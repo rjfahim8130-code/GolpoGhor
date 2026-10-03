@@ -12,6 +12,8 @@ import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/home/presentation/screens/category_list_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/offline/presentation/screens/offline_downloads_screen.dart';
+import '../features/offline/presentation/screens/offline_story_reader_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
@@ -210,7 +212,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/offline',
         name: 'offline',
-        builder: (_, __) => const _PlaceholderPage('অফলাইন'),
+        builder: (_, __) => const OfflineDownloadsScreen(),
+      ),
+      GoRoute(
+        path: '/offline-story/:id',
+        name: 'offline-story',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return OfflineStoryReaderScreen(storyId: id);
+        },
       ),
       GoRoute(
         path: '/settings',
@@ -255,10 +265,10 @@ class _SplashGate extends StatefulWidget {
   const _SplashGate();
 
   @override
-  State<_SplashGate> createState() => _SplashStateState(); // Fixed typo in state class if needed, or keep standard
+  State<_SplashGate> createState() => _SplashGateState();
 }
 
-class _SplashStateState extends State<_SplashGate> {
+class _SplashGateState extends State<_SplashGate> {
   @override
   void initState() {
     super.initState();
