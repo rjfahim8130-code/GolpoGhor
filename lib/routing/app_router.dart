@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/auth_service.dart';
+import '../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/auth/presentation/screens/onboarding_screen.dart';
+import '../features/auth/presentation/screens/profile_setup_screen.dart';
+import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/auth/presentation/screens/welcome_screen.dart';
 
-/// Placeholder — ব্যাচ ৩-এ আসল স্ক্রিন দিয়ে রিপ্লেস হবে একই ক্লাস নামে
 class _PlaceholderPage extends StatelessWidget {
   final String title;
   const _PlaceholderPage(this.title);
@@ -26,7 +31,7 @@ class _PlaceholderPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            '$title\n(স্ক্রিন পরের ব্যাচে যোগ হবে)',
+            '$title\n(স্ক্রিন পরের ব্যাচে)',
             textAlign: TextAlign.center,
           ),
         ),
@@ -51,7 +56,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           loc == '/splash' ||
           loc == '/onboarding';
 
-      if (!loggedIn && !isAuthRoute) return '/welcome';
+      if (!loggedIn && !isAuthRoute && loc != '/profile-setup') {
+        return '/welcome';
+      }
       return null;
     },
     routes: [
@@ -63,32 +70,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        builder: (_, __) => const _PlaceholderPage('অনবোর্ডিং'),
+        builder: (_, __) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/welcome',
         name: 'welcome',
-        builder: (_, __) => const _PlaceholderPage('ওয়েলকাম / লগইন গেট'),
+        builder: (_, __) => const WelcomeScreen(),
       ),
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (_, __) => const _PlaceholderPage('ইমেইল লগইন'),
+        builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (_, __) => const _PlaceholderPage('রেজিস্টার'),
+        builder: (_, __) => const RegisterScreen(),
       ),
       GoRoute(
         path: '/forgot-password',
         name: 'forgot-password',
-        builder: (_, __) => const _PlaceholderPage('পাসওয়ার্ড রিসেট'),
+        builder: (_, __) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/profile-setup',
         name: 'profile-setup',
-        builder: (_, __) => const _PlaceholderPage('প্রোফাইল সেটআপ'),
+        builder: (_, __) => const ProfileSetupScreen(),
       ),
       GoRoute(
         path: '/home',
@@ -109,7 +116,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/story/:id',
         name: 'story',
         builder: (_, state) =>
-            _PlaceholderPage('গল্প রিডার ${state.pathParameters['id']}'),
+            _PlaceholderPage('গল্প ${state.pathParameters['id']}'),
       ),
       GoRoute(
         path: '/create-story',
@@ -120,7 +127,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/edit-story/:id',
         name: 'edit-story',
         builder: (_, state) =>
-            _PlaceholderPage('গল্প এডিট ${state.pathParameters['id']}'),
+            _PlaceholderPage('এডিট ${state.pathParameters['id']}'),
       ),
       GoRoute(
         path: '/drafts',
@@ -142,7 +149,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/episode/:id',
         name: 'episode',
         builder: (_, state) =>
-            _PlaceholderPage('পর্ব রিডার ${state.pathParameters['id']}'),
+            _PlaceholderPage('পর্ব ${state.pathParameters['id']}'),
       ),
       GoRoute(
         path: '/add-episode/:novelId',
@@ -190,7 +197,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/offline',
         name: 'offline',
-        builder: (_, __) => const _PlaceholderPage('ডাউনলোড / অফলাইন'),
+        builder: (_, __) => const _PlaceholderPage('অফলাইন'),
       ),
       GoRoute(
         path: '/settings',
@@ -244,20 +251,20 @@ class _SplashGateState extends State<_SplashGate> {
   }
 
   Future<void> _go() async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+
     final auth = AuthService();
     if (!auth.isLoggedIn) {
-      context.go('/welcome');
+      context.go(onboardingDone ? '/welcome' : '/onboarding');
       return;
     }
     final needs = await auth.needsProfileSetup();
     if (!mounted) return;
-    if (needs) {
-      context.go('/profile-setup');
-    } else {
-      context.go('/home');
-    }
+    context.go(needs ? '/profile-setup' : '/home');
   }
 
   @override
