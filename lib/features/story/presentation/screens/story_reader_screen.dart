@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
+import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../social/presentation/widgets/comment_section.dart';
+import '../../../social/presentation/widgets/reaction_picker.dart';
 import '../widgets/reader_content.dart';
 import '../widgets/reader_watermark.dart';
 
@@ -22,12 +24,15 @@ class StoryReaderScreen extends StatefulWidget {
 class _StoryReaderScreenState extends State<StoryReaderScreen> {
   final _storyService = StoryService();
   final _bookmarkService = BookmarkService();
+  final _reactionService = ReactionService();
   final _scroll = ScrollController();
 
   StoryModel? _story;
   bool _loading = true;
   String? _error;
   bool _bookmarked = false;
+  String? _myReaction;
+  Map<String, int> _reactionCounts = {};
   double _fontScale = 1.0;
   bool _showControls = true;
   double _progress = 0;
@@ -72,12 +77,17 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
         return;
       }
       final bm = await _bookmarkService.isStoryBookmarked(widget.storyId);
+      final myR =
+          await _reactionService.getMyStoryReaction(widget.storyId);
+      final counts =
+          await _reactionService.countStoryReactions(widget.storyId);
       setState(() {
         _story = story;
         _bookmarked = bm;
+        _myReaction = myR;
+        _reactionCounts = counts;
         _loading = false;
       });
-      // ভিউ কাউন্ট — ব্যাকগ্রাউন্ডে
       _storyService.recordView(widget.storyId);
     } catch (e) {
       setState(() {
@@ -101,22 +111,57 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
+  }
+
+  Future<void> _pickReaction() async {
+    final type = await ReactionPicker.show(context);
+    if (type == null) return;
+    try {
+      final result = await _reactionService.toggleStoryReaction(
+        storyId: widget.storyId,
+        reactionType: type,
+      );
+      final counts =
+          await _reactionService.countStoryReactions(widget.storyId);
+      setState(() {
+        _myReaction = result;
+        _reactionCounts = counts;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  void _openComments() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SizedBox(
+          height: MediaQuery.of(ctx).size.height * 0.75,
+          child: CommentSection(storyId: widget.storyId),
+        );
+      },
+    ).then((_) => _load());
   }
 
   Future<void> _share() async {
     final s = _story;
     if (s == null) return;
     final code = s.publicCode ?? '';
-    final text = '${s.title}\n\n'
-        'গল্পঘরে পড়ুন'
-        '${code.isNotEmpty ? '\nকোড: $code' : ''}\n'
-        '#গল্পঘর';
-    await Share.share(text);
+    await Share.share(
+      '${s.title}\n\nগল্পঘরে পড়ুন'
+      '${code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+    );
   }
 
   void _showFontSheet() {
@@ -138,7 +183,6 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -151,10 +195,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                           },
                           icon: const Icon(Icons.text_decrease),
                         ),
-                        Text(
-                          '${(_fontScale * 100).round()}%',
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                        Text('${(_fontScale * 100).round()}%'),
                         IconButton(
                           onPressed: () {
                             setState(() {
@@ -175,6 +216,9 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
       },
     );
   }
+
+  int get _totalReactions =>
+      _reactionCounts.values.fold(0, (a, b) => a + b);
 
   @override
   Widget build(BuildContext context) {
@@ -209,144 +253,139 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // ওয়াটারমার্ক
           const Positioned.fill(child: ReaderWatermark()),
-          // কনটেন্ট
-          NotificationListener<ScrollNotification>(
-            onNotification: (n) {
-              if (n is ScrollUpdateNotification) {
-                // স্ক্রলে কন্ট্রোল টগল করা ঐচ্ছিক — এখানে সবসময় দেখানো
-              }
-              return false;
-            },
-            child: CustomScrollView(
-              controller: _scroll,
-              slivers: [
-                if (_showControls)
-                  SliverAppBar(
-                    pinned: true,
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => context.pop(),
-                    ),
-                    title: Text(
-                      story.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.text_fields),
-                        onPressed: _showFontSheet,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          _bookmarked
-                              ? Icons.bookmark
-                              : Icons.bookmark_border,
-                          color: _bookmarked ? AppColors.primary : null,
-                        ),
-                        onPressed: _toggleBookmark,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.share_outlined),
-                        onPressed: _share,
-                      ),
-                    ],
-                    bottom: PreferredSize(
-                      preferredSize: const Size.fromHeight(3),
-                      child: LinearProgressIndicator(
-                        value: _progress,
-                        minHeight: 3,
-                        backgroundColor: Colors.transparent,
-                        color: AppColors.primary,
-                      ),
-                    ),
+          CustomScrollView(
+            controller: _scroll,
+            slivers: [
+              if (_showControls)
+                SliverAppBar(
+                  pinned: true,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.pop(),
                   ),
-                if (!_showControls)
-                  const DiskSliverPadding(),
-                SliverToBoxAdapter(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _showControls = !_showControls),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            story.title,
-                            style: TextStyle(
-                              fontSize: 24 * _fontScale,
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                story.authorName ?? 'লেখক',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
-                              ),
-                              if (story.publicCode != null) ...[
-                                const SizedBox(width: 8),
-                                Text(
-                                  '· ${story.publicCode}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.9),
-                                  ),
-                                ),
-                              ],
-                              const Spacer(),
-                              Text(
-                                '${story.viewCount} দেখা',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          // কপি নিষেধ (হালকা অ্যান্টি-থেফট)
-                          SelectionContainer.disabled(
-                            child: ReaderContent(
-                              blocks: story.contentBlocks,
-                              fontScale: _fontScale,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          const Divider(),
-                          const SizedBox(height: 8),
-                          Text(
-                            'গল্পঘর থেকে পঠিত',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        ],
+                  title: Text(
+                    story.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.text_fields),
+                      onPressed: _showFontSheet,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        color: _bookmarked ? AppColors.primary : null,
                       ),
+                      onPressed: _toggleBookmark,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      onPressed: _share,
+                    ),
+                  ],
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(3),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      minHeight: 3,
+                      backgroundColor: Colors.transparent,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
-              ],
-            ),
+              if (!_showControls)
+                const SliverToBoxAdapter(child: SizedBox(height: 48)),
+              SliverToBoxAdapter(
+                child: GestureDetector(
+                  onTap: () => setState(() => _showControls = !_showControls),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          story.title,
+                          style: TextStyle(
+                            fontSize: 24 * _fontScale,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              story.authorName ?? 'লেখক',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                            if (story.publicCode != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                '· ${story.publicCode}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.primary.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
+                            const Spacer(),
+                            Text(
+                              '${story.viewCount} দেখা',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_totalReactions > 0) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _reactionCounts.entries
+                                .map((e) =>
+                                    '${ReactionPicker.emoji(e.key)} ${e.value}')
+                                .join('  '),
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        SelectionContainer.disabled(
+                          child: ReaderContent(
+                            blocks: story.contentBlocks,
+                            fontScale: _fontScale,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        Text(
+                          'গল্পঘর থেকে পঠিত',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          // নিচের অ্যাকশন
           if (_showControls)
             Positioned(
               left: 0,
@@ -366,26 +405,19 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _BottomAction(
-                          icon: Icons.favorite_border,
+                          icon: _myReaction != null
+                              ? null
+                              : Icons.favorite_border,
+                          emoji: _myReaction != null
+                              ? ReactionPicker.emoji(_myReaction)
+                              : null,
                           label: 'রিয়্যাকশন',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('রিয়্যাকশন পরের ব্যাচে'),
-                              ),
-                            );
-                          },
+                          onTap: _pickReaction,
                         ),
                         _BottomAction(
                           icon: Icons.chat_bubble_outline,
                           label: 'কমেন্ট',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('কমেন্ট পরের ব্যাচে'),
-                              ),
-                            );
-                          },
+                          onTap: _openComments,
                         ),
                         _BottomAction(
                           icon: Icons.download_outlined,
@@ -415,22 +447,15 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   }
 }
 
-class DiskSliverPadding extends StatelessWidget {
-  const DiskSliverPadding();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SliverToBoxAdapter(child: SizedBox(height: 48));
-  }
-}
-
 class _BottomAction extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? emoji;
   final String label;
   final VoidCallback onTap;
 
   const _BottomAction({
-    required this.icon,
+    this.icon,
+    this.emoji,
     required this.label,
     required this.onTap,
   });
@@ -441,11 +466,14 @@ class _BottomAction extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22),
+            if (emoji != null)
+              Text(emoji!, style: const TextStyle(fontSize: 22))
+            else
+              Icon(icon ?? Icons.circle, size: 22),
             const SizedBox(height: 2),
             Text(label, style: const TextStyle(fontSize: 11)),
           ],
