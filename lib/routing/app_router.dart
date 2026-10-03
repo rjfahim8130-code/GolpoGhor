@@ -11,6 +11,7 @@ import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
 
 class _PlaceholderPage extends StatelessWidget {
@@ -125,7 +126,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/create-story',
         name: 'create-story',
-        builder: (_, __) => const _PlaceholderPage('গল্প তৈরি'),
+        builder: (_, __) => const CreateStoryScreen(),
       ),
       GoRoute(
         path: '/edit-story/:id',
