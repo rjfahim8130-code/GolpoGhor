@@ -10,6 +10,7 @@ import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
+import '../features/home/presentation/screens/home_feed_screen.dart';
 
 class _PlaceholderPage extends StatelessWidget {
   final String title;
@@ -100,7 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (_, __) => const _PlaceholderPage('হোম'),
+        builder: (_, __) => const HomeFeedScreen(),
       ),
       GoRoute(
         path: '/discover',
