@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
+import '../../../../core/services/offline_service.dart';
 import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -25,12 +26,15 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   final _storyService = StoryService();
   final _bookmarkService = BookmarkService();
   final _reactionService = ReactionService();
+  final _offlineService = OfflineService();
   final _scroll = ScrollController();
 
   StoryModel? _story;
   bool _loading = true;
   String? _error;
   bool _bookmarked = false;
+  bool _downloaded = false;
+  bool _downloading = false;
   String? _myReaction;
   Map<String, int> _reactionCounts = {};
   double _fontScale = 1.0;
@@ -70,6 +74,16 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     try {
       final story = await _storyService.getById(widget.storyId);
       if (story == null) {
+        // অফলাইন ফলব্যাক
+        final offline = await _offlineService.getStory(widget.storyId);
+        if (offline != null) {
+          setState(() {
+            _story = offline.toStoryModel();
+            _downloaded = true;
+            _loading = false;
+          });
+          return;
+        }
         setState(() {
           _error = 'গল্প পাওয়া যায়নি';
           _loading = false;
@@ -81,15 +95,27 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
           await _reactionService.getMyStoryReaction(widget.storyId);
       final counts =
           await _reactionService.countStoryReactions(widget.storyId);
+      final dl = await _offlineService.isDownloaded(widget.storyId);
       setState(() {
         _story = story;
         _bookmarked = bm;
         _myReaction = myR;
         _reactionCounts = counts;
+        _downloaded = dl;
         _loading = false;
       });
       _storyService.recordView(widget.storyId);
     } catch (e) {
+      final offline = await _offlineService.getStory(widget.storyId);
+      if (offline != null) {
+        setState(() {
+          _story = offline.toStoryModel();
+          _downloaded = true;
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
       setState(() {
         _error = 'লোড সমস্যা';
         _loading = false;
@@ -110,6 +136,39 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
         );
       }
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _download() async {
+    final story = _story;
+    if (story == null) return;
+    if (_downloaded) {
+      await _offlineService.remove(story.id);
+      setState(() => _downloaded = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
+        );
+      }
+      return;
+    }
+    setState(() => _downloading = true);
+    try {
+      await _offlineService.saveStory(story);
+      setState(() {
+        _downloaded = true;
+        _downloading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('অফলাইনে সেভ হয়েছে')),
+        );
+      }
+    } catch (e) {
+      setState(() => _downloading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
@@ -420,15 +479,22 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                           onTap: _openComments,
                         ),
                         _BottomAction(
-                          icon: Icons.download_outlined,
-                          label: 'ডাউনলোড',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('ডাউনলোড পরের ব্যাচে'),
-                              ),
-                            );
-                          },
+                          icon: _downloading
+                              ? null
+                              : (_downloaded
+                                  ? Icons.download_done
+                                  : Icons.download_outlined),
+                          label: _downloaded ? 'সেভ আছে' : 'ডাউনলোড',
+                          onTap: _downloading ? () {} : _download,
+                          trailing: _downloading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : null,
                         ),
                         _BottomAction(
                           icon: Icons.share_outlined,
@@ -452,12 +518,14 @@ class _BottomAction extends StatelessWidget {
   final String? emoji;
   final String label;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   const _BottomAction({
     this.icon,
     this.emoji,
     required this.label,
     required this.onTap,
+    this.trailing,
   });
 
   @override
@@ -466,16 +534,18 @@ class _BottomAction extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (emoji != null)
+            if (trailing != null)
+              trailing!
+            else if (emoji != null)
               Text(emoji!, style: const TextStyle(fontSize: 22))
             else
               Icon(icon ?? Icons.circle, size: 22),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(fontSize: 11)),
+            Text(label, style: constTextStyle(fontSize: 11)),
           ],
         ),
       ),
