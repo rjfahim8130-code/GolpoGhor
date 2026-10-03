@@ -10,7 +10,9 @@ import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
+import '../features/home/presentation/screens/category_list_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/search/presentation/screens/search_screen.dart';
 import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
 
@@ -113,7 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/search',
         name: 'search',
-        builder: (_, __) => const _PlaceholderPage('সার্চ'),
+        builder: (_, __) => const SearchScreen(),
       ),
       GoRoute(
         path: '/story/:id',
@@ -217,8 +219,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/category/:name',
         name: 'category',
-        builder: (_, state) =>
-            _PlaceholderPage('ক্যাটাগরি ${state.pathParameters['name']}'),
+        builder: (context, state) {
+          final name = Uri.decodeComponent(state.pathParameters['name']!);
+          return CategoryListScreen(category: name);
+        },
       ),
       GoRoute(
         path: '/admin',
