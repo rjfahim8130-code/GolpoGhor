@@ -12,6 +12,10 @@ import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/home/presentation/screens/category_list_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../features/profile/presentation/screens/set_password_screen.dart';
+import '../features/profile/presentation/screens/settings_screen.dart';
+import '../features/profile/presentation/screens/user_profile_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
@@ -173,23 +177,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         name: 'profile',
-        builder: (_, __) => const _PlaceholderPage('প্রোফাইল'),
+        builder: (_, __) => const UserProfileScreen(),
       ),
       GoRoute(
         path: '/user/:id',
         name: 'user',
-        builder: (_, state) =>
-            _PlaceholderPage('ইউজার ${state.pathParameters['id']}'),
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UserProfileScreen(userId: id);
+        },
       ),
       GoRoute(
         path: '/edit-profile',
         name: 'edit-profile',
-        builder: (_, __) => const _PlaceholderPage('প্রোফাইল এডিট'),
+        builder: (_, __) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/set-password',
         name: 'set-password',
-        builder: (_, __) => const _PlaceholderPage('পাসওয়ার্ড সেট'),
+        builder: (_, __) => const SetPasswordScreen(),
       ),
       GoRoute(
         path: '/my-works',
@@ -209,7 +215,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         name: 'settings',
-        builder: (_, __) => const _PlaceholderPage('সেটিংস'),
+        builder: (_, __) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/trending',
@@ -249,10 +255,10 @@ class _SplashGate extends StatefulWidget {
   const _SplashGate();
 
   @override
-  State<_SplashGate> createState() => _SplashGateState();
+  State<_SplashGate> createState() => _SplashStateState(); // Fixed typo in state class if needed, or keep standard
 }
 
-class _SplashGateState extends State<_SplashGate> {
+class _SplashStateState extends State<_SplashGate> {
   @override
   void initState() {
     super.initState();
