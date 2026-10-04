@@ -44,6 +44,21 @@ class NovelService {
         .toList();
   }
 
+  Future<List<NovelModel>> getMyNovels() async {
+    final uid = _uid;
+    if (uid == null) return [];
+
+    final data = await _client
+        .from(SupabaseConstants.novels)
+        .select()
+        .eq('author_id', uid)
+        .order('updated_at', ascending: false);
+
+    return (data as List)
+        .map((e) => NovelModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
   Future<NovelModel?> getById(String id) async {
     final data = await _client
         .from(SupabaseConstants.novels)
