@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/auth_service.dart';
+import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
@@ -11,7 +12,10 @@ import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/home/presentation/screens/category_list_screen.dart';
+import '../features/home/presentation/screens/discover_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/home/presentation/screens/trending_screen.dart';
+import '../features/legal/presentation/screens/legal_screen.dart';
 import '../features/novel/presentation/screens/add_episode_screen.dart';
 import '../features/novel/presentation/screens/create_novel_screen.dart';
 import '../features/novel/presentation/screens/episode_reader_screen.dart';
@@ -28,35 +32,6 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
-
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  const _PlaceholderPage(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        leading: Navigator.of(context).canPop()
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
-              )
-            : null,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            '$title\n(স্ক্রিন পরের ব্যাচে)',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = AuthService();
@@ -88,38 +63,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/forgot-password', name: 'forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
       GoRoute(path: '/profile-setup', name: 'profile-setup', builder: (_, __) => const ProfileSetupScreen()),
       GoRoute(path: '/home', name: 'home', builder: (_, __) => const HomeFeedScreen()),
-      GoRoute(path: '/discover', name: 'discover', builder: (_, __) => const _PlaceholderPage('আবিষ্কার')),
+      GoRoute(path: '/discover', name: 'discover', builder: (_, __) => const DiscoverScreen()),
       GoRoute(path: '/search', name: 'search', builder: (_, __) => const SearchScreen()),
       GoRoute(
         path: '/story/:id',
         name: 'story',
-        builder: (context, state) => StoryReaderScreen(storyId: state.pathParameters['id']!),
+        builder: (_, state) => StoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/create-story', name: 'create-story', builder: (_, __) => const CreateStoryScreen()),
-      GoRoute(path: '/edit-story/:id', name: 'edit-story', builder: (_, state) => _PlaceholderPage('এডিট ${state.pathParameters['id']}')),
       GoRoute(path: '/drafts', name: 'drafts', builder: (_, __) => const DraftsScreen()),
       GoRoute(
         path: '/novel/:id',
         name: 'novel',
-        builder: (context, state) => NovelDetailsScreen(novelId: state.pathParameters['id']!),
+        builder: (_, state) => NovelDetailsScreen(novelId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/create-novel', name: 'create-novel', builder: (_, __) => const CreateNovelScreen()),
       GoRoute(
         path: '/episode/:id',
         name: 'episode',
-        builder: (context, state) => EpisodeReaderScreen(episodeId: state.pathParameters['id']!),
+        builder: (_, state) => EpisodeReaderScreen(episodeId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/add-episode/:novelId',
         name: 'add-episode',
-        builder: (context, state) => AddEpisodeScreen(novelId: state.pathParameters['novelId']!),
+        builder: (_, state) => AddEpisodeScreen(novelId: state.pathParameters['novelId']!),
       ),
-      GoRoute(path: '/edit-episode/:id', name: 'edit-episode', builder: (_, state) => _PlaceholderPage('পর্ব এডিট ${state.pathParameters['id']}')),
       GoRoute(path: '/profile', name: 'profile', builder: (_, __) => const UserProfileScreen()),
       GoRoute(
         path: '/user/:id',
         name: 'user',
-        builder: (context, state) => UserProfileScreen(userId: state.pathParameters['id']!),
+        builder: (_, state) => UserProfileScreen(userId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/edit-profile', name: 'edit-profile', builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: '/set-password', name: 'set-password', builder: (_, __) => const SetPasswordScreen()),
@@ -129,20 +102,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/offline-story/:id',
         name: 'offline-story',
-        builder: (context, state) => OfflineStoryReaderScreen(storyId: state.pathParameters['id']!),
+        builder: (_, state) => OfflineStoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const _PlaceholderPage('ট্রেন্ডিং')),
+      GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
       GoRoute(
         path: '/category/:name',
         name: 'category',
-        builder: (context, state) {
+        builder: (_, state) {
           final name = Uri.decodeComponent(state.pathParameters['name']!);
           return CategoryListScreen(category: name);
         },
       ),
-      GoRoute(path: '/admin', name: 'admin', builder: (_, __) => const _PlaceholderPage('অ্যাডমিন')),
-      GoRoute(path: '/legal/:type', name: 'legal', builder: (_, state) => _PlaceholderPage('লিগ্যাল ${state.pathParameters['type']}')),
+      GoRoute(path: '/admin', name: 'admin', builder: (_, __) => const AdminDashboardScreen()),
+      GoRoute(
+        path: '/legal/:type',
+        name: 'legal',
+        builder: (_, state) => LegalScreen(type: state.pathParameters['type'] ?? 'terms'),
+      ),
     ],
   );
 });
