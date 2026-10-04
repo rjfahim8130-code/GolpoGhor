@@ -44,6 +44,11 @@ class AuthService {
   Future<AuthResponse?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(
       scopes: const ['email', 'profile'],
+      // Google Cloud → Web OAuth client ID (Supabase-এ যেটা দিয়েছেন)
+      serverClientId: const String.fromEnvironment(
+        'GOOGLE_WEB_CLIENT_ID',
+        defaultValue: '',
+      ),
     );
 
     final googleUser = await googleSignIn.signIn();
