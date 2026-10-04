@@ -15,11 +15,14 @@ import '../features/home/presentation/screens/home_feed_screen.dart';
 import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_story_reader_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../features/profile/presentation/screens/my_works_screen.dart';
+import '../features/profile/presentation/screens/saved_stories_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
 import '../features/profile/presentation/screens/user_profile_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/story/presentation/screens/create_story_screen.dart';
+import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
 
 class _PlaceholderPage extends StatelessWidget {
@@ -145,7 +148,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/drafts',
         name: 'drafts',
-        builder: (_, __) => const _PlaceholderPage('খসড়া'),
+        builder: (_, __) => const DraftsScreen(),
       ),
       GoRoute(
         path: '/novel/:id',
@@ -202,12 +205,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-works',
         name: 'my-works',
-        builder: (_, __) => const _PlaceholderPage('আমার লেখা'),
+        builder: (_, __) => const MyWorksScreen(),
       ),
       GoRoute(
         path: '/saved',
         name: 'saved',
-        builder: (_, __) => const _PlaceholderPage('সংরক্ষিত'),
+        builder: (_, __) => const SavedStoriesScreen(),
       ),
       GoRoute(
         path: '/offline',
