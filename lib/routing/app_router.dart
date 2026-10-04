@@ -23,6 +23,7 @@ import '../features/novel/presentation/screens/novel_details_screen.dart';
 import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_story_reader_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../features/profile/presentation/screens/follow_list_screen.dart';
 import '../features/profile/presentation/screens/my_works_screen.dart';
 import '../features/profile/presentation/screens/saved_stories_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
@@ -100,6 +101,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'user',
         builder: (_, state) => UserProfileScreen(userId: state.pathParameters['id']!),
       ),
+      GoRoute(
+        path: '/follows/:userId/:mode',
+        name: 'follows',
+        builder: (_, state) {
+          final userId = state.pathParameters['userId']!;
+          final mode = state.pathParameters['mode'] ?? 'followers';
+          return FollowListScreen(userId: userId, mode: mode);
+        },
+      ),
       GoRoute(path: '/edit-profile', name: 'edit-profile', builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: '/set-password', name: 'set-password', builder: (_, __) => const SetPasswordScreen()),
       GoRoute(path: '/my-works', name: 'my-works', builder: (_, __) => const MyWorksScreen()),
@@ -111,7 +121,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => OfflineStoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
+      GoRoute(path: 'trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
       GoRoute(
         path: '/category/:name',
         name: 'category',
@@ -166,7 +176,7 @@ class _SplashGateState extends State<_SplashGate> {
   }
 
   @override
-  Widget_build(BuildContext context) {
+  Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Column(
