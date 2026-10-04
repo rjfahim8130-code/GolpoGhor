@@ -31,6 +31,7 @@ import '../features/profile/presentation/screens/user_profile_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
+import '../features/story/presentation/screens/edit_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -71,6 +72,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => StoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/create-story', name: 'create-story', builder: (_, __) => const CreateStoryScreen()),
+      GoRoute(
+        path: '/edit-story/:id',
+        name: 'edit-story',
+        builder: (_, state) => EditStoryScreen(storyId: state.pathParameters['id']!),
+      ),
       GoRoute(path: '/drafts', name: 'drafts', builder: (_, __) => const DraftsScreen()),
       GoRoute(
         path: '/novel/:id',
@@ -160,7 +166,7 @@ class _SplashGateState extends State<_SplashGate> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget_build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Column(
