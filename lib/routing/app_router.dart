@@ -121,12 +121,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => OfflineStoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(path: 'trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
+      // এখানে স্ল্যাশ (/) মিসিং ছিল, ঠিক করে দেওয়া হলো
+      GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
       GoRoute(
         path: '/category/:name',
         name: 'category',
         builder: (_, state) {
-          final name = Uri.decodeComponent(state.pathParameters['name']!);
+          final name =Uri.decodeComponent(state.pathParameters['name']!);
           return CategoryListScreen(category: name);
         },
       ),
@@ -139,55 +140,3 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-class _AuthRefresh extends ChangeNotifier {
-  _AuthRefresh(AuthService auth) {
-    auth.authStateChanges.listen((_) => notifyListeners());
-  }
-}
-
-class _SplashGate extends StatefulWidget {
-  const _SplashGate();
-
-  @override
-  State<_SplashGate> createState() => _SplashGateState();
-}
-
-class _SplashGateState extends State<_SplashGate> {
-  @override
-  void initState() {
-    super.initState();
-    _go();
-  }
-
-  Future<void> _go() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-    final auth = AuthService();
-    if (!auth.isLoggedIn) {
-      context.go(onboardingDone ? '/welcome' : '/onboarding');
-      return;
-    }
-    final needs = await auth.needsProfileSetup();
-    if (!mounted) return;
-    context.go(needs ? '/profile-setup' : '/home');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('গল্পঘর', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            SizedBox(height: 24),
-            CircularProgressIndicator(),
-          ],
-        ),
-      ),
-    );
-  }
-}
