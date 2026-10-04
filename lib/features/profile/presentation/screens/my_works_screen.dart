@@ -46,12 +46,41 @@ class _MyWorksScreenState extends State<MyWorksScreen>
       final novels = await _novelService.getMyNovels();
       setState(() {
         _stories = stories.where((s) => !s.isDraft).toList();
-        _novels = novels;
+        _novels = novels.where((n) => !n.isDraft).toList();
         _loading = false;
       });
     } catch (_) {
       setState(() => _loading = false);
     }
+  }
+
+  void _showCreate() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.article_outlined),
+              title: const Text('নতুন গল্প'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/create-story');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: const Text('নতুন উপন্যাস'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/create-novel');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -74,34 +103,7 @@ class _MyWorksScreenState extends State<MyWorksScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (ctx) => SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.article_outlined),
-                        title: const Text('নতুন গল্প'),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          context.push('/create-story');
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.menu_book_outlined),
-                        title: const Text('নতুন উপন্যাস'),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          context.push('/create-novel');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+            onPressed: _showCreate,
           ),
         ],
       ),
