@@ -5,10 +5,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/follow_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  /// null = নিজের প্রোফাইল
   final String? userId;
 
   const UserProfileScreen({super.key, this.userId});
@@ -19,9 +19,12 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final _auth = AuthService();
+  final _followService = FollowService();
   UserModel? _user;
   bool _loading = true;
   bool _isMe = true;
+  bool _following = false;
+  bool _followBusy = false;
 
   @override
   void initState() {
@@ -40,12 +43,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         return;
       }
       final p = await _auth.getProfile(id);
+      bool following = false;
+      if (!_isMe && p != null) {
+        following = await _followService.isFollowing(p.id);
+      }
       setState(() {
         _user = p;
+        _following = following;
         _loading = false;
       });
     } catch (_) {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    final u = _user;
+    if (u == null || _isMe) return;
+    setState(() => _followBusy = true);
+    try {
+      final on = await _followService.toggleFollow(u.id);
+      final refreshed = await _auth.getProfile(u.id);
+      setState(() {
+        _following = on;
+        if (refreshed != null) _user = refreshed;
+        _followBusy = false;
+      });
+    } catch (e) {
+      setState(() => _followBusy = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -88,8 +116,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (u == null) return;
     final code = u.inviteCode ?? u.username ?? '';
     await Share.share(
-      '${u.displayName} — গল্পঘরে ফলো করুন\n'
-      'কোড: $code\n#গল্পঘর',
+      '${u.displayName} — গল্পঘরে ফলো করুন\nকোড: $code\n#গল্পঘর',
     );
   }
 
@@ -170,10 +197,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             Text(
               u.displayName,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             if (u.username != null)
               Text(
@@ -187,21 +211,51 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
             if (u.bio != null && u.bio!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
-                u.bio!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(height: 1.4),
-              ),
+              Text(u.bio!, textAlign: TextAlign.center, style: const TextStyle(height: 1.4)),
             ],
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _stat('${u.followerCount}', 'ফলোয়ার'),
+                InkWell(
+                  onTap: () => context.push('/follows/${u.id}/followers'),
+                  child: _stat('${u.followerCount}', 'ফলোয়ার'),
+                ),
                 const SizedBox(width: 24),
-                _stat('${u.followingCount}', 'ফলোয়িং'),
+                InkWell(
+                  onTap: () => context.push('/follows/${u.id}/following'),
+                  child: _stat('${u.followingCount}', 'ফলোয়িং'),
+                ),
               ],
             ),
+            if (!_isMe) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _following ? Colors.grey.shade600 : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _followBusy ? null : _toggleFollow,
+                  child: _followBusy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(_following ? 'আনফলো' : 'ফলো'),
+                ),
+              ),
+            ],
             if (u.inviteCode != null) ...[
               const SizedBox(height: 16),
               Container(
@@ -216,10 +270,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'আমার কোড',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                          const Text('আমার কোড', style: TextStyle(fontSize: 12)),
                           Text(
                             u.inviteCode!,
                             style: const TextStyle(
@@ -231,10 +282,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: _copyCode,
-                      icon: const Icon(Icons.copy),
-                    ),
+                    IconButton(onPressed: _copyCode, icon: const Icon(Icons.copy)),
                     IconButton(
                       onPressed: _shareProfile,
                       icon: const Icon(Icons.share_outlined),
@@ -245,49 +293,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ],
             const SizedBox(height: 20),
             if (_isMe) ...[
-              _menuTile(
-                Icons.edit_outlined,
-                'প্রোফাইল এডিট',
-                () => context.push('/edit-profile'),
-              ),
-              _menuTile(
-                Icons.lock_outline,
-                'পাসওয়ার্ড সেট / পরিবর্তন',
-                () => context.push('/set-password'),
-              ),
-              _menuTile(
-                Icons.article_outlined,
-                'আমার লেখা',
-                () => context.push('/my-works'),
-              ),
-              _menuTile(
-                Icons.bookmark_outline,
-                'সংরক্ষিত',
-                () => context.push('/saved'),
-              ),
-              _menuTile(
-                Icons.drafts_outlined,
-                'খসড়া',
-                () => context.push('/drafts'),
-              ),
-              _menuTile(
-                Icons.download_outlined,
-                'অফলাইন ডাউনলোড',
-                () => context.push('/offline'),
-              ),
+              _menuTile(Icons.edit_outlined, 'প্রোফাইল এডিট',
+                  () => context.push('/edit-profile')),
+              _menuTile(Icons.lock_outline, 'পাসওয়ার্ড সেট / পরিবর্তন',
+                  () => context.push('/set-password')),
+              _menuTile(Icons.article_outlined, 'আমার লেখা',
+                  () => context.push('/my-works')),
+              _menuTile(Icons.bookmark_outline, 'সংরক্ষিত',
+                  () => context.push('/saved')),
+              _menuTile(Icons.drafts_outlined, 'খসড়া',
+                  () => context.push('/drafts')),
+              _menuTile(Icons.download_outlined, 'অফলাইন ডাউনলোড',
+                  () => context.push('/offline')),
               if (u.isAdmin)
-                _menuTile(
-                  Icons.admin_panel_settings_outlined,
-                  'অ্যাডমিন',
-                  () => context.push('/admin'),
-                ),
+                _menuTile(Icons.admin_panel_settings_outlined, 'অ্যাডমিন',
+                    () => context.push('/admin')),
               const Divider(height: 32),
-              _menuTile(
-                Icons.logout,
-                'লগআউট',
-                _logout,
-                danger: true,
-              ),
+              _menuTile(Icons.logout, 'লগআউট', _logout, danger: true),
             ],
           ],
         ),
@@ -298,10 +320,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget _stat(String value, String label) {
     return Column(
       children: [
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
+        Text(value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
@@ -315,10 +335,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }) {
     return ListTile(
       leading: Icon(icon, color: danger ? Colors.red : null),
-      title: Text(
-        title,
-        style: TextStyle(color: danger ? Colors.red : null),
-      ),
+      title: Text(title, style: TextStyle(color: danger ? Colors.red : null)),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
