@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -9,7 +10,6 @@ import '../widgets/novel_card.dart';
 import '../widgets/story_card.dart';
 
 class HomeFeedScreen extends StatefulWidget {
-  /// true হলে শেলের ভিতরে শুধু বডি (AppBar নেই)
   final bool embedded;
 
   const HomeFeedScreen({super.key, this.embedded = false});
@@ -146,6 +146,16 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.explore_outlined),
+            tooltip: 'আবিষ্কার',
+            onPressed: () => context.push('/discover'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.local_fire_department_outlined),
+            tooltip: 'ট্রেন্ডিং',
+            onPressed: () => context.push('/trending'),
+          ),
+          IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/search'),
           ),
@@ -185,8 +195,11 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.menu_book_outlined,
-                size: 64, color: AppColors.primary.withValues(alpha: 0.5)),
+            Icon(
+              Icons.menu_book_outlined,
+              size: 64,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 16),
             const Text('এখনো কোনো গল্প নেই'),
             const SizedBox(height: 8),
