@@ -121,4 +121,3 @@ class FollowService {
     return list;
   }
 }
-
