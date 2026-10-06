@@ -38,8 +38,8 @@ class GolpoGhorApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'গল্পঘর',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
     );
