@@ -22,7 +22,7 @@ class AppConstants {
   ];
 
   /// রিডার ওয়াটারমার্ক অপাসিটি
-  static const double readerLogoOpacity = 0.06;
+  static const double readerLogoOpacity = 0.08;
 
   static const int feedPageSize = 15;
   static const int searchDebounceMs = 300;
