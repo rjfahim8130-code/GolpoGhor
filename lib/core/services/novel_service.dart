@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -99,6 +101,40 @@ class NovelService {
         .maybeSingle();
     if (data == null) return null;
     return EpisodeModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  /// Supabase Storage-এ ইমেজ আপলোড করার মেথড
+  Future<String> uploadImage(dynamic imageFile, String bucketName) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final fileName = '$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    if (imageFile is File) {
+      await _client.storage.from(bucketName).upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(upsert: true),
+          );
+    } else if (imageFile is Uint8List) {
+      await _client.storage.from(bucketName).uploadBinary(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(upsert: true),
+          );
+    } else if (imageFile is String) {
+      final file = File(imageFile);
+      await _client.storage.from(bucketName).upload(
+            fileName,
+            file,
+            fileOptions: const FileOptions(upsert: true),
+          );
+    } else {
+      throw Exception('অসমর্থিত ইমেজ ফরম্যাট');
+    }
+
+    final publicUrl = _client.storage.from(bucketName).getPublicUrl(fileName);
+    return publicUrl;
   }
 
   Future<NovelModel> createNovel({
