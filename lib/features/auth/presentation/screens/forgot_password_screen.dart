@@ -18,7 +18,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _pass2 = TextEditingController();
   final _auth = AuthService();
 
-  int _step = 0; // 0 = email, 1 = otp + new password
+  /// 0 = ইমেইল, 1 = OTP + নতুন পাসওয়ার্ড
+  int _step = 0;
   bool _loading = false;
   bool _obscure = true;
 
@@ -49,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('ইমেইলে OTP পাঠানো হয়েছে (ইনবক্স / Spam চেক করুন)'),
+          content: Text('ইমেইলে OTP পাঠানো হয়েছে — Inbox / Spam দেখুন'),
         ),
       );
     } catch (err) {
