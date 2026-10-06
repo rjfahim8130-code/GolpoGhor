@@ -42,7 +42,7 @@ class DiscoverScreen extends StatelessWidget {
               return ActionChip(
                 label: Text(c),
                 onPressed: () => context.push(
-                  '/category/${Uri.encodeComponent(c)}',
+                  Uri(path: '/category', queryParameters: {'name': c}).toString(),
                 ),
               );
             }).toList(),
