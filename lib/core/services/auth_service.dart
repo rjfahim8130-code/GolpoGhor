@@ -44,7 +44,6 @@ class AuthService {
   Future<AuthResponse?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(
       scopes: const ['email', 'profile'],
-      // Google Cloud → Web OAuth client ID (Supabase-এ যেটা দিয়েছেন)
       serverClientId: const String.fromEnvironment(
         'GOOGLE_WEB_CLIENT_ID',
         defaultValue: '',
@@ -74,8 +73,31 @@ class AuthService {
     await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
-  Future<void> sendPasswordReset(String email) async {
+  /// পাসওয়ার্ড রিসেট OTP পাঠায় (ইমেইলে)
+  Future<void> sendPasswordResetOtp(String email) async {
     await _client.auth.resetPasswordForEmail(email.trim());
+  }
+
+  /// পুরনো মেথডের নাম বজায় রাখতে বা ব্যাকওয়ার্ড কম্প্যাটিবিলিটির জন্য
+  Future<void> sendPasswordReset(String email) => sendPasswordResetOtp(email);
+
+  /// OTP যাচাই + নতুন পাসওয়ার্ড সেট
+  Future<void> resetPasswordWithOtp({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    final res = await _client.auth.verifyOTP(
+      email: email.trim(),
+      token: token.trim(),
+      type: OtpType.recovery,
+    );
+    if (res.session == null && res.user == null) {
+      throw Exception('OTP সঠিক নয় বা মেয়াদ শেষ');
+    }
+    await _client.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
   }
 
   Future<void> signOut() async {
