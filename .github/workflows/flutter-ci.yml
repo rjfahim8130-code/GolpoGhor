@@ -27,6 +27,21 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Create Android platform if missing
+        run: |
+          echo "Checking android folder..."
+          ls -la
+          if [ ! -d android ]; then
+            echo "android/ missing — running flutter create"
+            flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          elif [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
+            echo "android/ incomplete — running flutter create"
+            flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          else
+            echo "android/ OK"
+          fi
+          ls -la android/app/ || true
+
       - name: Pub get
         run: flutter pub get
 
@@ -46,4 +61,3 @@ jobs:
           name: golpoghor-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
-          
