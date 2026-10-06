@@ -134,10 +134,21 @@ class NovelService {
     required String novelId,
     required String title,
     required List<ContentBlockModel> contentBlocks,
+    String? coverUrl,
     int? chapterNumber,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
+
+    // শুধু নিজের উপন্যাসে পর্ব যোগ করার অনুমতি চেক
+    final novel = await _client
+        .from(SupabaseConstants.novels)
+        .select('author_id')
+        .eq('id', novelId)
+        .maybeSingle();
+    if (novel == null || novel['author_id'] != uid) {
+      throw Exception('এই উপন্যাসে পর্ব যোগ করার অনুমতি নেই');
+    }
 
     int number = chapterNumber ?? 1;
     if (chapterNumber == null) {
@@ -160,6 +171,7 @@ class NovelService {
           'chapter_number': number,
           'title': title.trim(),
           'content_blocks': contentBlocks.map((e) => e.toJson()).toList(),
+          'cover_url': coverUrl,
           'is_published': true,
         })
         .select()
