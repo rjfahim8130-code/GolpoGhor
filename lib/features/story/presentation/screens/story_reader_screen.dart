@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -395,6 +396,19 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                                   color: AppColors.primary.withValues(alpha: 0.9),
                                 ),
                               ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 16),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                tooltip: 'কোড কপি করুন',
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: story.publicCode!));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('কোড কপি হয়েছে')),
+                                  );
+                                },
+                              ),
                             ],
                             const Spacer(),
                             Text(
@@ -445,7 +459,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
             ],
           ),
           
-                    if (_showControls)
+          if (_showControls)
             Positioned(
               left: 0,
               right: 0,
@@ -552,4 +566,3 @@ class _BottomAction extends StatelessWidget {
     );
   }
 }
-
