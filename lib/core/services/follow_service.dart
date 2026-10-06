@@ -81,44 +81,4 @@ class FollowService {
       }).eq('id', followerId);
     } catch (_) {}
   }
-
-  Future<List<UserModel>> getFollowers(String userId) async {
-    final data = await _client
-        .from(SupabaseConstants.follows)
-        .select('''
-          follower_id,
-          profiles:follower_id (*)
-        ''')
-        .eq('following_id', userId)
-        .order('created_at', ascending: false);
-
-    final list = <UserModel>[];
-    for (final row in data as List) {
-      final p = (row as Map)['profiles'];
-      if (p is Map) {
-        list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
-      }
-    }
-    return list;
-  }
-
-  Future<List<UserModel>> getFollowing(String userId) async {
-    final data = await _client
-        .from(SupabaseConstants.follows)
-        .select('''
-          following_id,
-          profiles:following_id (*)
-        ''')
-        .eq('follower_id', userId)
-        .order('created_at', alias: null, ascending: false);
-
-    final list = <UserModel>[];
-    for (final row in data as List) {
-      final p = (row as Map)['profiles'];
-      if (p is Map) {
-        list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
-      }
-    }
-    return list;
-  }
-}
+  
