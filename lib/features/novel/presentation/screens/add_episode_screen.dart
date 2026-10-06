@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -24,11 +26,24 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
   _Preset _preset = _Preset.body;
   bool _saving = false;
 
+  File? _coverImage;
+  String? _coverUrl;
+
   @override
   void dispose() {
     _titleCtrl.dispose();
     _bodyCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked != null) {
+      setState(() {
+        _coverImage = File(picked.path);
+      });
+    }
   }
 
   ContentBlockModel _fromText(String text) {
@@ -89,10 +104,16 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
 
     setState(() => _saving = true);
     try {
+      // যদি কভার ইমেজ সিলেক্ট করা থাকে তবে তা আপলোড করা
+      if (_coverImage != null) {
+        _coverUrl = await _novelService.uploadImage(_coverImage!, 'novel_covers');
+      }
+
       final ep = await _novelService.addEpisode(
         novelId: widget.novelId,
         title: title,
         contentBlocks: blocks,
+        coverUrl: _coverUrl,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -136,6 +157,36 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // কভার ছবি আপলোড সেকশন
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      image: _coverImage != null
+                          ? DecorationImage(
+                              image: FileImage(_coverImage!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: _coverImage == null
+                        ? const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_a_photo, size: 36, color: AppColors.primary),
+                              SizedBox(height: 8),
+                              Text('পর্বের কভার ছবি যোগ করুন (ঐচ্ছিক)', style: TextStyle(color: Colors.grey)),
+                            ],
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _titleCtrl,
                   style: const TextStyle(
