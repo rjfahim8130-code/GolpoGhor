@@ -208,12 +208,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 (c) => ActionChip(
                   label: Text(c),
                   onPressed: () => context.push(
-                    '/category/${Uri.encodeComponent(c)}',
+                    Uri(path: '/category', queryParameters: {'name': c}).toString(),
                   ),
                 ),
               )
               .toList(),
-          ),
+        ),
         const SizedBox(height: 24),
         Text(
           'লেখকের কোড বা GS-XXXX গল্প কোড লিখলে সরাসরি পাওয়া যাবে।',
