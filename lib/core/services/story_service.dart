@@ -177,4 +177,101 @@ class StoryService {
         .map((e) => StoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
-  
+    Future<StoryModel> createStory({
+    required String title,
+    String? description,
+    String? category,
+    List<String>? tags,
+    String? coverUrl,
+    required List<ContentBlockModel> contentBlocks,
+    bool isDraft = false,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final data = await _client
+        .from(SupabaseConstants.stories)
+        .insert({
+          'author_id': uid,
+          'title': title.trim(),
+          'description': description?.trim() ?? '',
+          'category': category,
+          'tags': tags ?? [],
+          'cover_url': coverUrl,
+          'content_blocks': contentBlocks.map((e) => e.toJson()).toList(),
+          'is_published': !isDraft,
+          'is_draft': isDraft,
+        })
+        .select()
+        .single();
+
+    return StoryModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<StoryModel> updateStory({
+    required String storyId,
+    String? title,
+    String? description,
+    String? category,
+    List<String>? tags,
+    String? coverUrl,
+    List<ContentBlockModel>? contentBlocks,
+    bool? isDraft,
+    bool? isPublished,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final map = <String, dynamic>{
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (title != null) map['title'] = title.trim();
+    if (description != null) map['description'] = description.trim();
+    if (category != null) map['category'] = category;
+    if (tags != null) map['tags'] = tags;
+    if (coverUrl != null) map['cover_url'] = coverUrl;
+    if (contentBlocks != null) {
+      map['content_blocks'] = contentBlocks.map((e) => e.toJson()).toList();
+    }
+    if (isDraft != null) {
+      map['is_draft'] = isDraft;
+      map['is_published'] = !isDraft;
+    }
+    if (isPublished != null) map['is_published'] = isPublished;
+
+    final data = await _client
+        .from(SupabaseConstants.stories)
+        .update(map)
+        .eq('id', storyId)
+        .eq('author_id', uid)
+        .select()
+        .single();
+
+    return StoryModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteStory(String storyId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+    await _client
+        .from(SupabaseConstants.stories)
+        .delete()
+        .eq('id', storyId)
+        .eq('author_id', uid);
+  }
+
+  Future<int> recordView(String storyId) async {
+    try {
+      final result = await _client.rpc(
+        'record_view',
+        params: {'p_type': 'story', 'p_id': storyId},
+      );
+      if (result is int) return result;
+      if (result is num) return result.toInt();
+      return 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+}
+
