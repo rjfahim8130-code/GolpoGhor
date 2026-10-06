@@ -50,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('ইমেইলে OTP পাঠানো হয়েছে — Inbox / Spam দেখুন'),
+          content: Text('ইমেইলে OTP পাঠানো হয়েছে। ইনবক্স বা Spam / প্রমোশন ফোল্ডার চেক করুন।'),
         ),
       );
     } catch (err) {
@@ -71,19 +71,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (token.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP লিখুন')),
+        const SnackBar(content: Text('সঠিক OTP কোড লিখুন')),
       );
       return;
     }
     if (p1.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর')),
+        const SnackBar(content: Text('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে')),
       );
       return;
     }
     if (p1 != p2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('দুই পাসওয়ার্ড মিলছে না')),
+        const SnackBar(content: Text('দুটি পাসওয়ার্ড মিলছে না')),
       );
       return;
     }
@@ -97,7 +97,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পাসওয়ার্ড বদলেছে — এখন লগইন করুন')),
+        const SnackBar(content: Text('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে — এখন লগইন করুন')),
       );
       context.go('/login');
     } catch (err) {
@@ -139,7 +139,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
-          'রেজিস্টার করা ইমেইল দিন। সেখানে একটি OTP কোড যাবে।',
+          'গল্পঘর অ্যাকাউন্টের রেজিস্টার করা ইমেইল দিন। সেখানে পাসওয়ার্ড রিসেট করার একটি OTP কোড পাঠানো হবে।',
+          style: TextStyle(fontSize: 14, color: Colors.black87),
         ),
         const SizedBox(height: 24),
         TextField(
@@ -147,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
           decoration: const InputDecoration(
-            labelText: 'ইমেইল',
+            labelText: 'ইমেইল এড্রেস',
             prefixIcon: Icon(Icons.email_outlined),
           ),
         ),
@@ -169,7 +170,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('OTP পাঠান'),
+                : const Text('OTP পাঠান', style: TextStyle(fontSize: 16)),
           ),
         ),
       ],
@@ -181,10 +182,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${_email.text.trim()} এ OTP পাঠানো হয়েছে',
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          '${_email.text.trim()} ইমেইলে একটি ওটিপি কোড পাঠানো হয়েছে। দয়া করে ইনবক্স চেক করুন। না পেলে Spam বা প্রমোশন ফোল্ডার দেখুন।',
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14, height: 1.4),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         TextField(
           controller: _otp,
           keyboardType: TextInputType.number,
@@ -193,7 +194,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             prefixIcon: Icon(Icons.pin_outlined),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         TextField(
           controller: _pass,
           obscureText: _obscure,
@@ -206,12 +207,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         TextField(
           controller: _pass2,
           obscureText: _obscure,
           decoration: const InputDecoration(
-            labelText: 'পাসওয়ার্ড আবার',
+            labelText: 'পাসওয়ার্ড আবার লিখুন',
             prefixIcon: Icon(Icons.lock_outline),
           ),
         ),
@@ -233,9 +234,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('পাসওয়ার্ড সেট করুন'),
+                : const Text('পাসওয়ার্ড সেট করুন', style: TextStyle(fontSize: 16)),
           ),
         ),
+        const SizedBox(height: 12),
         TextButton(
           onPressed: _loading ? null : _sendOtp,
           child: const Text('OTP আবার পাঠান'),
