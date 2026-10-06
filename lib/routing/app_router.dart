@@ -123,10 +123,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
       GoRoute(
-        path: '/category/:name',
+        path: '/category',
         name: 'category',
         builder: (_, state) {
-          final name = Uri.decodeComponent(state.pathParameters['name']!);
+          final name = state.uri.queryParameters['name'] ?? 'অন্যান্য';
           return CategoryListScreen(category: name);
         },
       ),
