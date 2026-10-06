@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/services/offline_service.dart';
@@ -109,15 +110,51 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (item.authorName != null) ...[
+              if (item.authorName != null || item.publicCode != null) ...[
                 const SizedBox(height: 6),
-                Text(
-                  item.authorName!,
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
+                Row(
+                  children: [
+                    if (item.authorName != null)
+                      Text(
+                        item.authorName!,
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                    if (item.publicCode != null) ...[
+                      if (item.authorName != null)
+                        Text(
+                          ' · ',
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      Text(
+                        item.publicCode!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.copy, size: 16),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'কোড কপি করুন',
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: item.publicCode!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('কোড কপি হয়েছে')),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
                 ),
               ],
               const SizedBox(height: 20),
