@@ -1,44 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/services/auth_service.dart';
+
 import '../../../../core/theme/app_colors.dart';
 
-class WelcomeScreen extends StatefulWidget {
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  final _auth = AuthService();
-  bool _loadingGoogle = false;
-
-  Future<void> _google() async {
-    setState(() => _loadingGoogle = true);
-    try {
-      final res = await _auth.signInWithGoogle();
-      if (!mounted) return;
-      if (res == null) {
-        setState(() => _loadingGoogle = false);
-        return;
-      }
-      final needs = await _auth.needsProfileSetup();
-      if (!mounted) return;
-      if (needs) {
-        context.go('/profile-setup');
-      } else {
-        context.go('/home');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google লগইন সমস্যা: $e')),
-        );
-        setState(() => _loadingGoogle = false);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +18,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Icon(Icons.auto_stories_rounded,
-                  size: 72, color: AppColors.primary),
+              Center(
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  height: 96,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.auto_stories_rounded,
+                    size: 72,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'গল্পঘর',
@@ -74,26 +50,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               const Spacer(),
               SizedBox(
                 height: 52,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    elevation: 1,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
-                  onPressed: _loadingGoogle ? null : _google,
-                  icon: _loadingGoogle
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.g_mobiledata, size: 28),
-                  label: const Text(
-                    'Google দিয়ে চালিয়ে যান',
+                  onPressed: () => context.push('/login'),
+                  child: const Text(
+                    'ইমেইল দিয়ে লগইন',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -109,19 +76,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () => context.push('/login'),
+                  onPressed: () => context.push('/register'),
                   child: const Text(
-                    'ইমেইল দিয়ে লগইন',
+                    'নতুন অ্যাকাউন্ট তৈরি',
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => context.push('/register'),
-                child: const Text('নতুন অ্যাকাউন্ট তৈরি'),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
             ],
           ),
         ),
