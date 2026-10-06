@@ -122,6 +122,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
+      // ক্যাটাগরি রুট (ফিক্সড কুয়েরি প্যারামিটারসহ)
       GoRoute(
         path: '/category',
         name: 'category',
