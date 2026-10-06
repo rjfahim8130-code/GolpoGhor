@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,7 +13,6 @@ class AuthService {
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
-  /// ইমেইল + পাসওয়ার্ড রেজিস্টার (ভেরিফিকেশন OFF ধরে)
   Future<AuthResponse> signUpWithEmail({
     required String email,
     required String password,
@@ -40,7 +38,7 @@ class AuthService {
     );
   }
 
-  /// Google Sign-In → Supabase
+  /// Google — আপাতত ব্যবহার হচ্ছে না; কোড রাখা আছে
   Future<AuthResponse?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(
       scopes: const ['email', 'profile'],
@@ -68,20 +66,20 @@ class AuthService {
     );
   }
 
-  /// Google ইউজার পাসওয়ার্ড সেট / পরিবর্তন
   Future<void> setPassword(String newPassword) async {
     await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
-  /// পাসওয়ার্ড রিসেট OTP পাঠায় (ইমেইলে)
+  /// ইমেইলে রিসেট OTP পাঠায় (Supabase Email)
   Future<void> sendPasswordResetOtp(String email) async {
     await _client.auth.resetPasswordForEmail(email.trim());
   }
 
-  /// পুরনো মেথডের নাম বজায় রাখতে বা ব্যাকওয়ার্ড কম্প্যাটিবিলিটির জন্য
-  Future<void> sendPasswordReset(String email) => sendPasswordResetOtp(email);
+  /// পুরনো নামের alias — ভেঙে না যাওয়ার জন্য
+  Future<void> sendPasswordReset(String email) =>
+      sendPasswordResetOtp(email);
 
-  /// OTP যাচাই + নতুন পাসওয়ার্ড সেট
+  /// OTP যাচাই + নতুন পাসওয়ার্ড
   Future<void> resetPasswordWithOtp({
     required String email,
     required String token,
@@ -92,7 +90,7 @@ class AuthService {
       token: token.trim(),
       type: OtpType.recovery,
     );
-    if (res.session == null && res.user == null) {
+    if (res.user == null && res.session == null) {
       throw Exception('OTP সঠিক নয় বা মেয়াদ শেষ');
     }
     await _client.auth.updateUser(
