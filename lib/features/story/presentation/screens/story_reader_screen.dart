@@ -74,7 +74,6 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     try {
       final story = await _storyService.getById(widget.storyId);
       if (story == null) {
-        // অফলাইন ফলব্যাক
         final offline = await _offlineService.getStory(widget.storyId);
         if (offline != null) {
           setState(() {
@@ -445,110 +444,4 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
               ),
             ],
           ),
-          if (_showControls)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Material(
-                elevation: 8,
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _BottomAction(
-                          icon: _myReaction != null
-                              ? null
-                              : Icons.favorite_border,
-                          emoji: _myReaction != null
-                              ? ReactionPicker.emoji(_myReaction)
-                              : null,
-                          label: 'রিয়্যাকশন',
-                          onTap: _pickReaction,
-                        ),
-                        _BottomAction(
-                          icon: Icons.chat_bubble_outline,
-                          label: 'কমেন্ট',
-                          onTap: _openComments,
-                        ),
-                        _BottomAction(
-                          icon: _downloading
-                              ? null
-                              : (_downloaded
-                                  ? Icons.download_done
-                                  : Icons.download_outlined),
-                          label: _downloaded ? 'সেভ আছে' : 'ডাউনলোড',
-                          onTap: _downloading ? () {} : _download,
-                          trailing: _downloading
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        _BottomAction(
-                          icon: Icons.share_outlined,
-                          label: 'শেয়ার',
-                          onTap: _share,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomAction extends StatelessWidget {
-  final IconData? icon;
-  final String? emoji;
-  final String label;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  const _BottomAction({
-    this.icon,
-    this.emoji,
-    required this.label,
-    required this.onTap,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (trailing != null)
-              trailing!
-            else if (emoji != null)
-              Text(emoji!, style: const TextStyle(fontSize: 22))
-            else
-              Icon(icon ?? Icons.circle, size: 22),
-            const SizedBox(height: 2),
-            Text(label, style: constTextStyle(fontSize: 11)),
-          ],
-        ),
-      ),
-    );
-  }
-}
+          
