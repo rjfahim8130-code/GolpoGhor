@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/user_model.dart';
+import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/follow_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -308,6 +310,39 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               if (u.isAdmin)
                 _menuTile(Icons.admin_panel_settings_outlined, 'অ্যাডমিন',
                     () => context.push('/admin')),
+              Consumer(
+                builder: (context, ref, child) {
+                  final themeMode = ref.watch(themeModeProvider);
+                  String subtitle;
+                  IconData icon;
+
+                  if (themeMode == ThemeMode.dark) {
+                    subtitle = 'ডার্ক মোড';
+                    icon = Icons.dark_mode;
+                  } else if (themeMode == ThemeMode.light) {
+                    subtitle = 'লাইট মোড';
+                    icon = Icons.light_mode;
+                  } else {
+                    subtitle = 'সিস্টেম';
+                    icon = Icons.brightness_auto;
+                  }
+
+                  return _menuTile(
+                    icon,
+                    'থিম পরিবর্তন ($subtitle)',
+                    () {
+                      final current = ref.read(themeModeProvider);
+                      if (current == ThemeMode.system) {
+                        ref.read(themeModeProvider.notifier).state = ThemeMode.light;
+                      } else if (current == ThemeMode.light) {
+                        ref.read(themeModeProvider.notifier).state = ThemeMode.dark;
+                      } else {
+                        ref.read(themeModeProvider.notifier).state = ThemeMode.system;
+                      }
+                    },
+                  );
+                },
+              ),
               const Divider(height: 32),
               _menuTile(Icons.logout, 'লগআউট', _logout, danger: true),
             ],
