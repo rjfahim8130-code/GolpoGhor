@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/comment_model.dart';
 import '../../../../core/services/auth_service.dart';
@@ -251,23 +252,37 @@ class _CommentSectionState extends State<CommentSection> {
   }) {
     return ListTile(
       dense: isReply,
-      leading: CircleAvatar(
-        radius: isReply ? 14 : 18,
-        backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-        backgroundImage:
-            c.authorAvatar != null && c.authorAvatar!.isNotEmpty
-                ? NetworkImage(c.authorAvatar!)
-                : null,
-        child: c.authorAvatar == null || c.authorAvatar!.isEmpty
-            ? Text(
-                (c.authorName ?? 'উ')[0],
-                style: const TextStyle(color: AppColors.primary, fontSize: 12),
-              )
-            : null,
+      leading: GestureDetector(
+        onTap: () {
+          if (c.userId.isNotEmpty) {
+            context.push('/user/${c.userId}');
+          }
+        },
+        child: CircleAvatar(
+          radius: isReply ? 14 : 18,
+          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+          backgroundImage:
+              c.authorAvatar != null && c.authorAvatar!.isNotEmpty
+                  ? NetworkImage(c.authorAvatar!)
+                  : null,
+          child: c.authorAvatar == null || c.authorAvatar!.isEmpty
+              ? Text(
+                  (c.authorName ?? 'উ')[0],
+                  style: const TextStyle(color: AppColors.primary, fontSize: 12),
+                )
+              : null,
+        ),
       ),
-      title: Text(
-        c.authorName ?? 'ইউজার',
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+      title: GestureDetector(
+        onTap: () {
+          if (c.userId.isNotEmpty) {
+            context.push('/user/${c.userId}');
+          }
+        },
+        child: Text(
+          c.authorName ?? 'ইউজার',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
