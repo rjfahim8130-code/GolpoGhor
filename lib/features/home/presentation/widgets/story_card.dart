@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -32,47 +33,60 @@ class StoryCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                    backgroundImage: story.authorAvatar != null &&
-                            story.authorAvatar!.isNotEmpty
-                        ? CachedNetworkImageProvider(story.authorAvatar!)
-                        : null,
-                    child: story.authorAvatar == null ||
-                            story.authorAvatar!.isEmpty
-                        ? Text(
-                            (story.authorName ?? 'গ')[0],
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          story.authorName ?? 'লেখক',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (story.authorId.isNotEmpty) {
+                          context.push('/user/${story.authorId}');
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                            backgroundImage: story.authorAvatar != null &&
+                                    story.authorAvatar!.isNotEmpty
+                                ? CachedNetworkImageProvider(story.authorAvatar!)
+                                : null,
+                            child: story.authorAvatar == null ||
+                                    story.authorAvatar!.isEmpty
+                                ? Text(
+                                    (story.authorName ?? 'গ')[0],
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
                           ),
-                        ),
-                        if (story.authorUsername != null)
-                          Text(
-                            '@${story.authorUsername}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  story.authorName ?? 'লেখক',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                if (story.authorUsername != null)
+                                  Text(
+                                    '@${story.authorUsername}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.lightTextSecondary,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   if (story.category != null)
