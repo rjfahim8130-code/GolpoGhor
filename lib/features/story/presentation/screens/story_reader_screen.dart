@@ -563,3 +563,72 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     );
   }
 }
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.lightTextSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: c),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(fontSize: 13, color: c)),
+      ],
+    );
+  }
+}
+
+class _PurpleBarBtn extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool loading;
+
+  const _PurpleBarBtn({
+    this.icon,
+    required this.label,
+    this.onTap,
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else
+              Icon(icon ?? Icons.circle, size: 22, color: Colors.white),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
