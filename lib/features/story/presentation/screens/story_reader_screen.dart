@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +39,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   bool _downloading = false;
   String? _myReaction;
   Map<String, int> _reactionCounts = {};
-  double _fontScale = 0.9;
-  bool _showControls = true;
+  double _fontScale = 0.95;
   double _progress = 0;
 
   @override
@@ -62,9 +62,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
       setState(() => _progress = 0);
       return;
     }
-    setState(() {
-      _progress = (_scroll.offset / max).clamp(0.0, 1.0);
-    });
+    setState(() => _progress = (_scroll.offset / max).clamp(0.0, 1.0));
   }
 
   Future<void> _load() async {
@@ -91,8 +89,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
         return;
       }
       final bm = await _bookmarkService.isStoryBookmarked(widget.storyId);
-      final myR =
-          await _reactionService.getMyStoryReaction(widget.storyId);
+      final myR = await _reactionService.getMyStoryReaction(widget.storyId);
       final counts =
           await _reactionService.countStoryReactions(widget.storyId);
       final dl = await _offlineService.isDownloaded(widget.storyId);
@@ -237,10 +234,8 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                   children: [
                     const Text(
                       'ফন্ট সাইজ',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -249,7 +244,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale - 0.1).clamp(0.55, 1.5);
+                              _fontScale = (_fontScale - 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -259,7 +254,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale + 0.1).clamp(0.55, 1.5);
+                              _fontScale = (_fontScale + 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -277,8 +272,20 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     );
   }
 
+  void _copyCode(String code) {
+    Clipboard.setData(ClipboardData(text: code));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('কোড কপি হয়েছে')),
+    );
+  }
+
   int get _totalReactions =>
       _reactionCounts.values.fold(0, (a, b) => a + b);
+
+  String _fmtCount(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)} হাজার';
+    return '$n';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,6 +297,8 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     if (_error != null || _story == null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
@@ -308,261 +317,248 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     }
 
     final story = _story!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Stack(
+      backgroundColor: Colors.white,
+      body: Column(
         children: [
-          const Positioned.fill(child: ReaderWatermark()),
-          CustomScrollView(
-            controller: _scroll,
-            slivers: [
-              if (_showControls)
-                SliverAppBar(
-                  pinned: true,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.pop(),
-                  ),
-                  title: Text(
-                    story.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.text_fields),
-                      onPressed: _showFontSheet,
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: _bookmarked ? AppColors.primary : null,
-                      ),
-                      onPressed: _toggleBookmark,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share_outlined),
-                      onPressed: _share,
-                    ),
-                  ],
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(3),
-                    child: LinearProgressIndicator(
-                      value: _progress,
-                      minHeight: 3,
-                      backgroundColor: Colors.transparent,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              if (!_showControls)
-                const SliverToBoxAdapter(child: SizedBox(height: 48)),
-              SliverToBoxAdapter(
-                child: GestureDetector(
-                  onTap: () => setState(() => _showControls = !_showControls),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          // ——— ফিক্সড বেগুনি টপ ———
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 48,
+                    child: Row(
                       children: [
-                        Text(
-                          story.title,
-                          style: TextStyle(
-                            fontSize: 24 * _fontScale,
-                            fontWeight: FontWeight.bold,
-                            height: 1.3,
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => context.pop(),
                         ),
-                        const SizedBox(height: 8),
-                        Row(
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                  LinearProgressIndicator(
+                    value: _progress,
+                    minHeight: 2,
+                    backgroundColor: Colors.white24,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ——— স্ক্রল কনটেন্ট ———
+          Expanded(
+            child: Stack(
+              children: [
+                const Positioned.fill(child: ReaderWatermark()),
+                ListView(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  children: [
+                    // লেখক
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (story.authorId.isNotEmpty) {
+                            context.push('/user/${story.authorId}');
+                          }
+                        },
+                        child: Column(
                           children: [
+                            CircleAvatar(
+                              radius: 36,
+                              backgroundColor:
+                                  AppColors.primary.withValues(alpha: 0.12),
+                              backgroundImage: story.authorAvatar != null &&
+                                      story.authorAvatar!.isNotEmpty
+                                  ? CachedNetworkImageProvider(
+                                      story.authorAvatar!)
+                                  : null,
+                              child: story.authorAvatar == null ||
+                                      story.authorAvatar!.isEmpty
+                                  ? Text(
+                                      (story.authorName ?? 'ল')[0],
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(height: 10),
                             Text(
                               story.authorName ?? 'লেখক',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                            if (story.publicCode != null) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                '· ${story.publicCode}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.primary.withValues(alpha: 0.9),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                icon: const Icon(Icons.copy, size: 16),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                tooltip: 'কোড কপি করুন',
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: story.publicCode!));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('কোড কপি হয়েছে')),
-                                  );
-                                },
-                              ),
-                            ],
-                            const Spacer(),
-                            Text(
-                              '${story.viewCount} দেখা',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: AppColors.lightTextSecondary,
                               ),
                             ),
                           ],
                         ),
-                        if (_totalReactions > 0) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            _reactionCounts.entries
-                                .map((e) =>
-                                    '${ReactionPicker.emoji(e.key)} ${e.value}')
-                                .join('  '),
-                            style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // নাম + কোড
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            story.title,
+                            style: TextStyle(
+                              fontSize: 24 * _fontScale,
+                              fontWeight: FontWeight.bold,
+                              height: 1.25,
+                              color: AppColors.lightText,
+                            ),
+                          ),
+                        ),
+                        if (story.publicCode != null) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _copyCode(story.publicCode!),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                story.publicCode!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
-                        const SizedBox(height: 20),
-                        SelectionContainer.disabled(
-                          child: ReaderContent(
-                            blocks: story.contentBlocks,
-                            fontScale: _fontScale,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        Text(
-                          'গল্পঘর থেকে পঠিত',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          if (_showControls)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Material(
-                elevation: 8,
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
+
+                    if (story.description.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        story.description,
+                        style: TextStyle(
+                          fontSize: 14 * _fontScale,
+                          color: AppColors.lightTextSecondary,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
-                    child: Row(
+                    const SizedBox(height: 16),
+
+                    // গল্প বডি
+                    SelectionContainer.disabled(
+                      child: ReaderContent(
+                        blocks: story.contentBlocks,
+                        fontScale: _fontScale,
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // শেষে স্ট্যাট
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _BottomAction(
-                          icon: _myReaction != null
-                              ? null
-                              : Icons.favorite_border,
-                          emoji: _myReaction != null
-                              ? ReactionPicker.emoji(_myReaction)
-                              : null,
-                          label: 'রিয়্যাকশন',
+                        _StatChip(
+                          icon: Icons.remove_red_eye_outlined,
+                          label: _fmtCount(story.viewCount),
+                        ),
+                        GestureDetector(
                           onTap: _pickReaction,
+                          child: _StatChip(
+                            icon: _myReaction != null
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            label: _fmtCount(
+                              _totalReactions > 0
+                                  ? _totalReactions
+                                  : story.reactionCount,
+                            ),
+                            color: _myReaction != null
+                                ? Colors.redAccent
+                                : null,
+                          ),
                         ),
-                        _BottomAction(
-                          icon: Icons.chat_bubble_outline,
-                          label: 'কমেন্ট',
+                        GestureDetector(
                           onTap: _openComments,
-                        ),
-                        _BottomAction(
-                          icon: _downloading
-                              ? null
-                              : (_downloaded
-                                  ? Icons.download_done
-                                  : Icons.download_outlined),
-                          label: _downloaded ? 'সেভ আছে' : 'ডাউনলোড',
-                          onTap: _downloading ? () {} : _download,
-                          trailing: _downloading
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        _BottomAction(
-                          icon: Icons.share_outlined,
-                          label: 'শেয়ার',
-                          onTap: _share,
+                          child: _StatChip(
+                            icon: Icons.chat_bubble_outline,
+                            label: _fmtCount(story.commentCount),
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ——— ফিক্সড বেগুনি বটম ———
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 56,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _PurpleBarBtn(
+                      icon: _downloading
+                          ? null
+                          : (_downloaded
+                              ? Icons.download_done
+                              : Icons.download_outlined),
+                      label: 'ডাউনলোড',
+                      onTap: _downloading ? null : _download,
+                      loading: _downloading,
+                    ),
+                    _PurpleBarBtn(
+                      icon: Icons.text_fields,
+                      label: 'টেক্সট সাইজ',
+                      onTap: _showFontSheet,
+                    ),
+                    _PurpleBarBtn(
+                      icon: _bookmarked
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
+                      label: 'বুকমার্ক',
+                      onTap: _toggleBookmark,
+                    ),
+                    _PurpleBarBtn(
+                      icon: Icons.share_outlined,
+                      label: 'শেয়ার',
+                      onTap: _share,
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomAction extends StatelessWidget {
-  final IconData? icon;
-  final String? emoji;
-  final String label;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  const _BottomAction({
-    this.icon,
-    this.emoji,
-    required this.label,
-    required this.onTap,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (trailing != null)
-              trailing!
-            else if (emoji != null)
-              Text(emoji!, style: const TextStyle(fontSize: 22))
-            else
-              Icon(icon ?? Icons.circle, size: 22),
-            const SizedBox(height: 2),
-            Text(label, style: const TextStyle(fontSize: 11)),
-          ],
-        ),
       ),
     );
   }
