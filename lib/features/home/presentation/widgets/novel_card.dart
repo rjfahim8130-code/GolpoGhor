@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -12,6 +14,11 @@ class NovelCard extends StatelessWidget {
     required this.novel,
     required this.onTap,
   });
+
+  void _openAuthor(BuildContext context) {
+    if (novel.authorId.isEmpty) return;
+    context.push('/user/${novel.authorId}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,13 +83,19 @@ class NovelCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      novel.authorName ?? 'লেখক',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                    // লেখকের নাম → প্রোফাইল
+                    GestureDetector(
+                      onTap: () => _openAuthor(context),
+                      child: Text(
+                        novel.authorName ?? 'লেখক',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary.withValues(alpha: 0.4),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
