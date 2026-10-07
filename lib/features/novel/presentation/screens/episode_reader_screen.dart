@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/episode_model.dart';
+import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
+import '../../../../core/services/offline_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../story/presentation/widgets/reader_content.dart';
 import '../../../story/presentation/widgets/reader_watermark.dart';
@@ -18,12 +21,16 @@ class EpisodeReaderScreen extends StatefulWidget {
 
 class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
   final _novelService = NovelService();
+  final _offlineService = OfflineService();
   final _scroll = ScrollController();
 
   EpisodeModel? _episode;
+  String? _novelTitle;
   List<EpisodeModel> _siblings = [];
   bool _loading = true;
   String? _error;
+  bool _downloaded = false;
+  bool _downloading = false;
   double _fontScale = 0.9;
   double _progress = 0;
 
@@ -62,9 +69,14 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
         return;
       }
       final all = await _novelService.getEpisodes(ep.novelId);
+      final novel = await _novelService.getById(ep.novelId);
+      final dl =
+          await _offlineService.isDownloaded('ep_${ep.id}');
       setState(() {
         _episode = ep;
         _siblings = all;
+        _novelTitle = novel?.title;
+        _downloaded = dl;
         _loading = false;
       });
       _novelService.recordView('episode', ep.id);
@@ -92,6 +104,62 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     return null;
   }
 
+  Future<void> _download() async {
+    final ep = _episode;
+    if (ep == null) return;
+    final offlineId = 'ep_${ep.id}';
+    if (_downloaded) {
+      await _offlineService.remove(offlineId);
+      setState(() => _downloaded = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
+        );
+      }
+      return;
+    }
+    setState(() => _downloading = true);
+    try {
+      await _offlineService.saveStory(
+        StoryModel(
+          id: offlineId,
+          authorId: ep.authorId,
+          title: '${_novelTitle ?? ''} — ${ep.title}',
+          description: 'পর্ব ${ep.chapterNumber}',
+          contentBlocks: ep.contentBlocks,
+          publicCode: ep.publicCode,
+          isPublished: true,
+          createdAt: ep.createdAt,
+        ),
+      );
+      setState(() {
+        _downloaded = true;
+        _downloading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('পর্ব অফলাইনে সেভ হয়েছে')),
+        );
+      }
+    } catch (e) {
+      setState(() => _downloading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _share() async {
+    final ep = _episode;
+    if (ep == null) return;
+    final code = ep.publicCode ?? '';
+    await Share.share(
+      '${_novelTitle ?? ''} — ${ep.title}\n'
+      'পর্ব ${ep.chapterNumber}'
+      '${code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+    );
+  }
+
   void _showFontSheet() {
     showModalBottomSheet(
       context: context,
@@ -106,10 +174,8 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                   children: [
                     const Text(
                       'ফন্ট সাইজ',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -118,7 +184,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale - 0.1).clamp(0.55, 1.5);
+                              _fontScale = (_fontScale - 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -128,7 +194,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale + 0.1).clamp(0.55, 1.5);
+                              _fontScale = (_fontScale + 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -146,6 +212,11 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     );
   }
 
+  String _fmtCount(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)} হাজার';
+    return '$n';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -156,6 +227,8 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     if (_error != null || _episode == null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
@@ -166,96 +239,182 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     }
 
     final ep = _episode!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final prev = _prev;
     final next = _next;
+    final titleText =
+        '${_novelTitle ?? 'উপন্যাস'} · পর্ব ${ep.chapterNumber}';
 
     return Scaffold(
-      body: Stack(
+      backgroundColor: Colors.white,
+      body: Column(
         children: [
-          const Positioned.fill(child: ReaderWatermark()),
-          CustomScrollView(
-            controller: _scroll,
-            slivers: [
-              SliverAppBar(
-                pinned: true,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
-                ),
-                title: Text(
-                  'পর্ব ${ep.chapterNumber}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.text_fields),
-                    onPressed: _showFontSheet,
+          // ——— ফিক্সড বেগুনি টপ ———
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 48,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => context.pop(),
+                        ),
+                        Expanded(
+                          child: Text(
+                            titleText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.list),
-                    onPressed: () => context.push('/novel/${ep.novelId}'),
+                  LinearProgressIndicator(
+                    value: _progress,
+                    minHeight: 2,
+                    backgroundColor: Colors.white24,
+                    color: Colors.white,
                   ),
                 ],
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(3),
-                  child: LinearProgressIndicator(
-                    value: _progress,
-                    minHeight: 3,
-                    backgroundColor: Colors.transparent,
-                    color: AppColors.primary,
-                  ),
-                ),
               ),
-              SliverContent(
-                episode: ep,
-                fontScale: _fontScale,
-                isDark: isDark,
-              ),
-            ],
+            ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Material(
-              elevation: 8,
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: prev == null
-                              ? null
-                              : () => context.pushReplacement(
-                                    '/episode/${prev.id}',
-                                  ),
-                          icon: const Icon(Icons.chevron_left),
-                          label: const Text('আগের'),
+
+          Expanded(
+            child: Stack(
+              children: [
+                const Positioned.fill(child: ReaderWatermark()),
+                ListView(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  children: [
+                    if (ep.title.isNotEmpty) ...[
+                      Text(
+                        ep.title,
+                        style: TextStyle(
+                          fontSize: 20 * _fontScale,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: next == null
-                              ? null
-                              : () => context.pushReplacement(
-                                    '/episode/${next.id}',
-                                  ),
-                          icon: const Icon(Icons.chevron_right),
-                          label: const Text('পরের'),
-                        ),
-                      ),
+                      const SizedBox(height: 16),
                     ],
-                  ),
+                    SelectionContainer.disabled(
+                      child: ReaderContent(
+                        blocks: ep.contentBlocks,
+                        fontScale: _fontScale,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _EpStat(
+                          icon: Icons.remove_red_eye_outlined,
+                          label: _fmtCount(ep.viewCount),
+                        ),
+                        _EpStat(
+                          icon: Icons.favorite_border,
+                          label: _fmtCount(ep.reactionCount),
+                        ),
+                        _EpStat(
+                          icon: Icons.chat_bubble_outline,
+                          label: _fmtCount(ep.commentCount),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ——— ফিক্সড বেগুনি বটম ———
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 52,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.chevron_left,
+                        color: prev == null ? Colors.white38 : Colors.white,
+                      ),
+                      onPressed: prev == null
+                          ? null
+                          : () => context.pushReplacement(
+                                '/episode/${prev.id}',
+                              ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.text_fields, color: Colors.white),
+                      onPressed: _showFontSheet,
+                    ),
+                    IconButton(
+                      icon: _downloading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              _downloaded
+                                  ? Icons.download_done
+                                  : Icons.download_outlined,
+                              color: Colors.white,
+                            ),
+                      onPressed: _downloading ? null : _download,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.list, color: Colors.white),
+                      onPressed: () =>
+                          context.push('/novel/${ep.novelId}'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline,
+                          color: Colors.white),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('পর্বের কমেন্ট শীঘ্রই আসছে'),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined,
+                          color: Colors.white),
+                      onPressed: _share,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.chevron_right,
+                        color: next == null ? Colors.white38 : Colors.white,
+                      ),
+                      onPressed: next == null
+                          ? null
+                          : () => context.pushReplacement(
+                                '/episode/${next.id}',
+                              ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -266,53 +425,27 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
   }
 }
 
-class SliverContent extends StatelessWidget {
-  final EpisodeModel episode;
-  final double fontScale;
-  final bool isDark;
+class _EpStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
 
-  const SliverContent({
-    super.key,
-    required this.episode,
-    required this.fontScale,
-    required this.isDark,
-  });
+  const _EpStat({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              episode.title,
-              style: TextStyle(
-                fontSize: 22 * fontScale,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'পর্ব ${episode.chapterNumber} · ${episode.viewCount} দেখা',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SelectionContainer.disabled(
-              child: ReaderContent(
-                blocks: episode.contentBlocks,
-                fontScale: fontScale,
-              ),
-            ),
-          ],
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: AppColors.lightTextSecondary),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.lightTextSecondary,
+          ),
         ),
-      ),
+      ],
     );
   }
 }
