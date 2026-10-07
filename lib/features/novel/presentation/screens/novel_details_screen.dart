@@ -75,8 +75,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
 
   Future<void> _toggleBookmark() async {
     try {
-      final on =
-          await _bookmarkService.toggleNovelBookmark(widget.novelId);
+      final on = await _bookmarkService.toggleNovelBookmark(widget.novelId);
       setState(() => _bookmarked = on);
     } catch (e) {
       if (mounted) {
@@ -183,12 +182,20 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            Text(
-              n.authorName ?? 'লেখক',
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+            InkWell(
+              onTap: () {
+                if (n.authorId.isNotEmpty) {
+                  context.push('/user/${n.authorId}');
+                }
+              },
+              child: Text(
+                n.authorName ?? 'লেখক',
+                style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             if (n.publicCode != null) ...[
@@ -251,8 +258,31 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       ),
                     ),
                     title: Text(e.title),
-                    subtitle: Text('${e.viewCount} দেখা'),
-                    trailing: const Icon(Icons.chevron_right),
+                    subtitle: Text(
+                      [
+                        '${e.viewCount} দেখা',
+                        if (e.publicCode != null) e.publicCode!,
+                        if (!e.isPublished || (e is EpisodeModel && false)) '',
+                      ].where((s) => s.isNotEmpty).join(' · '),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (e.publicCode != null)
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 18),
+                            onPressed: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: e.publicCode!));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('পর্বের কোড কপি')),
+                              );
+                            },
+                          ),
+                        const Icon(Icons.chevron_right),
+                      ],
+                    ),
                     onTap: () => context.push('/episode/${e.id}'),
                   ),
                 );
