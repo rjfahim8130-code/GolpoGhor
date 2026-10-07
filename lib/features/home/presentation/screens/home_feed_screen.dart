@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -31,10 +32,14 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
   int _offset = 0;
   final int _limit = 15;
 
+  String? _myAvatarUrl;
+  String? _myName;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _loadMe();
     _scroll.addListener(_onScroll);
   }
 
@@ -50,6 +55,17 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         _hasMore) {
       _loadMore();
     }
+  }
+
+  Future<void> _loadMe() async {
+    try {
+      final p = await AuthService().getMyProfile();
+      if (!mounted || p == null) return;
+      setState(() {
+        _myAvatarUrl = p.avatarUrl;
+        _myName = p.displayName;
+      });
+    } catch (_) {}
   }
 
   Future<void> _load() async {
@@ -103,35 +119,6 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     }
   }
 
-  void _showCreateSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.article_outlined),
-              title: const Text('নতুন গল্প'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-story');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.menu_book_outlined),
-              title: const Text('নতুন উপন্যাস'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-novel');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final body = _buildBody();
@@ -140,9 +127,26 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'গল্পঘর',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo_watermark.png',
+              height: 28,
+              errorBuilder: (_, __, ___) => Image.asset(
+                'assets/images/logo.png',
+                height: 28,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.auto_stories_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'গল্পঘর',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -159,9 +163,28 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/search'),
           ),
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => context.push('/profile'),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                backgroundImage: _myAvatarUrl != null && _myAvatarUrl!.isNotEmpty
+                    ? NetworkImage(_myAvatarUrl!)
+                    : null,
+                child: _myAvatarUrl == null || _myAvatarUrl!.isEmpty
+                    ? Text(
+                        (_myName ?? 'গ').isNotEmpty ? (_myName ?? 'গ')[0] : 'গ',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
           ),
         ],
       ),
