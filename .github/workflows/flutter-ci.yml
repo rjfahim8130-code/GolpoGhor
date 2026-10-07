@@ -1,4 +1,4 @@
-name: Flutter CI
+Name: Flutter CI
 
 on:
   push:
@@ -45,6 +45,9 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
         continue-on-error: true
@@ -61,3 +64,4 @@ jobs:
           name: golpoghor-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
+          
