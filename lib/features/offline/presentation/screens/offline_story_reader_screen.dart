@@ -21,7 +21,7 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
   final _service = OfflineService();
   OfflineStoryItem? _item;
   bool _loading = true;
-  double _fontScale = 1.0;
+  double _fontScale = 0.9;
 
   @override
   void initState() {
@@ -35,6 +35,60 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
       _item = item;
       _loading = false;
     });
+  }
+
+  void _showFontSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'ফন্ট সাইজ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale - 0.1).clamp(0.55, 1.5);
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_decrease),
+                        ),
+                        Text('${(_fontScale * 100).round()}%'),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale + 0.1).clamp(0.55, 1.5);
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_increase),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -73,11 +127,7 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.text_fields),
-            onPressed: () {
-              setState(() {
-                _fontScale = _fontScale >= 1.4 ? 1.0 : _fontScale + 0.15;
-              });
-            },
+            onPressed: _showFontSheet,
           ),
         ],
       ),
