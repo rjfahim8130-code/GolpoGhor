@@ -44,6 +44,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final loggedIn = auth.isLoggedIn;
       final loc = state.matchedLocation;
+
       final isAuthRoute = loc == '/welcome' ||
           loc == '/login' ||
           loc == '/register' ||
@@ -51,7 +52,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           loc == '/splash' ||
           loc == '/onboarding';
 
-      if (!loggedIn && !isAuthRoute && loc != '/profile-setup') {
+      // অফলাইন পড়া — লগইন ছাড়া
+      final isOfflineRoute =
+          loc == '/offline' || loc.startsWith('/offline-story');
+
+      if (!loggedIn &&
+          !isAuthRoute &&
+          !isOfflineRoute &&
+          loc != '/profile-setup') {
         return '/welcome';
       }
       return null;
@@ -122,7 +130,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
-      // ক্যাটাগরি রুট (ফিক্সড কুয়েরি প্যারামিটারসহ)
       GoRoute(
         path: '/category',
         name: 'category',
