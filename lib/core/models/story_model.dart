@@ -21,6 +21,7 @@ class StoryModel {
   final String? authorName;
   final String? authorUsername;
   final String? authorAvatar;
+  final int authorFollowerCount;
 
   const StoryModel({
     required this.id,
@@ -42,6 +43,7 @@ class StoryModel {
     this.authorName,
     this.authorUsername,
     this.authorAvatar,
+    this.authorFollowerCount = 0,
   });
 
   factory StoryModel.fromJson(Map<String, dynamic> json) {
@@ -86,6 +88,10 @@ class StoryModel {
       authorName: json['author_name'] as String?,
       authorUsername: json['author_username'] as String?,
       authorAvatar: json['author_avatar'] as String?,
+      authorFollowerCount:
+          (json['author_follower_count'] as num?)?.toInt() ??
+          (json['follower_count'] as num?)?.toInt() ??
+          0,
     );
   }
 }
