@@ -102,6 +102,11 @@ class _CommentSectionState extends State<CommentSection> {
     }
   }
 
+  void _openProfile(String userId) {
+    if (userId.isEmpty) return;
+    context.push('/user/$userId');
+  }
+
   List<CommentModel> get _roots =>
       _comments.where((c) => c.parentId == null).toList();
 
@@ -253,11 +258,7 @@ class _CommentSectionState extends State<CommentSection> {
     return ListTile(
       dense: isReply,
       leading: GestureDetector(
-        onTap: () {
-          if (c.userId.isNotEmpty) {
-            context.push('/user/${c.userId}');
-          }
-        },
+        onTap: () => _openProfile(c.userId),
         child: CircleAvatar(
           radius: isReply ? 14 : 18,
           backgroundColor: AppColors.primary.withValues(alpha: 0.15),
@@ -274,11 +275,7 @@ class _CommentSectionState extends State<CommentSection> {
         ),
       ),
       title: GestureDetector(
-        onTap: () {
-          if (c.userId.isNotEmpty) {
-            context.push('/user/${c.userId}');
-          }
-        },
+        onTap: () => _openProfile(c.userId),
         child: Text(
           c.authorName ?? 'ইউজার',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
