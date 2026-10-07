@@ -6,9 +6,11 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/novel_model.dart';
+import '../../../../core/models/story_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/bookmark_service.dart';
 import '../../../../core/services/novel_service.dart';
+import '../../../../core/services/offline_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class NovelDetailsScreen extends StatefulWidget {
@@ -23,12 +25,14 @@ class NovelDetailsScreen extends StatefulWidget {
 class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   final _novelService = NovelService();
   final _bookmarkService = BookmarkService();
+  final _offline = OfflineService();
   final _auth = AuthService();
 
   NovelModel? _novel;
   List<EpisodeModel> _episodes = [];
   bool _loading = true;
   bool _bookmarked = false;
+  bool _downloading = false;
   String? _error;
 
   bool get _isAuthor {
@@ -94,6 +98,49 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     );
   }
 
+  /// সব পর্ব অফলাইনে সেভ
+  Future<void> _downloadNovelOffline() async {
+    if (_episodes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('কোনো পর্ব নেই')),
+      );
+      return;
+    }
+    setState(() => _downloading = true);
+    try {
+      for (final e in _episodes) {
+        await _offline.saveStory(
+          StoryModel(
+            id: 'ep_${e.id}',
+            authorId: e.authorId,
+            title: '${_novel?.title ?? ''} — ${e.title}',
+            description: 'পর্ব ${e.chapterNumber}',
+            contentBlocks: e.contentBlocks,
+            publicCode: e.publicCode,
+            isPublished: true,
+            createdAt: e.createdAt,
+            authorName: _novel?.authorName,
+          ),
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_episodes.length} পর্ব অফলাইনে সেভ হয়েছে'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('ডাউনলোড ব্যর্থ: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -132,6 +179,17 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         ),
         actions: [
           IconButton(
+            icon: _downloading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_outlined),
+            tooltip: 'অফলাইনে সেভ',
+            onPressed: _downloading ? null : _downloadNovelOffline,
+          ),
+          IconButton(
             icon: Icon(
               _bookmarked ? Icons.bookmark : Icons.bookmark_border,
               color: _bookmarked ? AppColors.primary : null,
@@ -149,7 +207,10 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               onPressed: () => context.push('/add-episode/${n.id}'),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('পর্ব যোগ', style: TextStyle(color: Colors.white)),
+              label: const Text(
+                'পর্ব যোগ',
+                style: TextStyle(color: Colors.white),
+              ),
             )
           : null,
       body: RefreshIndicator(
@@ -174,7 +235,11 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.menu_book, size: 48, color: AppColors.primary),
+                child: const Icon(
+                  Icons.menu_book,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
               ),
             const SizedBox(height: 16),
             Text(
@@ -182,6 +247,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
+            // লেখক → প্রোফাইল
             InkWell(
               onTap: () {
                 if (n.authorId.isNotEmpty) {
@@ -191,10 +257,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               child: Text(
                 n.authorName ?? 'লেখক',
                 style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
@@ -204,7 +269,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: n.publicCode!));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('কোড কপি')),
+                    const SnackBar(content: Text('উপন্যাসের কোড কপি')),
                   );
                 },
                 child: Text(
@@ -262,8 +327,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       [
                         '${e.viewCount} দেখা',
                         if (e.publicCode != null) e.publicCode!,
-                        if (!e.isPublished || (e is EpisodeModel && false)) '',
-                      ].where((s) => s.isNotEmpty).join(' · '),
+                      ].join(' · '),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -273,10 +337,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                             icon: const Icon(Icons.copy, size: 18),
                             onPressed: () {
                               Clipboard.setData(
-                                  ClipboardData(text: e.publicCode!));
+                                ClipboardData(text: e.publicCode!),
+                              );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('পর্বের কোড কপি')),
+                                  content: Text('পর্বের কোড কপি'),
+                                ),
                               );
                             },
                           ),
