@@ -13,21 +13,18 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Spacer(),
-              Center(
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  height: 96,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.auto_stories_rounded,
-                    size: 72,
-                    color: AppColors.primary,
-                  ),
+              const SizedBox(height: 48),
+              Image.asset(
+                'assets/images/logo.png',
+                height: 88,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.auto_stories_rounded,
+                  size: 72,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -47,13 +44,11 @@ class WelcomeScreen extends StatelessWidget {
                       : AppColors.lightTextSecondary,
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => context.push('/offline'),
-                  icon: const Icon(Icons.download_done_outlined),
-                  label: const Text('অফলাইন গল্প পড়ুন'),
-                ),
+              const SizedBox(height: 20),
+              TextButton.icon(
+                onPressed: () => context.push('/offline'),
+                icon: const Icon(Icons.download_done_outlined, size: 20),
+                label: const Text('অফলাইন গল্প পড়ুন'),
               ),
               const Spacer(),
               SizedBox(
@@ -63,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   onPressed: () => context.push('/login'),
@@ -81,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   onPressed: () => context.push('/register'),
