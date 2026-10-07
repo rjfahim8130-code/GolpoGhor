@@ -163,11 +163,44 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               )
             : null,
         actions: [
-          if (_isMe)
+          if (_isMe) ...[
+            IconButton(
+              tooltip: 'লিখুন',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (ctx) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.article_outlined),
+                          title: const Text('নতুন গল্প'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            context.push('/create-story');
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.menu_book_outlined),
+                          title: const Text('নতুন উপন্যাস'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            context.push('/create-novel');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.settings_outlined),
               onPressed: () => context.push('/settings'),
             ),
+          ],
         ],
       ),
       body: RefreshIndicator(
