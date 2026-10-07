@@ -24,7 +24,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
   List<EpisodeModel> _siblings = [];
   bool _loading = true;
   String? _error;
-  double _fontScale = 1.0;
+  double _fontScale = 0.9;
   double _progress = 0;
 
   @override
@@ -92,6 +92,60 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     return null;
   }
 
+  void _showFontSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'ফন্ট সাইজ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale - 0.1).clamp(0.55, 1.5);
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_decrease),
+                        ),
+                        Text('${(_fontScale * 100).round()}%'),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale + 0.1).clamp(0.55, 1.5);
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_increase),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -136,12 +190,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.text_fields),
-                    onPressed: () {
-                      setState(() {
-                        _fontScale =
-                            _fontScale >= 1.4 ? 1.0 : _fontScale + 0.15;
-                      });
-                    },
+                    onPressed: _showFontSheet,
                   ),
                   IconButton(
                     icon: const Icon(Icons.list),
