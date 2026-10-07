@@ -47,6 +47,14 @@ class WelcomeScreen extends StatelessWidget {
                       : AppColors.lightTextSecondary,
                 ),
               ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.push('/offline'),
+                  icon: const Icon(Icons.download_done_outlined),
+                  label: const Text('অফলাইন গল্প পড়ুন'),
+                ),
+              ),
               const Spacer(),
               SizedBox(
                 height: 52,
