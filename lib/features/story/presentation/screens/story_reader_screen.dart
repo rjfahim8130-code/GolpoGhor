@@ -38,7 +38,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   bool _downloading = false;
   String? _myReaction;
   Map<String, int> _reactionCounts = {};
-  double _fontScale = 1.0;
+  double _fontScale = 0.9;
   bool _showControls = true;
   double _progress = 0;
 
@@ -242,13 +242,14 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale - 0.1).clamp(0.8, 1.6);
+                              _fontScale = (_fontScale - 0.1).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -258,7 +259,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale + 0.1).clamp(0.8, 1.6);
+                              _fontScale = (_fontScale + 0.1).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
