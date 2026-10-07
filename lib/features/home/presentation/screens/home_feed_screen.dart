@@ -166,11 +166,6 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ],
       ),
       body: body,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateSheet,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.edit, color: Colors.white),
-      ),
     );
   }
 
