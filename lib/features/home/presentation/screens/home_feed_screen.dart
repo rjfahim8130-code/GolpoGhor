@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
+import '../../../../core/models/user_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
@@ -22,6 +24,7 @@ class HomeFeedScreen extends StatefulWidget {
 class _HomeFeedScreenState extends State<HomeFeedScreen> {
   final _storyService = StoryService();
   final _novelService = NovelService();
+  final _auth = AuthService();
   final _scroll = ScrollController();
 
   final List<dynamic> _items = [];
@@ -31,9 +34,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
   String? _error;
   int _offset = 0;
   final int _limit = 15;
-
-  String? _myAvatarUrl;
-  String? _myName;
+  UserModel? _me;
 
   @override
   void initState() {
@@ -49,23 +50,19 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     super.dispose();
   }
 
+  Future<void> _loadMe() async {
+    try {
+      final p = await _auth.getMyProfile();
+      if (mounted) setState(() => _me = p);
+    } catch (_) {}
+  }
+
   void _onScroll() {
     if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 240 &&
         !_loadingMore &&
         _hasMore) {
       _loadMore();
     }
-  }
-
-  Future<void> _loadMe() async {
-    try {
-      final p = await AuthService().getMyProfile();
-      if (!mounted || p == null) return;
-      setState(() {
-        _myAvatarUrl = p.avatarUrl;
-        _myName = p.displayName;
-      });
-    } catch (_) {}
   }
 
   Future<void> _load() async {
@@ -119,6 +116,35 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     }
   }
 
+  void _showCreateSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.article_outlined),
+              title: const Text('নতুন গল্প'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/create-story');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: const Text('নতুন উপন্যাস'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/create-novel');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final body = _buildBody();
@@ -126,34 +152,36 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     if (widget.embedded) return body;
 
     return Scaffold(
+      backgroundColor: AppColors.lightBg,
       appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 8,
         title: Row(
           children: [
             Image.asset(
               'assets/images/logo_watermark.png',
               height: 28,
-              errorBuilder: (_, __, ___) => Image.asset(
-                'assets/images/logo.png',
-                height: 28,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.auto_stories_rounded,
-                  color: AppColors.primary,
-                ),
+              color: Colors.white,
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.auto_stories_rounded,
+                color: Colors.white,
+                size: 26,
               ),
             ),
             const SizedBox(width: 8),
             const Text(
               'গল্পঘর',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.explore_outlined),
-            tooltip: 'আবিষ্কার',
-            onPressed: () => context.push('/discover'),
-          ),
           IconButton(
             icon: const Icon(Icons.local_fire_department_outlined),
             tooltip: 'ট্রেন্ডিং',
@@ -169,19 +197,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
               onTap: () => context.push('/profile'),
               child: CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                backgroundImage: _myAvatarUrl != null && _myAvatarUrl!.isNotEmpty
-                    ? NetworkImage(_myAvatarUrl!)
+                backgroundColor: Colors.white24,
+                backgroundImage: _me?.avatarUrl != null &&
+                        _me!.avatarUrl!.isNotEmpty
+                    ? CachedNetworkImageProvider(_me!.avatarUrl!)
                     : null,
-                child: _myAvatarUrl == null || _myAvatarUrl!.isEmpty
-                    ? Text(
-                        (_myName ?? 'গ').isNotEmpty ? (_myName ?? 'গ')[0] : 'গ',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      )
+                child: _me?.avatarUrl == null || _me!.avatarUrl!.isEmpty
+                    ? const Icon(Icons.person, size: 18, color: Colors.white)
                     : null,
               ),
             ),
@@ -189,6 +211,11 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ],
       ),
       body: body,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateSheet,
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.edit, color: Colors.white),
+      ),
     );
   }
 
