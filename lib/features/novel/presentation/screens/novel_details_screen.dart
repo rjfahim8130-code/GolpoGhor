@@ -25,7 +25,7 @@ class NovelDetailsScreen extends StatefulWidget {
 class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   final _novelService = NovelService();
   final _bookmarkService = BookmarkService();
-  final _offline = OfflineService();
+  final _offlineService = OfflineService();
   final _auth = AuthService();
 
   NovelModel? _novel;
@@ -98,8 +98,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     );
   }
 
-  /// সব পর্ব অফলাইনে সেভ
-  Future<void> _downloadNovelOffline() async {
+  Future<void> _downloadAll() async {
     if (_episodes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('কোনো পর্ব নেই')),
@@ -109,7 +108,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     setState(() => _downloading = true);
     try {
       for (final e in _episodes) {
-        await _offline.saveStory(
+        await _offlineService.saveStory(
           StoryModel(
             id: 'ep_${e.id}',
             authorId: e.authorId,
@@ -125,20 +124,32 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_episodes.length} পর্ব অফলাইনে সেভ হয়েছে'),
-          ),
+          SnackBar(content: Text('${_episodes.length} পর্ব অফলাইনে সেভ')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ডাউনলোড ব্যর্থ: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _downloading = false);
     }
+  }
+
+  String? _episodeCover(EpisodeModel e) {
+    for (final b in e.contentBlocks) {
+      if (b.type == 'image' &&
+          b.imageUrl != null &&
+          b.imageUrl!.isNotEmpty) {
+        return b.imageUrl;
+      }
+    }
+    return null;
+  }
+
+  String _fmt(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return '$n';
   }
 
   @override
@@ -151,6 +162,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     if (_error != null || _novel == null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
@@ -169,191 +182,328 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
 
     final n = _novel!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: _downloading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.download_outlined),
-            tooltip: 'অফলাইনে সেভ',
-            onPressed: _downloading ? null : _downloadNovelOffline,
-          ),
-          IconButton(
-            icon: Icon(
-              _bookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _bookmarked ? AppColors.primary : null,
-            ),
-            onPressed: _toggleBookmark,
-          ),
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: _share,
-          ),
-        ],
-      ),
-      floatingActionButton: _isAuthor
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push('/add-episode/${n.id}'),
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'পর্ব যোগ',
-                style: TextStyle(color: Colors.white),
-              ),
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-          children: [
-            if (n.coverUrl != null && n.coverUrl!.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: CachedNetworkImage(
-                  imageUrl: n.coverUrl!,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              )
-            else
-              Container(
-                height: 140,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.menu_book,
-                  size: 48,
-                  color: AppColors.primary,
-                ),
-              ),
-            const SizedBox(height: 16),
-            Text(
-              n.title,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            // লেখক → প্রোফাইল
-            InkWell(
-              onTap: () {
-                if (n.authorId.isNotEmpty) {
-                  context.push('/user/${n.authorId}');
-                }
-              },
-              child: Text(
-                n.authorName ?? 'লেখক',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-            if (n.publicCode != null) ...[
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: n.publicCode!));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('উপন্যাসের কোড কপি')),
-                  );
-                },
-                child: Text(
-                  'কোড: ${n.publicCode}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 8),
-            Text(
-              '${n.episodeCount} পর্ব · ${n.viewCount} দেখা',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-            ),
-            if (n.description.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(n.description, style: const TextStyle(height: 1.45)),
-            ],
-            const SizedBox(height: 20),
-            const Text(
-              'পর্বসমূহ',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            if (_episodes.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('এখনো কোনো পর্ব নেই')),
-              )
-            else
-              ..._episodes.map((e) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor:
-                          AppColors.primary.withValues(alpha: 0.12),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              bottom: false,
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => context.pop(),
+                    ),
+                    const Expanded(
                       child: Text(
-                        '${e.chapterNumber}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                        'গল্পঘর উপন্যাস',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    title: Text(e.title),
-                    subtitle: Text(
-                      [
-                        '${e.viewCount} দেখা',
-                        if (e.publicCode != null) e.publicCode!,
-                      ].join(' · '),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (e.publicCode != null)
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 18),
-                            onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(text: e.publicCode!),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('পর্বের কোড কপি'),
-                                ),
-                              );
-                            },
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                children: [
+                  // লেখক
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (n.authorId.isNotEmpty) {
+                          context.push('/user/${n.authorId}');
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.12),
+                            backgroundImage: n.authorAvatar != null &&
+                                    n.authorAvatar!.isNotEmpty
+                                ? CachedNetworkImageProvider(n.authorAvatar!)
+                                : null,
+                            child: n.authorAvatar == null ||
+                                    n.authorAvatar!.isEmpty
+                                ? Text(
+                                    (n.authorName ?? 'ল')[0],
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
                           ),
-                        const Icon(Icons.chevron_right),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            n.authorName ?? 'লেখক',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    onTap: () => context.push('/episode/${e.id}'),
                   ),
-                );
-              }),
-          ],
+                  const SizedBox(height: 16),
+
+                  // কভার
+                  if (n.coverUrl != null && n.coverUrl!.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: CachedNetworkImage(
+                        imageUrl: n.coverUrl!,
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 800,
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.menu_book,
+                          size: 48, color: AppColors.primary),
+                    ),
+                  const SizedBox(height: 14),
+
+                  // নাম + কোড
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          n.title,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (n.publicCode != null)
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(
+                                ClipboardData(text: n.publicCode!));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('কোড কপি')),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              n.publicCode!,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  if (n.description.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(n.description,
+                        style: const TextStyle(height: 1.45, fontSize: 14)),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // পর্ব গ্রিড
+                  if (_episodes.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(child: Text('এখনো কোনো পর্ব নেই')),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _episodes.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.78,
+                      ),
+                      itemBuilder: (context, i) {
+                        final e = _episodes[i];
+                        final cover = _episodeCover(e);
+                        return Material(
+                          color: Colors.white,
+                          elevation: 1,
+                          borderRadius: BorderRadius.circular(12),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () => context.push('/episode/${e.id}'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: cover != null
+                                      ? CachedNetworkImage(
+                                          imageUrl: cover,
+                                          fit: BoxFit.cover,
+                                          memCacheWidth: 400,
+                                          errorWidget: (_, __, ___) =>
+                                              _epPlaceholder(e.chapterNumber),
+                                        )
+                                      : _epPlaceholder(e.chapterNumber),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                                  child: Text(
+                                    e.title.isNotEmpty
+                                        ? e.title
+                                        : 'পর্ব ${e.chapterNumber}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.remove_red_eye_outlined,
+                                          size: 12,
+                                          color: AppColors.lightTextSecondary),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        _fmt(e.viewCount),
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Icon(Icons.favorite_border,
+                                          size: 12,
+                                          color: AppColors.lightTextSecondary),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        _fmt(e.reactionCount),
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        'পড়ুন',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // নিচের বার
+          Material(
+            elevation: 8,
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: _downloading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_outlined),
+                      tooltip: 'অফলাইনে সেভ',
+                      onPressed: _downloading ? null : _downloadAll,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        color: _bookmarked ? AppColors.primary : null,
+                      ),
+                      onPressed: _toggleBookmark,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      onPressed: _share,
+                    ),
+                    const Spacer(),
+                    if (_isAuthor)
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () =>
+                            context.push('/add-episode/${n.id}'),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('পর্ব যোগ'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _epPlaceholder(int num) {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.08),
+      alignment: Alignment.center,
+      child: Text(
+        'পর্ব $num',
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
         ),
       ),
     );
