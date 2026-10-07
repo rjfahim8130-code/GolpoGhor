@@ -6,6 +6,7 @@ import '../constants/supabase_constants.dart';
 import '../models/content_block_model.dart';
 import '../models/episode_model.dart';
 import '../models/novel_model.dart';
+import 'r2_storage_service.dart';
 
 class NovelService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -103,38 +104,27 @@ class NovelService {
     return EpisodeModel.fromJson(Map<String, dynamic>.from(data));
   }
 
-  /// Supabase Storage-এ ইমেজ আপলোড করার মেথড
-  Future<String> uploadImage(dynamic imageFile, String bucketName) async {
+  /// R2 তে ছবি আপলোড (Supabase Storage নয়)
+  Future<String> uploadImage(dynamic imageFile, [String folder = 'episodes']) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
 
-    final fileName = '$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
+    File file;
     if (imageFile is File) {
-      await _client.storage.from(bucketName).upload(
-            fileName,
-            imageFile,
-            fileOptions: const FileOptions(upsert: true),
-          );
-    } else if (imageFile is Uint8List) {
-      await _client.storage.from(bucketName).uploadBinary(
-            fileName,
-            imageFile,
-            fileOptions: const FileOptions(upsert: true),
-          );
+      file = imageFile;
     } else if (imageFile is String) {
-      final file = File(imageFile);
-      await _client.storage.from(bucketName).upload(
-            fileName,
-            file,
-            fileOptions: const FileOptions(upsert: true),
-          );
+      file = File(imageFile);
+    } else if (imageFile is Uint8List) {
+      // Uint8List হ্যান্ডেল করার প্রয়োজন হলে একটি টেম্পোরারি ফাইল তৈরি করে নেওয়া যেতে পারে
+      final tempDir = Directory.systemTemp;
+      file = File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await file.writeAsBytes(imageFile);
     } else {
       throw Exception('অসমর্থিত ইমেজ ফরম্যাট');
     }
 
-    final publicUrl = _client.storage.from(bucketName).getPublicUrl(fileName);
-    return publicUrl;
+    final r2 = R2StorageService();
+    return r2.uploadImage(file: file, folder: folder);
   }
 
   Future<NovelModel> createNovel({
