@@ -19,6 +19,7 @@ class NovelModel {
   final String? authorName;
   final String? authorUsername;
   final String? authorAvatar;
+  final int authorFollowerCount;
 
   const NovelModel({
     required this.id,
@@ -40,6 +41,7 @@ class NovelModel {
     this.authorName,
     this.authorUsername,
     this.authorAvatar,
+    this.authorFollowerCount = 0,
   });
 
   factory NovelModel.fromJson(Map<String, dynamic> json) {
@@ -72,6 +74,10 @@ class NovelModel {
       authorName: json['author_name'] as String?,
       authorUsername: json['author_username'] as String?,
       authorAvatar: json['author_avatar'] as String?,
+      authorFollowerCount:
+          (json['author_follower_count'] as num?)?.toInt() ??
+          (json['follower_count'] as num?)?.toInt() ??
+          0,
     );
   }
 }
