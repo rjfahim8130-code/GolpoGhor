@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -45,7 +46,6 @@ class _StoryCardState extends State<StoryCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // হেডার
             Row(
               children: [
                 GestureDetector(
@@ -85,7 +85,7 @@ class _StoryCardState extends State<StoryCard> {
                           ),
                         ),
                         Text(
-                          '${story.authorFollowerCount} জন ফলোয়ার',
+                          '${story.authorFollowerCount} ${UiStrings.followersSuffix}',
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
@@ -116,7 +116,6 @@ class _StoryCardState extends State<StoryCard> {
               ],
             ),
             const SizedBox(height: 12),
-            // শিরোনাম
             Text(
               story.title,
               style: const TextStyle(
@@ -125,7 +124,6 @@ class _StoryCardState extends State<StoryCard> {
                 height: 1.3,
               ),
             ),
-            // বিবরণ + সি মোর
             if (desc.isNotEmpty) ...[
               const SizedBox(height: 6),
               GestureDetector(
@@ -149,7 +147,7 @@ class _StoryCardState extends State<StoryCard> {
                       ),
                       if (longDesc)
                         TextSpan(
-                          text: _expanded ? 'কম দেখুন' : 'সি মোর',
+                          text: _expanded ? 'কম দেখুন' : UiStrings.more,
                           style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -160,27 +158,26 @@ class _StoryCardState extends State<StoryCard> {
                 ),
               ),
             ],
-            // ছবি — থাকলেই
             if (story.coverUrl != null && story.coverUrl!.isNotEmpty) ...[
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: story.coverUrl!,
-                  width: double.infinity,
-                  height: 180,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 800,
-                  placeholder: (_, __) => Container(
-                    height: 120,
-                    color: AppColors.primary.withValues(alpha: 0.06),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: CachedNetworkImage(
+                    imageUrl: story.coverUrl!,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 800,
+                    placeholder: (_, __) => Container(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                    ),
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
-                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
             ],
             const SizedBox(height: 10),
-            // স্ট্যাটস + পড়ুন
             Row(
               children: [
                 Icon(Icons.visibility_outlined,
@@ -234,7 +231,7 @@ class _StoryCardState extends State<StoryCard> {
                   ),
                   onPressed: widget.onTap,
                   child: const Text(
-                    'পড়ুন',
+                    UiStrings.read,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
