@@ -508,3 +508,114 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
             ),
           ),
           
+          // ফিক্সড বেগুনি বটম
+          Material(
+            color: AppColors.primary,
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 56,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _PurpleBarBtn(
+                      icon: _downloading ? null : (_downloaded ? Icons.download_done : Icons.download_outlined),
+                      label: UiStrings.download,
+                      onTap: _downloading ? null : _download,
+                      loading: _downloading,
+                    ),
+                    _PurpleBarBtn(
+                      icon: Icons.text_fields,
+                      label: UiStrings.fontSize,
+                      onTap: _showFontSheet,
+                    ),
+                    _PurpleBarBtn(
+                      icon: _bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      label: UiStrings.bookmark,
+                      onTap: _toggleBookmark,
+                    ),
+                    _PurpleBarBtn(
+                      icon: Icons.share_outlined,
+                      label: UiStrings.share,
+                      onTap: _share,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.lightTextSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: c),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(fontSize: 13, color: c, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
+class _PurpleBarBtn extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool loading;
+
+  const _PurpleBarBtn({
+    this.icon,
+    required this.label,
+    this.onTap,
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else
+              Icon(icon ?? Icons.circle, size: 22, color: Colors.white),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
