@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/comment_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/comment_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// গল্প বা পর্ব — একটা দাও
 class CommentSection extends StatefulWidget {
   final String? storyId;
   final String? episodeId;
@@ -142,7 +142,7 @@ class _CommentSectionState extends State<CommentSection> {
           child: Row(
             children: [
               const Text(
-                'মন্তব্য',
+                UiStrings.comment,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
@@ -163,7 +163,7 @@ class _CommentSectionState extends State<CommentSection> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text('উত্তর: ${_replyToName ?? ''}'),
+                  child: Text('${UiStrings.reply}: ${_replyToName ?? ''}'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
@@ -181,7 +181,7 @@ class _CommentSectionState extends State<CommentSection> {
               : _roots.isEmpty
                   ? Center(
                       child: Text(
-                        'এখনো কোনো মন্তব্য নেই',
+                        UiStrings.noComments,
                         style: TextStyle(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -228,7 +228,7 @@ class _CommentSectionState extends State<CommentSection> {
                     minLines: 1,
                     maxLines: 4,
                     decoration: InputDecoration(
-                      hintText: 'মন্তব্য লিখুন…',
+                      hintText: UiStrings.writeComment,
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -276,9 +276,7 @@ class _CommentSectionState extends State<CommentSection> {
       dense: isReply,
       leading: GestureDetector(
         onTap: () {
-          if (c.userId.isNotEmpty) {
-            context.push('/user/${c.userId}');
-          }
+          if (c.userId.isNotEmpty) context.push('/user/${c.userId}');
         },
         child: CircleAvatar(
           radius: isReply ? 14 : 18,
@@ -297,9 +295,7 @@ class _CommentSectionState extends State<CommentSection> {
       ),
       title: GestureDetector(
         onTap: () {
-          if (c.userId.isNotEmpty) {
-            context.push('/user/${c.userId}');
-          }
+          if (c.userId.isNotEmpty) context.push('/user/${c.userId}');
         },
         child: Text(
           c.authorName ?? 'ইউজার',
@@ -322,7 +318,9 @@ class _CommentSectionState extends State<CommentSection> {
                 ),
                 onPressed: () => _like(c),
                 child: Text(
-                  c.likeCount > 0 ? 'পছন্দ ${c.likeCount}' : 'পছন্দ',
+                  c.likeCount > 0
+                      ? '${UiStrings.like} ${c.likeCount}'
+                      : UiStrings.like,
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -339,7 +337,7 @@ class _CommentSectionState extends State<CommentSection> {
                       _replyToName = c.authorName;
                     });
                   },
-                  child: const Text('উত্তর', style: TextStyle(fontSize: 12)),
+                  child: const Text(UiStrings.reply, style: TextStyle(fontSize: 12)),
                 ),
               if (myId == c.userId)
                 TextButton(
