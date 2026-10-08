@@ -6,10 +6,16 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/comment_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
+/// গল্প বা পর্ব — একটা দাও
 class CommentSection extends StatefulWidget {
-  final String storyId;
+  final String? storyId;
+  final String? episodeId;
 
-  const CommentSection({super.key, required this.storyId});
+  const CommentSection({
+    super.key,
+    this.storyId,
+    this.episodeId,
+  }) : assert(storyId != null || episodeId != null);
 
   @override
   State<CommentSection> createState() => _CommentSectionState();
@@ -27,6 +33,8 @@ class _CommentSectionState extends State<CommentSection> {
   String? _replyToId;
   String? _replyToName;
 
+  bool get _isEpisode => widget.episodeId != null;
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +51,9 @@ class _CommentSectionState extends State<CommentSection> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final list = await _service.getStoryComments(widget.storyId);
+      final list = _isEpisode
+          ? await _service.getEpisodeComments(widget.episodeId!)
+          : await _service.getStoryComments(widget.storyId!);
       setState(() {
         _comments = list;
         _loading = false;
@@ -58,11 +68,19 @@ class _CommentSectionState extends State<CommentSection> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await _service.addStoryComment(
-        storyId: widget.storyId,
-        body: text,
-        parentId: _replyToId,
-      );
+      if (_isEpisode) {
+        await _service.addEpisodeComment(
+          episodeId: widget.episodeId!,
+          body: text,
+          parentId: _replyToId,
+        );
+      } else {
+        await _service.addStoryComment(
+          storyId: widget.storyId!,
+          body: text,
+          parentId: _replyToId,
+        );
+      }
       _controller.clear();
       setState(() {
         _replyToId = null;
@@ -93,18 +111,17 @@ class _CommentSectionState extends State<CommentSection> {
 
   Future<void> _delete(CommentModel c) async {
     try {
-      await _service.deleteComment(c.id, storyId: widget.storyId);
+      await _service.deleteComment(
+        c.id,
+        storyId: widget.storyId,
+        episodeId: widget.episodeId,
+      );
       await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
-  }
-
-  void _openProfile(String userId) {
-    if (userId.isEmpty) return;
-    context.push('/user/$userId');
   }
 
   List<CommentModel> get _roots =>
@@ -125,7 +142,7 @@ class _CommentSectionState extends State<CommentSection> {
           child: Row(
             children: [
               const Text(
-                'কমেন্ট',
+                'মন্তব্য',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
@@ -146,7 +163,7 @@ class _CommentSectionState extends State<CommentSection> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text('রিপ্লাই: ${_replyToName ?? ''}'),
+                  child: Text('উত্তর: ${_replyToName ?? ''}'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
@@ -164,7 +181,7 @@ class _CommentSectionState extends State<CommentSection> {
               : _roots.isEmpty
                   ? Center(
                       child: Text(
-                        'এখনো কোনো কমেন্ট নেই',
+                        'এখনো কোনো মন্তব্য নেই',
                         style: TextStyle(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -211,7 +228,7 @@ class _CommentSectionState extends State<CommentSection> {
                     minLines: 1,
                     maxLines: 4,
                     decoration: InputDecoration(
-                      hintText: 'কমেন্ট লিখুন…',
+                      hintText: 'মন্তব্য লিখুন…',
                       isDense: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -258,7 +275,11 @@ class _CommentSectionState extends State<CommentSection> {
     return ListTile(
       dense: isReply,
       leading: GestureDetector(
-        onTap: () => _openProfile(c.userId),
+        onTap: () {
+          if (c.userId.isNotEmpty) {
+            context.push('/user/${c.userId}');
+          }
+        },
         child: CircleAvatar(
           radius: isReply ? 14 : 18,
           backgroundColor: AppColors.primary.withValues(alpha: 0.15),
@@ -275,7 +296,11 @@ class _CommentSectionState extends State<CommentSection> {
         ),
       ),
       title: GestureDetector(
-        onTap: () => _openProfile(c.userId),
+        onTap: () {
+          if (c.userId.isNotEmpty) {
+            context.push('/user/${c.userId}');
+          }
+        },
         child: Text(
           c.authorName ?? 'ইউজার',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
@@ -297,7 +322,7 @@ class _CommentSectionState extends State<CommentSection> {
                 ),
                 onPressed: () => _like(c),
                 child: Text(
-                  c.likeCount > 0 ? 'লাইক ${c.likeCount}' : 'লাইক',
+                  c.likeCount > 0 ? 'পছন্দ ${c.likeCount}' : 'পছন্দ',
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -314,7 +339,7 @@ class _CommentSectionState extends State<CommentSection> {
                       _replyToName = c.authorName;
                     });
                   },
-                  child: const Text('রিপ্লাই', style: TextStyle(fontSize: 12)),
+                  child: const Text('উত্তর', style: TextStyle(fontSize: 12)),
                 ),
               if (myId == c.userId)
                 TextButton(
