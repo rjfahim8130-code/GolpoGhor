@@ -167,6 +167,9 @@ class OfflineService {
     await _setIds(ids);
   }
 
+  /// অ্যালিয়াস — রিডার/লিস্ট দুটোই removeStory নামে ডাকতে পারবে
+  Future<void> removeStory(String storyId) => remove(storyId);
+
   Future<void> clearAll() async {
     final ids = await _ids();
     for (final id in ids) {
