@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/auth_service.dart';
+import '../core/utils/network_check.dart';
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -53,7 +54,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           loc == '/splash' ||
           loc == '/onboarding';
 
-      // অফলাইন পড়া — লগইন ছাড়া
+      // অফলাইন — লগইন ছাড়াও ঢোকা যাবে
       final isOfflineRoute =
           loc == '/offline' || loc.startsWith('/offline-story');
 
@@ -66,49 +67,116 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', name: 'splash', builder: (_, __) => const _SplashGate()),
-      GoRoute(path: '/onboarding', name: 'onboarding', builder: (_, __) => const OnboardingScreen()),
-      GoRoute(path: '/welcome', name: 'welcome', builder: (_, __) => const WelcomeScreen()),
-      GoRoute(path: '/login', name: 'login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', name: 'register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/forgot-password', name: 'forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
-      GoRoute(path: '/profile-setup', name: 'profile-setup', builder: (_, __) => const ProfileSetupScreen()),
-      GoRoute(path: '/home', name: 'home', builder: (_, __) => const HomeFeedScreen()),
-      GoRoute(path: '/discover', name: 'discover', builder: (_, __) => const DiscoverScreen()),
-      GoRoute(path: '/search', name: 'search', builder: (_, __) => const SearchScreen()),
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (_, __) => const _SplashGate(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (_, __) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/welcome',
+        name: 'welcome',
+        builder: (_, __) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
+        builder: (_, __) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/profile-setup',
+        name: 'profile-setup',
+        builder: (_, __) => const ProfileSetupScreen(),
+      ),
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        builder: (_, __) => const HomeFeedScreen(),
+      ),
+      GoRoute(
+        path: '/discover',
+        name: 'discover',
+        builder: (_, __) => const DiscoverScreen(),
+      ),
+      GoRoute(
+        path: '/popular',
+        name: 'popular',
+        builder: (_, __) => const PopularScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        name: 'search',
+        builder: (_, __) => const SearchScreen(),
+      ),
       GoRoute(
         path: '/story/:id',
         name: 'story',
-        builder: (_, state) => StoryReaderScreen(storyId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            StoryReaderScreen(storyId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/create-story', name: 'create-story', builder: (_, __) => const CreateStoryScreen()),
+      GoRoute(
+        path: '/create-story',
+        name: 'create-story',
+        builder: (_, __) => const CreateStoryScreen(),
+      ),
       GoRoute(
         path: '/edit-story/:id',
         name: 'edit-story',
-        builder: (_, state) => EditStoryScreen(storyId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            EditStoryScreen(storyId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/drafts', name: 'drafts', builder: (_, __) => const DraftsScreen()),
+      GoRoute(
+        path: '/drafts',
+        name: 'drafts',
+        builder: (_, __) => const DraftsScreen(),
+      ),
       GoRoute(
         path: '/novel/:id',
         name: 'novel',
-        builder: (_, state) => NovelDetailsScreen(novelId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            NovelDetailsScreen(novelId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/create-novel', name: 'create-novel', builder: (_, __) => const CreateNovelScreen()),
+      GoRoute(
+        path: '/create-novel',
+        name: 'create-novel',
+        builder: (_, __) => const CreateNovelScreen(),
+      ),
       GoRoute(
         path: '/episode/:id',
         name: 'episode',
-        builder: (_, state) => EpisodeReaderScreen(episodeId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            EpisodeReaderScreen(episodeId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/add-episode/:novelId',
         name: 'add-episode',
-        builder: (_, state) => AddEpisodeScreen(novelId: state.pathParameters['novelId']!),
+        builder: (_, state) =>
+            AddEpisodeScreen(novelId: state.pathParameters['novelId']!),
       ),
-      GoRoute(path: '/profile', name: 'profile', builder: (_, __) => const UserProfileScreen()),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (_, __) => const UserProfileScreen(),
+      ),
       GoRoute(
         path: '/user/:id',
         name: 'user',
-        builder: (_, state) => UserProfileScreen(userId: state.pathParameters['id']!),
+        builder: (_, state) =>
+            UserProfileScreen(userId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/follows/:userId/:mode',
@@ -119,22 +187,47 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return FollowListScreen(userId: userId, mode: mode);
         },
       ),
-      GoRoute(path: '/edit-profile', name: 'edit-profile', builder: (_, __) => const EditProfileScreen()),
-      GoRoute(path: '/set-password', name: 'set-password', builder: (_, __) => const SetPasswordScreen()),
-      GoRoute(path: '/my-works', name: 'my-works', builder: (_, __) => const MyWorksScreen()),
-      GoRoute(path: '/saved', name: 'saved', builder: (_, __) => const SavedStoriesScreen()),
-      GoRoute(path: '/offline', name: 'offline', builder: (_, __) => const OfflineDownloadsScreen()),
+      GoRoute(
+        path: '/edit-profile',
+        name: 'edit-profile',
+        builder: (_, __) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/set-password',
+        name: 'set-password',
+        builder: (_, __) => const SetPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/my-works',
+        name: 'my-works',
+        builder: (_, __) => const MyWorksScreen(),
+      ),
+      GoRoute(
+        path: '/saved',
+        name: 'saved',
+        builder: (_, __) => const SavedStoriesScreen(),
+      ),
+      GoRoute(
+        path: '/offline',
+        name: 'offline',
+        builder: (_, __) => const OfflineDownloadsScreen(),
+      ),
       GoRoute(
         path: '/offline-story/:id',
         name: 'offline-story',
-        builder: (_, state) => OfflineStoryReaderScreen(storyId: state.pathParameters['id']!),
+        builder: (_, state) => OfflineStoryReaderScreen(
+          storyId: state.pathParameters['id']!,
+        ),
       ),
-      GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
       GoRoute(
-        path: '/popular',
-        name: 'popular',
-        builder: (_, __) => const PopularScreen(),
+        path: '/settings',
+        name: 'settings',
+        builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/trending',
+        name: 'trending',
+        builder: (_, __) => const TrendingScreen(),
       ),
       GoRoute(
         path: '/category',
@@ -144,11 +237,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CategoryListScreen(category: name);
         },
       ),
-      GoRoute(path: '/admin', name: 'admin', builder: (_, __) => const AdminDashboardScreen()),
+      GoRoute(
+        path: '/admin',
+        name: 'admin',
+        builder: (_, __) => const AdminDashboardScreen(),
+      ),
       GoRoute(
         path: '/legal/:type',
         name: 'legal',
-        builder: (_, state) => LegalScreen(type: state.pathParameters['type'] ?? 'terms'),
+        builder: (_, state) =>
+            LegalScreen(type: state.pathParameters['type'] ?? 'terms'),
       ),
     ],
   );
@@ -160,6 +258,7 @@ class _AuthRefresh extends ChangeNotifier {
   }
 }
 
+/// স্প্ল্যাশ: অনলাইন → হোম/অথ; অফলাইন → অফলাইন ডাউনলোড (আটকাবে না)
 class _SplashGate extends StatefulWidget {
   const _SplashGate();
 
@@ -175,18 +274,53 @@ class _SplashGateState extends State<_SplashGate> {
   }
 
   Future<void> _go() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    // খুব ছোট ডিলে — শুধু UI ফ্লিকার কমাতে
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
+
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     final auth = AuthService();
+
+    // ১) নেট চেক — সর্বোচ্চ \~২.৫ সেকেন্ড
+    final online = await NetworkCheck.isOnline();
+
+    if (!online) {
+      // ডাটা বন্ধ → সরাসরি অফলাইন লিস্ট (লগইন থাকুক বা না থাকুক)
+      if (!mounted) return;
+      context.go('/offline');
+      return;
+    }
+
+    // ২) অনলাইন + লগইন নেই
     if (!auth.isLoggedIn) {
+      if (!mounted) return;
       context.go(onboardingDone ? '/welcome' : '/onboarding');
       return;
     }
-    final needs = await auth.needsProfileSetup();
+
+    // ৩) অনলাইন + লগইন আছে
+    // প্রোফাইল সেটআপ — লোকাল ক্যাশ আগে; নেট কল টাইমআউটসহ
+    final cachedSetup = prefs.getBool('profile_setup_done') ?? false;
+    if (cachedSetup) {
+      if (!mounted) return;
+      context.go('/home');
+      return;
+    }
+
+    bool needsSetup = false;
+    try {
+      needsSetup = await auth
+          .needsProfileSetup()
+          .timeout(const Duration(seconds: 4));
+      await prefs.setBool('profile_setup_done', !needsSetup);
+    } catch (_) {
+      // নেট ধীর/ফেল → হোমে যাও, আটকাবে না
+      needsSetup = false;
+    }
+
     if (!mounted) return;
-    context.go(needs ? '/profile-setup' : '/home');
+    context.go(needsSetup ? '/profile-setup' : '/home');
   }
 
   @override
@@ -196,9 +330,17 @@ class _SplashGateState extends State<_SplashGate> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('গল্পঘর', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            Text(
+              'গল্পঘর',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 24),
             CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'লোড হচ্ছে…',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
           ],
         ),
       ),
