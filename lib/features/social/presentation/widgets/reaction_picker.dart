@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/ui_strings.dart';
 
 class ReactionPicker {
   static const Map<String, String> labels = {
@@ -26,7 +26,7 @@ class ReactionPicker {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'রিয়্যাকশন',
+                  UiStrings.reaction,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
