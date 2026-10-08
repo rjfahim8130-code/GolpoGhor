@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -155,7 +156,6 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
         );
       },
     ).then((_) async {
-      // কমেন্ট কাউন্ট রিফ্রেশ
       try {
         final ep = await _novelService.getEpisodeById(widget.episodeId);
         if (ep != null && mounted) {
@@ -199,7 +199,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('পর্ব অফলাইনে সংরক্ষিত')),
+          const SnackBar(content: Text(UiStrings.episodeSaved)),
         );
       }
     } catch (e) {
@@ -234,7 +234,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'অক্ষরের আকার',
+                      UiStrings.fontSize,
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
@@ -378,7 +378,6 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
-                    // এই পর্বের আলাদা স্ট্যাট
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -435,7 +434,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.text_fields, color: Colors.white),
-                      tooltip: 'অক্ষরের আকার',
+                      tooltip: UiStrings.fontSize,
                       onPressed: _showFontSheet,
                     ),
                     IconButton(
@@ -454,7 +453,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                                   : Icons.download_outlined,
                               color: Colors.white,
                             ),
-                      tooltip: 'সংরক্ষণ',
+                      tooltip: UiStrings.download,
                       onPressed: _downloading ? null : _download,
                     ),
                     IconButton(
@@ -465,7 +464,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                     IconButton(
                       icon: const Icon(Icons.chat_bubble_outline,
                           color: Colors.white),
-                      tooltip: 'মন্তব্য',
+                      tooltip: UiStrings.comment,
                       onPressed: _openComments,
                     ),
                     IconButton(
@@ -475,7 +474,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                             : Icons.favorite_border,
                         color: Colors.white,
                       ),
-                      tooltip: 'পছন্দ',
+                      tooltip: UiStrings.reaction,
                       onPressed: _pickReaction,
                     ),
                     IconButton(
