@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
@@ -418,7 +419,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        'পড়ুন',
+                                        UiStrings.read,
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
@@ -482,7 +483,10 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                         onPressed: () =>
                             context.push('/add-episode/${n.id}'),
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('পর্ব যোগ'),
+                        label: const Text(
+                          UiStrings.addEpisode,
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                   ],
                 ),
