@@ -633,4 +633,3 @@ class _PurpleBarBtn extends StatelessWidget {
     );
   }
 }
-
