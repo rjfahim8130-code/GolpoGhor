@@ -85,7 +85,8 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale - 0.08).clamp(0.55, 1.5);
+                              _fontScale =
+                                  (_fontScale - 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -95,7 +96,8 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale + 0.08).clamp(0.55, 1.5);
+                              _fontScale =
+                                  (_fontScale + 0.08).clamp(0.55, 1.5);
                             });
                             setModal(() {});
                           },
@@ -121,6 +123,34 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
       '${item.title}\n\nগল্পঘরে অফলাইনে পড়ুন'
       '${code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
     );
+  }
+
+  Future<void> _deleteOffline() async {
+    final item = _item;
+    if (item == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('অফলাইন থেকে মুছবেন?'),
+        content: Text(item.title),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('না'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('মুছুন'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    await _service.remove(widget.storyId);
+    if (!mounted) return;
+    context.pop();
   }
 
   @override
@@ -157,7 +187,6 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
       backgroundColor: bg,
       body: Column(
         children: [
-          // ফিক্সড বেগুনি টপ বার (আগের ও মূল রিডার স্ক্রিনের মতো)
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -169,7 +198,8 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(Icons.arrow_back,
+                              color: Colors.white),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
@@ -197,8 +227,6 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
               ),
             ),
           ),
-
-          // মাঝের কনটেন্ট ও ওয়াটারমার্ক
           Expanded(
             child: Stack(
               children: [
@@ -207,11 +235,13 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                   children: [
-                    Container(
+                    Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
@@ -235,7 +265,8 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                         height: 1.25,
                       ),
                     ),
-                    if (item.authorName != null || item.publicCode != null) ...[
+                    if (item.authorName != null ||
+                        item.publicCode != null) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -246,12 +277,14 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                             ),
                           if (item.publicCode != null) ...[
                             if (item.authorName != null)
-                              Text(' · ', style: TextStyle(color: textSecondary)),
+                              Text(' · ',
+                                  style: TextStyle(color: textSecondary)),
                             Text(
                               item.publicCode!,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary.withValues(alpha: 0.9),
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.9),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -263,10 +296,12 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                               tooltip: 'কোড কপি করুন',
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: item.publicCode!));
+                                  ClipboardData(text: item.publicCode!),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('কোড কপি হয়েছে')),
+                                    content: Text('কোড কপি হয়েছে'),
+                                  ),
                                 );
                               },
                             ),
@@ -286,8 +321,6 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
               ],
             ),
           ),
-
-          // ফিক্সড বেগুনি বটম বার (শুধু ফন্ট সাইজ এবং শেয়ার বাটন — কোনো লাইক/কমেন্ট বা রিপোর্ট নেই)
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -306,6 +339,11 @@ class _OfflineStoryReaderScreenState extends State<OfflineStoryReaderScreen> {
                       icon: Icons.share_outlined,
                       label: UiStrings.share,
                       onTap: _share,
+                    ),
+                    _PurpleBarBtn(
+                      icon: Icons.delete_outline,
+                      label: 'মুছুন',
+                      onTap: _deleteOffline,
                     ),
                   ],
                 ),
