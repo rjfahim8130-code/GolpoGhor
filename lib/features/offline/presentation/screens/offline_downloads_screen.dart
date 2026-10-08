@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/offline_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/network_check.dart';
 
 class OfflineDownloadsScreen extends StatefulWidget {
   const OfflineDownloadsScreen({super.key});
@@ -66,6 +68,23 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
+          // অনলাইনে যাওয়ার বাটন
+          IconButton(
+            icon: const Icon(Icons.wifi),
+            tooltip: 'অনলাইন চেষ্টা',
+            onPressed: () async {
+              final online = await NetworkCheck.isOnline();
+              if (!context.mounted) return;
+              if (online) {
+                final auth = AuthService();
+                context.go(auth.isLoggedIn ? '/home' : '/welcome');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('এখনো নেট নেই')),
+                );
+              }
+            },
+          ),
           if (_items.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
