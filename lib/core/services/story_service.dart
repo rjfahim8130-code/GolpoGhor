@@ -70,6 +70,29 @@ class StoryService {
         .toList();
   }
 
+  Future<List<StoryModel>> getPopular({int limit = 40}) async {
+    final data = await _client
+        .from(SupabaseConstants.stories)
+        .select('''
+          *,
+          profiles:author_id (
+            full_name,
+            username,
+            avatar_url
+          )
+        ''')
+        .eq('is_published', true)
+        .eq('is_draft', false)
+        .order('reaction_count', ascending: false)
+        .limit(limit);
+
+    return (data as List)
+        .map((e) => StoryModel.fromJson(
+              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
+            ))
+        .toList();
+  }
+
   Future<List<StoryModel>> getByCategory(String category, {int limit = 30}) async {
     final data = await _client
         .from(SupabaseConstants.stories)
@@ -177,7 +200,8 @@ class StoryService {
         .map((e) => StoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
-    Future<StoryModel> createStory({
+
+  Future<StoryModel> createStory({
     required String title,
     String? description,
     String? category,
