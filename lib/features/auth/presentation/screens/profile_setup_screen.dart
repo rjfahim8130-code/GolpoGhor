@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -53,6 +54,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         bio: _bio.text,
         profileSetupDone: true,
       );
+      
+      // দ্রুত পরের স্টার্টের জন্য লোকাল ক্যাশ আপডেট
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('profile_setup_done', true);
+
       if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
