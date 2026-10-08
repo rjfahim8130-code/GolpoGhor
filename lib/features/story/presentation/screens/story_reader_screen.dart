@@ -91,8 +91,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
       }
       final bm = await _bookmarkService.isStoryBookmarked(widget.storyId);
       final myR = await _reactionService.getMyStoryReaction(widget.storyId);
-      final counts =
-          await _reactionService.countStoryReactions(widget.storyId);
+      final counts = await _reactionService.countStoryReactions(widget.storyId);
       final dl = await _offlineService.isDownloaded(widget.storyId);
       setState(() {
         _story = story;
@@ -181,8 +180,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
         storyId: widget.storyId,
         reactionType: type,
       );
-      final counts =
-          await _reactionService.countStoryReactions(widget.storyId);
+      final counts = await _reactionService.countStoryReactions(widget.storyId);
       setState(() {
         _myReaction = result;
         _reactionCounts = counts;
@@ -235,8 +233,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                   children: [
                     const Text(
                       UiStrings.fontSize,
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -280,8 +277,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     );
   }
 
-  int get _totalReactions =>
-      _reactionCounts.values.fold(0, (a, b) => a + b);
+  int get _totalReactions => _reactionCounts.values.fold(0, (a, b) => a + b);
 
   String _fmtCount(int n) {
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)} হাজার';
@@ -290,13 +286,20 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final textPrimary = isDark ? AppColors.darkText : AppColors.lightText;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_error != null || _story == null) {
       return Scaffold(
+        backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -309,7 +312,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_error ?? 'সমস্যা'),
+              Text(_error ?? 'সমস্যা', style: TextStyle(color: textPrimary)),
               TextButton(onPressed: _load, child: const Text('আবার')),
             ],
           ),
@@ -320,10 +323,10 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     final story = _story!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       body: Column(
         children: [
-          // ——— ফিক্সড বেগুনি টপ ———
+          // ফিক্সড বেগুনি টপ
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -353,7 +356,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
             ),
           ),
 
-          // ——— স্ক্রল কনটেন্ট ———
+          // মাঝ — থিম অনুযায়ী + ওয়াটারমার্ক
           Expanded(
             child: Stack(
               children: [
@@ -362,7 +365,6 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                   children: [
-                    // লেখক
                     Center(
                       child: GestureDetector(
                         onTap: () {
@@ -374,15 +376,11 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                           children: [
                             CircleAvatar(
                               radius: 36,
-                              backgroundColor:
-                                  AppColors.primary.withValues(alpha: 0.12),
-                              backgroundImage: story.authorAvatar != null &&
-                                      story.authorAvatar!.isNotEmpty
-                                  ? CachedNetworkImageProvider(
-                                      story.authorAvatar!)
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                              backgroundImage: story.authorAvatar != null && story.authorAvatar!.isNotEmpty
+                                  ? CachedNetworkImageProvider(story.authorAvatar!)
                                   : null,
-                              child: story.authorAvatar == null ||
-                                      story.authorAvatar!.isEmpty
+                              child: story.authorAvatar == null || story.authorAvatar!.isEmpty
                                   ? Text(
                                       (story.authorName ?? 'ল')[0],
                                       style: const TextStyle(
@@ -396,9 +394,10 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                             const SizedBox(height: 10),
                             Text(
                               story.authorName ?? 'লেখক',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
-                                color: AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w600,
+                                color: textPrimary,
                               ),
                             ),
                           ],
@@ -406,8 +405,6 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // নাম + কোড
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -418,7 +415,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                               fontSize: 24 * _fontScale,
                               fontWeight: FontWeight.bold,
                               height: 1.25,
-                              color: AppColors.lightText,
+                              color: textPrimary,
                             ),
                           ),
                         ),
@@ -426,14 +423,19 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => _copyCode(story.publicCode!),
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 6),
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                               child: Text(
                                 story.publicCode!,
                                 style: const TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -441,20 +443,18 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         ],
                       ],
                     ),
-
                     if (story.description.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         story.description,
                         style: TextStyle(
                           fontSize: 14 * _fontScale,
-                          color: AppColors.lightTextSecondary,
-                          height: 1.4,
+                          color: textSecondary,
+                          height: 1.45,
                         ),
                       ),
                     ],
-
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Center(
                       child: Container(
                         width: 6,
@@ -466,39 +466,29 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // গল্প বডি
                     SelectionContainer.disabled(
                       child: ReaderContent(
                         blocks: story.contentBlocks,
                         fontScale: _fontScale,
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // শেষে স্ট্যাট
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _StatChip(
                           icon: Icons.remove_red_eye_outlined,
                           label: _fmtCount(story.viewCount),
+                          color: textSecondary,
                         ),
                         GestureDetector(
                           onTap: _pickReaction,
                           child: _StatChip(
-                            icon: _myReaction != null
-                                ? Icons.favorite
-                                : Icons.favorite_border,
+                            icon: _myReaction != null ? Icons.favorite : Icons.favorite_border,
                             label: _fmtCount(
-                              _totalReactions > 0
-                                  ? _totalReactions
-                                  : story.reactionCount,
+                              _totalReactions > 0 ? _totalReactions : story.reactionCount,
                             ),
-                            color: _myReaction != null
-                                ? Colors.redAccent
-                                : null,
+                            color: _myReaction != null ? Colors.redAccent : textSecondary,
                           ),
                         ),
                         GestureDetector(
@@ -506,6 +496,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                           child: _StatChip(
                             icon: Icons.chat_bubble_outline,
                             label: _fmtCount(story.commentCount),
+                            color: textSecondary,
                           ),
                         ),
                       ],
@@ -516,120 +507,4 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
               ],
             ),
           ),
-                    // ——— ফিক্সড বেগুনি বটম ———
-          Material(
-            color: AppColors.primary,
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _PurpleBarBtn(
-                      icon: _downloading
-                          ? null
-                          : (_downloaded
-                              ? Icons.download_done
-                              : Icons.download_outlined),
-                      label: UiStrings.download,
-                      onTap: _downloading ? null : _download,
-                      loading: _downloading,
-                    ),
-                    _PurpleBarBtn(
-                      icon: Icons.text_fields,
-                      label: UiStrings.fontSize,
-                      onTap: _showFontSheet,
-                    ),
-                    _PurpleBarBtn(
-                      icon: _bookmarked
-                          ? Icons.bookmark
-                          : Icons.bookmark_border,
-                      label: UiStrings.bookmark,
-                      onTap: _toggleBookmark,
-                    ),
-                    _PurpleBarBtn(
-                      icon: Icons.share_outlined,
-                      label: UiStrings.share,
-                      onTap: _share,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _StatChip({
-    required this.icon,
-    required this.label,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? AppColors.lightTextSecondary;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: c),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 13, color: c)),
-      ],
-    );
-  }
-}
-
-class _PurpleBarBtn extends StatelessWidget {
-  final IconData? icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool loading;
-
-  const _PurpleBarBtn({
-    this.icon,
-    required this.label,
-    this.onTap,
-    this.loading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (loading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            else
-              Icon(icon ?? Icons.circle, size: 22, color: Colors.white),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 10, color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+          
