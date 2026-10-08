@@ -22,7 +22,7 @@ class ReaderContent extends StatelessWidget {
           'heading2' => 20.0,
           'emphasis' => 17.0,
           'quote' => 16.0,
-          _ => 16.0,
+          _ => 16.5,
         };
 
     final size = baseSize * fontScale;
@@ -30,10 +30,11 @@ class ReaderContent extends StatelessWidget {
             b.style == 'heading1' ||
             b.style == 'heading2' ||
             b.style == 'emphasis'
-        ? FontWeight.bold
-        : FontWeight.normal;
+        ? FontWeight.w700
+        : FontWeight.w500;
     final italic = b.italic || b.style == 'quote';
 
+    // স্পষ্ট কনট্রাস্ট — ব্লার/ম্লান নয়
     final color = isDark ? AppColors.darkText : AppColors.lightText;
 
     TextStyle style;
@@ -43,7 +44,7 @@ class ReaderContent extends StatelessWidget {
           fontSize: size,
           fontWeight: weight,
           fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-          height: 1.7,
+          height: 1.75,
           color: color,
         );
         break;
@@ -52,7 +53,7 @@ class ReaderContent extends StatelessWidget {
           fontSize: size * 1.05,
           fontWeight: weight,
           fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-          height: 1.8,
+          height: 1.85,
           color: color,
         );
         break;
@@ -61,7 +62,7 @@ class ReaderContent extends StatelessWidget {
           fontSize: size,
           fontWeight: weight,
           fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-          height: 1.7,
+          height: 1.75,
           color: color,
         );
     }
@@ -73,9 +74,14 @@ class ReaderContent extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (blocks.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
-        child: Text('কোনো কনটেন্ট নেই'),
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'কোনো কনটেন্ট নেই',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
       );
     }
 
@@ -83,18 +89,26 @@ class ReaderContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: blocks.map((b) {
         if (b.type == 'image' && b.imageUrl != null && b.imageUrl!.isNotEmpty) {
+          // সবসময় ১৬:৯, পূর্ণ প্রস্থ, পাশে ফাঁকা নেই
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                imageUrl: b.imageUrl!,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  height: 180,
-                  color: AppColors.primary.withValues(alpha: 0.08),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CachedNetworkImage(
+                  imageUrl: b.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  placeholder: (_, __) => Container(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    child: const Icon(Icons.broken_image_outlined),
+                  ),
                 ),
-                errorWidget: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           );
@@ -103,9 +117,8 @@ class ReaderContent extends StatelessWidget {
         final text = b.text ?? '';
         if (text.isEmpty) return const SizedBox.shrink();
 
-        final align = b.align == 'center'
-            ? TextAlign.center
-            : TextAlign.start;
+        final align =
+            b.align == 'center' ? TextAlign.center : TextAlign.start;
 
         Widget child = Text(
           text,
