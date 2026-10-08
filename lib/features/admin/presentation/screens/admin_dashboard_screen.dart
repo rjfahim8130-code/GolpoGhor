@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/admin_service.dart';
+import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -14,10 +15,13 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final _admin = AdminService();
+  final _reportService = ReportService();
+  
   bool _loading = true;
   bool _allowed = false;
   Map<String, int> _stats = {};
   List<StoryModel> _stories = [];
+  List<Map<String, dynamic>> _reports = [];
 
   @override
   void initState() {
@@ -37,10 +41,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
     final stats = await _admin.stats();
     final stories = await _admin.recentStories();
+    
+    List<Map<String, dynamic>> reports = [];
+    try {
+      reports = await _reportService.listOpen();
+    } catch (_) {
+      reports = [];
+    }
+
     setState(() {
       _allowed = true;
       _stats = stats;
       _stories = stories;
+      _reports = reports;
       _loading = false;
     });
   }
@@ -119,6 +132,47 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 _statCard('কমেন্ট', '${_stats['comments'] ?? 0}'),
               ],
             ),
+            if (_reports.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const Text(
+                'খোলা রিপোর্ট',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ..._reports.map((r) {
+                final type = '${r['target_type'] ?? ''}';
+                final id = '${r['target_id'] ?? ''}';
+                final reason = '${r['reason'] ?? ''}';
+                return Card(
+                  child: ListTile(
+                    title: Text('ধরন: $type', maxLines: 1),
+                    subtitle: Text(reason, maxLines: 3),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (v) async {
+                        final rid = r['id']?.toString();
+                        if (rid == null) return;
+                        if (v == 'reviewed') {
+                          await _reportService.markReviewed(rid);
+                        }
+                        if (v == 'dismiss') {
+                          await _reportService.dismiss(rid);
+                        }
+                        await _init();
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'reviewed', child: Text('রিভিউড')),
+                        PopupMenuItem(value: 'dismiss', child: Text('বাতিল')),
+                      ],
+                    ),
+                    onTap: () {
+                      if (type == 'story') context.push('/story/$id');
+                      if (type == 'episode') context.push('/episode/$id');
+                      if (type == 'novel') context.push('/novel/$id');
+                    },
+                  ),
+                );
+              }),
+            ],
             const SizedBox(height: 24),
             const Text(
               'সাম্প্রতিক গল্প (মডারেশন)',
