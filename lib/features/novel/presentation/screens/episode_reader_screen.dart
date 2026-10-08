@@ -174,7 +174,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
       setState(() => _downloaded = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('সংরক্ষণ সরানো হয়েছে')),
+          const SnackBar(content: Text(UiStrings.downloadRemoved)),
         );
       }
       return;
@@ -280,13 +280,21 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final textPrimary = isDark ? AppColors.darkText : AppColors.lightText;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_error != null || _episode == null) {
       return Scaffold(
+        backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -295,7 +303,9 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
             onPressed: () => context.pop(),
           ),
         ),
-        body: Center(child: Text(_error ?? 'সমস্যা')),
+        body: Center(
+          child: Text(_error ?? 'সমস্যা', style: TextStyle(color: textPrimary)),
+        ),
       );
     }
 
@@ -308,7 +318,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
         _totalReactions > 0 ? _totalReactions : ep.reactionCount;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       body: Column(
         children: [
           Material(
@@ -367,6 +377,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                           fontSize: 20 * _fontScale,
                           fontWeight: FontWeight.bold,
                           height: 1.3,
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -378,12 +389,14 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
+                    // শুধু কনটেন্টের শেষে — বটম বারে নয়
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _EpStat(
                           icon: Icons.remove_red_eye_outlined,
                           label: _fmtCount(ep.viewCount),
+                          color: textSecondary,
                         ),
                         GestureDetector(
                           onTap: _pickReaction,
@@ -394,7 +407,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                             label: _fmtCount(reactionTotal),
                             color: _myReaction != null
                                 ? Colors.redAccent
-                                : null,
+                                : textSecondary,
                           ),
                         ),
                         GestureDetector(
@@ -402,6 +415,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                           child: _EpStat(
                             icon: Icons.chat_bubble_outline,
                             label: _fmtCount(_commentCount),
+                            color: textSecondary,
                           ),
                         ),
                       ],
@@ -412,6 +426,8 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
             ),
           ),
 
+          // বেগুনি বটম: আগের · আকার · ডাউনলোড · তালিকা · শেয়ার · পরের
+          // (❤️ / 💬 নেই — overflow ঠিক)
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -426,6 +442,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         Icons.chevron_left,
                         color: prev == null ? Colors.white38 : Colors.white,
                       ),
+                      tooltip: 'আগের পর্ব',
                       onPressed: prev == null
                           ? null
                           : () => context.pushReplacement(
@@ -462,24 +479,8 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                       onPressed: () => context.push('/novel/${ep.novelId}'),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.chat_bubble_outline,
-                          color: Colors.white),
-                      tooltip: UiStrings.comment,
-                      onPressed: _openComments,
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _myReaction != null
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: Colors.white,
-                      ),
-                      tooltip: UiStrings.reaction,
-                      onPressed: _pickReaction,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share_outlined,
-                          color: Colors.white),
+                      icon: const Icon(Icons.share_outlined, color: Colors.white),
+                      tooltip: UiStrings.share,
                       onPressed: _share,
                     ),
                     IconButton(
@@ -487,6 +488,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         Icons.chevron_right,
                         color: next == null ? Colors.white38 : Colors.white,
                       ),
+                      tooltip: 'পরের পর্ব',
                       onPressed: next == null
                           ? null
                           : () => context.pushReplacement(
@@ -523,7 +525,10 @@ class _EpStat extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: c),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 13, color: c)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: c, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }
