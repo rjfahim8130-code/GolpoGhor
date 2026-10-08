@@ -11,6 +11,7 @@ import '../../../../core/services/reaction_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../social/presentation/widgets/comment_section.dart';
 import '../../../social/presentation/widgets/reaction_picker.dart';
+import '../../../social/presentation/widgets/report_sheet.dart';
 import '../../../story/presentation/widgets/reader_content.dart';
 import '../../../story/presentation/widgets/reader_watermark.dart';
 
@@ -117,8 +118,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     return null;
   }
 
-  int get _totalReactions =>
-      _reactionCounts.values.fold(0, (a, b) => a + b);
+  int get _totalReactions => _reactionCounts.values.fold(0, (a, b) => a + b);
 
   Future<void> _pickReaction() async {
     final type = await ReactionPicker.show(context);
@@ -128,8 +128,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
         episodeId: widget.episodeId,
         reactionType: type,
       );
-      final counts =
-          await _reactionService.countEpisodeReactions(widget.episodeId);
+      final counts = await _reactionService.countEpisodeReactions(widget.episodeId);
       setState(() {
         _myReaction = result;
         _reactionCounts = counts;
@@ -235,8 +234,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                   children: [
                     const Text(
                       UiStrings.fontSize,
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -283,8 +281,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final textPrimary = isDark ? AppColors.darkText : AppColors.lightText;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     if (_loading) {
       return Scaffold(
@@ -312,10 +309,8 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     final ep = _episode!;
     final prev = _prev;
     final next = _next;
-    final titleText =
-        '${_novelTitle ?? 'উপন্যাস'} · পর্ব ${ep.chapterNumber}';
-    final reactionTotal =
-        _totalReactions > 0 ? _totalReactions : ep.reactionCount;
+    final titleText = '${_novelTitle ?? 'উপন্যাস'} · পর্ব ${ep.chapterNumber}';
+    final reactionTotal = _totalReactions > 0 ? _totalReactions : ep.reactionCount;
 
     return Scaffold(
       backgroundColor: bg,
@@ -332,8 +327,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon:
-                              const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
@@ -347,6 +341,18 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.flag_outlined, color: Colors.white),
+                          tooltip: 'রিপোর্ট',
+                          onPressed: () {
+                            ReportSheet.show(
+                              context,
+                              targetType: 'episode',
+                              targetId: widget.episodeId,
+                              title: 'পর্ব রিপোর্ট',
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -389,7 +395,6 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
-                    // শুধু কনটেন্টের শেষে — বটম বারে নয়
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -401,13 +406,9 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         GestureDetector(
                           onTap: _pickReaction,
                           child: _EpStat(
-                            icon: _myReaction != null
-                                ? Icons.favorite
-                                : Icons.favorite_border,
+                            icon: _myReaction != null ? Icons.favorite : Icons.favorite_border,
                             label: _fmtCount(reactionTotal),
-                            color: _myReaction != null
-                                ? Colors.redAccent
-                                : textSecondary,
+                            color: _myReaction != null ? Colors.redAccent : textSecondary,
                           ),
                         ),
                         GestureDetector(
@@ -426,8 +427,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
             ),
           ),
 
-          // বেগুনি বটম: আগের · আকার · ডাউনলোড · তালিকা · শেয়ার · পরের
-          // (❤️ / 💬 নেই — overflow ঠিক)
+          // বেগুনি বটম বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -443,11 +443,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         color: prev == null ? Colors.white38 : Colors.white,
                       ),
                       tooltip: 'আগের পর্ব',
-                      onPressed: prev == null
-                          ? null
-                          : () => context.pushReplacement(
-                                '/episode/${prev.id}',
-                              ),
+                      onPressed: prev == null ? null : () => context.pushReplacement('/episode/${prev.id}'),
                     ),
                     IconButton(
                       icon: const Icon(Icons.text_fields, color: Colors.white),
@@ -465,9 +461,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                               ),
                             )
                           : Icon(
-                              _downloaded
-                                  ? Icons.download_done
-                                  : Icons.download_outlined,
+                              _downloaded ? Icons.download_done : Icons.download_outlined,
                               color: Colors.white,
                             ),
                       tooltip: UiStrings.download,
@@ -489,11 +483,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                         color: next == null ? Colors.white38 : Colors.white,
                       ),
                       tooltip: 'পরের পর্ব',
-                      onPressed: next == null
-                          ? null
-                          : () => context.pushReplacement(
-                                '/episode/${next.id}',
-                              ),
+                      onPressed: next == null ? null : () => context.pushReplacement('/episode/${next.id}'),
                     ),
                   ],
                 ),
