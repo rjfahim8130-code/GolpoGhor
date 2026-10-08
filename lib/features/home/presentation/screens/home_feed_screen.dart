@@ -116,43 +116,16 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     }
   }
 
-  void _showCreateSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.article_outlined),
-              title: const Text('নতুন গল্প'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-story');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.menu_book_outlined),
-              title: const Text('নতুন উপন্যাস'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-novel');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final body = _buildBody();
 
     if (widget.embedded) return body;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -184,7 +157,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.local_fire_department_outlined),
-            tooltip: 'ট্রেন্ডিং',
+            tooltip: 'জনপ্রিয়',
             onPressed: () => context.push('/trending'),
           ),
           IconButton(
@@ -211,11 +184,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ],
       ),
       body: body,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateSheet,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.edit, color: Colors.white),
-      ),
+      // FAB নেই — লেখা শুধু প্রোফাইল থেকে
     );
   }
 
@@ -261,7 +230,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
       onRefresh: _load,
       child: ListView.builder(
         controller: _scroll,
-        padding: const EdgeInsets.only(top: 8, bottom: 88),
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
         itemCount: _items.length + (_loadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= _items.length) {
