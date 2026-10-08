@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -84,7 +85,7 @@ class _NovelCardState extends State<NovelCard> {
                           ),
                         ),
                         Text(
-                          '${novel.authorFollowerCount} জন ফলোয়ার',
+                          '${novel.authorFollowerCount} ${UiStrings.followersSuffix}',
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
@@ -100,14 +101,14 @@ class _NovelCardState extends State<NovelCard> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.15),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
                     'উপন্যাস',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.accent,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -146,7 +147,7 @@ class _NovelCardState extends State<NovelCard> {
                       ),
                       if (longDesc)
                         TextSpan(
-                          text: _expanded ? 'কম দেখুন' : 'সি মোর',
+                          text: _expanded ? 'কম দেখুন' : UiStrings.more,
                           style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -161,17 +162,18 @@ class _NovelCardState extends State<NovelCard> {
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: novel.coverUrl!,
-                  width: double.infinity,
-                  height: 180,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 800,
-                  placeholder: (_, __) => Container(
-                    height: 120,
-                    color: AppColors.primary.withValues(alpha: 0.06),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: CachedNetworkImage(
+                    imageUrl: novel.coverUrl!,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 800,
+                    placeholder: (_, __) => Container(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                    ),
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
-                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
             ],
@@ -240,7 +242,7 @@ class _NovelCardState extends State<NovelCard> {
                   ),
                   onPressed: widget.onTap,
                   child: const Text(
-                    'পড়ুন',
+                    UiStrings.read,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
