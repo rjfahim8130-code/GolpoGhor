@@ -1,4 +1,4 @@
-/// গল্পঘর — UI শব্দতালিকা (এক জায়গায় সব লেবেল)
+/// গল্পঘর — অফিসিয়াল UI শব্দতালিকা
 class UiStrings {
   static const more = 'আরও';
   static const trending = 'ট্রেন্ডিং';
@@ -8,7 +8,7 @@ class UiStrings {
   static const share = 'শেয়ার';
   static const reaction = 'প্রতিক্রিয়া';
   static const follower = 'ফলোয়ার';
-  static const followersCount = 'জন ফলোয়ার'; // যেমন: ০ জন ফলোয়ার
+  static const followersSuffix = 'জন ফলোয়ার';
   static const read = 'পড়ুন';
   static const addEpisode = 'পর্ব যোগ করুন';
   static const fontSize = 'লেখার আকার';
@@ -17,4 +17,13 @@ class UiStrings {
   static const comment = 'মন্তব্য';
   static const reply = 'উত্তর';
   static const like = 'পছন্দ';
+
+  // সহায়ক বাক্য
+  static const downloadRemoved = 'ডাউনলোড সরানো হয়েছে';
+  static const downloadSaved = 'অফলাইনে ডাউনলোড হয়েছে';
+  static const bookmarkOn = 'বুকমার্ক করা হয়েছে';
+  static const bookmarkOff = 'বুকমার্ক সরানো হয়েছে';
+  static const noComments = 'এখনো কোনো মন্তব্য নেই';
+  static const writeComment = 'মন্তব্য লিখুন…';
+  static const episodeSaved = 'পর্ব অফলাইনে ডাউনলোড হয়েছে';
 }
