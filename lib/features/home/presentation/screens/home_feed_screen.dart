@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/ui_strings.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
@@ -156,8 +157,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.local_fire_department_outlined),
+            icon: const Icon(Icons.star_outline),
             tooltip: 'জনপ্রিয়',
+            onPressed: () => context.push('/popular'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.local_fire_department_outlined),
+            tooltip: UiStrings.trending,
             onPressed: () => context.push('/trending'),
           ),
           IconButton(
