@@ -115,7 +115,6 @@ class NovelService {
     } else if (imageFile is String) {
       file = File(imageFile);
     } else if (imageFile is Uint8List) {
-      // Uint8List হ্যান্ডেল করার প্রয়োজন হলে একটি টেম্পোরারি ফাইল তৈরি করে নেওয়া যেতে পারে
       final tempDir = Directory.systemTemp;
       file = File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await file.writeAsBytes(imageFile);
@@ -166,7 +165,6 @@ class NovelService {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
 
-    // শুধু নিজের উপন্যাসে পর্ব যোগ করার অনুমতি চেক
     final novel = await _client
         .from(SupabaseConstants.novels)
         .select('author_id')
@@ -218,5 +216,37 @@ class NovelService {
     } catch (_) {
       return 0;
     }
+  }
+
+  /// পুরো উপন্যাস এবং তার আওতাধীন সব পর্ব ডিলিট করার মেথড
+  Future<void> deleteNovel(String novelId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    // প্রথমে উপন্যাসের সব পর্ব ডিলিট করা
+    await _client
+        .from(SupabaseConstants.episodes)
+        .delete()
+        .eq('novel_id', novelId)
+        .eq('author_id', uid);
+
+    // এরপর মূল উপন্যাসটি ডিলিট করা
+    await _client
+        .from(SupabaseConstants.novels)
+        .delete()
+        .eq('id', novelId)
+        .eq('author_id', uid);
+  }
+
+  /// নির্দিষ্ট কোনো পর্ব ডিলিট করার মেথড
+  Future<void> deleteEpisode(String episodeId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    await _client
+        .from(SupabaseConstants.episodes)
+        .delete()
+        .eq('id', episodeId)
+        .eq('author_id', uid);
   }
 }
