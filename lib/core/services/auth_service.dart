@@ -1,4 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -151,6 +152,11 @@ class AuthService {
         .select()
         .single();
 
+    if (profileSetupDone == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('profile_setup_done', true);
+    }
+
     return UserModel.fromJson(Map<String, dynamic>.from(data));
   }
 
@@ -161,6 +167,9 @@ class AuthService {
       'profile_setup_done': true,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', uid);
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('profile_setup_done', true);
   }
 
   Future<bool> needsProfileSetup() async {
