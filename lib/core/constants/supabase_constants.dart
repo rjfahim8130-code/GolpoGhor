@@ -15,4 +15,5 @@ class SupabaseConstants {
   static const String readingProgress = 'reading_progress';
   static const String contentViews = 'content_views';
   static const String appSettings = 'app_settings';
+  static const String reports = 'reports'; // নতুন যোগ করা হলো
 }
