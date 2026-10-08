@@ -6,7 +6,10 @@ import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/offline_service.dart';
+import '../../../../core/services/reaction_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../social/presentation/widgets/comment_section.dart';
+import '../../../social/presentation/widgets/reaction_picker.dart';
 import '../../../story/presentation/widgets/reader_content.dart';
 import '../../../story/presentation/widgets/reader_watermark.dart';
 
@@ -22,6 +25,7 @@ class EpisodeReaderScreen extends StatefulWidget {
 class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
   final _novelService = NovelService();
   final _offlineService = OfflineService();
+  final _reactionService = ReactionService();
   final _scroll = ScrollController();
 
   EpisodeModel? _episode;
@@ -31,6 +35,9 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
   String? _error;
   bool _downloaded = false;
   bool _downloading = false;
+  String? _myReaction;
+  Map<String, int> _reactionCounts = {};
+  int _commentCount = 0;
   double _fontScale = 0.9;
   double _progress = 0;
 
@@ -70,13 +77,18 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
       }
       final all = await _novelService.getEpisodes(ep.novelId);
       final novel = await _novelService.getById(ep.novelId);
-      final dl =
-          await _offlineService.isDownloaded('ep_${ep.id}');
+      final dl = await _offlineService.isDownloaded('ep_${ep.id}');
+      final myR = await _reactionService.getMyEpisodeReaction(ep.id);
+      final counts = await _reactionService.countEpisodeReactions(ep.id);
+
       setState(() {
         _episode = ep;
         _siblings = all;
         _novelTitle = novel?.title;
         _downloaded = dl;
+        _myReaction = myR;
+        _reactionCounts = counts;
+        _commentCount = ep.commentCount;
         _loading = false;
       });
       _novelService.recordView('episode', ep.id);
@@ -104,6 +116,55 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     return null;
   }
 
+  int get _totalReactions =>
+      _reactionCounts.values.fold(0, (a, b) => a + b);
+
+  Future<void> _pickReaction() async {
+    final type = await ReactionPicker.show(context);
+    if (type == null) return;
+    try {
+      final result = await _reactionService.toggleEpisodeReaction(
+        episodeId: widget.episodeId,
+        reactionType: type,
+      );
+      final counts =
+          await _reactionService.countEpisodeReactions(widget.episodeId);
+      setState(() {
+        _myReaction = result;
+        _reactionCounts = counts;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  void _openComments() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SizedBox(
+          height: MediaQuery.of(ctx).size.height * 0.75,
+          child: CommentSection(episodeId: widget.episodeId),
+        );
+      },
+    ).then((_) async {
+      // কমেন্ট কাউন্ট রিফ্রেশ
+      try {
+        final ep = await _novelService.getEpisodeById(widget.episodeId);
+        if (ep != null && mounted) {
+          setState(() => _commentCount = ep.commentCount);
+        }
+      } catch (_) {}
+    });
+  }
+
   Future<void> _download() async {
     final ep = _episode;
     if (ep == null) return;
@@ -113,7 +174,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
       setState(() => _downloaded = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
+          const SnackBar(content: Text('সংরক্ষণ সরানো হয়েছে')),
         );
       }
       return;
@@ -138,7 +199,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('পর্ব অফলাইনে সেভ হয়েছে')),
+          const SnackBar(content: Text('পর্ব অফলাইনে সংরক্ষিত')),
         );
       }
     } catch (e) {
@@ -173,7 +234,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'ফন্ট সাইজ',
+                      'অক্ষরের আকার',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
@@ -243,12 +304,13 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
     final next = _next;
     final titleText =
         '${_novelTitle ?? 'উপন্যাস'} · পর্ব ${ep.chapterNumber}';
+    final reactionTotal =
+        _totalReactions > 0 ? _totalReactions : ep.reactionCount;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // ——— ফিক্সড বেগুনি টপ ———
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -316,6 +378,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
+                    // এই পর্বের আলাদা স্ট্যাট
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -323,13 +386,24 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                           icon: Icons.remove_red_eye_outlined,
                           label: _fmtCount(ep.viewCount),
                         ),
-                        _EpStat(
-                          icon: Icons.favorite_border,
-                          label: _fmtCount(ep.reactionCount),
+                        GestureDetector(
+                          onTap: _pickReaction,
+                          child: _EpStat(
+                            icon: _myReaction != null
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            label: _fmtCount(reactionTotal),
+                            color: _myReaction != null
+                                ? Colors.redAccent
+                                : null,
+                          ),
                         ),
-                        _EpStat(
-                          icon: Icons.chat_bubble_outline,
-                          label: _fmtCount(ep.commentCount),
+                        GestureDetector(
+                          onTap: _openComments,
+                          child: _EpStat(
+                            icon: Icons.chat_bubble_outline,
+                            label: _fmtCount(_commentCount),
+                          ),
                         ),
                       ],
                     ),
@@ -339,7 +413,6 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
             ),
           ),
 
-          // ——— ফিক্সড বেগুনি বটম ———
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -362,6 +435,7 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.text_fields, color: Colors.white),
+                      tooltip: 'অক্ষরের আকার',
                       onPressed: _showFontSheet,
                     ),
                     IconButton(
@@ -380,23 +454,29 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
                                   : Icons.download_outlined,
                               color: Colors.white,
                             ),
+                      tooltip: 'সংরক্ষণ',
                       onPressed: _downloading ? null : _download,
                     ),
                     IconButton(
                       icon: const Icon(Icons.list, color: Colors.white),
-                      onPressed: () =>
-                          context.push('/novel/${ep.novelId}'),
+                      tooltip: 'পর্ব তালিকা',
+                      onPressed: () => context.push('/novel/${ep.novelId}'),
                     ),
                     IconButton(
                       icon: const Icon(Icons.chat_bubble_outline,
                           color: Colors.white),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('পর্বের কমেন্ট শীঘ্রই আসছে'),
-                          ),
-                        );
-                      },
+                      tooltip: 'মন্তব্য',
+                      onPressed: _openComments,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _myReaction != null
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'পছন্দ',
+                      onPressed: _pickReaction,
                     ),
                     IconButton(
                       icon: const Icon(Icons.share_outlined,
@@ -428,23 +508,23 @@ class _EpisodeReaderScreenState extends State<EpisodeReaderScreen> {
 class _EpStat extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color? color;
 
-  const _EpStat({required this.icon, required this.label});
+  const _EpStat({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? AppColors.lightTextSecondary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: AppColors.lightTextSecondary),
+        Icon(icon, size: 20, color: c),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.lightTextSecondary,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 13, color: c)),
       ],
     );
   }
