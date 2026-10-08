@@ -7,7 +7,6 @@ class ReportService {
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  /// targetType: story | episode | novel | user | comment
   Future<void> submit({
     required String targetType,
     required String targetId,
@@ -15,7 +14,6 @@ class ReportService {
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
-
     final text = reason.trim();
     if (text.length < 5) throw Exception('কারণ কমপক্ষে ৫ অক্ষর লিখুন');
 
@@ -26,5 +24,29 @@ class ReportService {
       'reason': text,
       'status': 'open',
     });
+  }
+
+  Future<List<Map<String, dynamic>>> listOpen({int limit = 50}) async {
+    final rows = await _client
+        .from(SupabaseConstants.reports)
+        .select()
+        .eq('status', 'open')
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  Future<void> markReviewed(String reportId) async {
+    await _client
+        .from(SupabaseConstants.reports)
+        .update({'status': 'reviewed'})
+        .eq('id', reportId);
+  }
+
+  Future<void> dismiss(String reportId) async {
+    await _client
+        .from(SupabaseConstants.reports)
+        .update({'status': 'dismissed'})
+        .eq('id', reportId);
   }
 }
