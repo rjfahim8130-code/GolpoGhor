@@ -9,7 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/r2_constants.dart';
 import 'media_compress_service.dart';
 
-/// R2 কনফিগ না থাকলে Supabase Storage `story-images` ফলব্যাক।
+/// শুধু Cloudflare R2 — Supabase Storage ফলব্যাক নেই
 class R2StorageService {
   final _compress = MediaCompressService();
   final _supabase = Supabase.instance.client;
@@ -18,24 +18,21 @@ class R2StorageService {
     required File file,
     String folder = 'stories',
   }) async {
-    final uid = _supabase.auth.currentUser?.id ?? 'anon';
-    final bytes = await _compress.compressImageFile(file);
-    final path = '$folder/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    if (R2Constants.isConfigured) {
-      await _putR2(path, bytes, contentType: 'image/jpeg');
-      return '${R2Constants.publicBaseUrl}/$path';
+    if (!R2Constants.isConfigured) {
+      throw Exception(
+        'Cloudflare R2 কনফিগ নেই। '
+        'APK বিল্ডে R2_ACCESS_KEY ও R2_SECRET_KEY (dart-define / GitHub Secrets) দিন।',
+      );
     }
 
-    await _supabase.storage.from('story-images').uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
-        );
-    return _supabase.storage.from('story-images').getPublicUrl(path);
+    final uid = _supabase.auth.currentUser?.id ?? 'anon';
+    final bytes = await _compress.compressImageFile(file);
+    
+    // পাথ (Path) এর সিনট্যাক্স ভুলটি এখানে ঠিক করা হয়েছে
+    final path = '$folder/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    await _putR2(path, bytes, contentType: 'image/jpeg');
+    return '${R2Constants.publicBaseUrl}/$path';
   }
 
   Future<String> uploadAvatar(File file) async {
@@ -51,24 +48,23 @@ class R2StorageService {
     final secretKey = R2Constants.secretAccessKey;
     final bucket = R2Constants.bucketName;
     final host = '${R2Constants.accountId}.r2.cloudflarestorage.com';
-    final method = 'PUT';
-    final service = 's3';
-    final region = 'auto';
+    const method = 'PUT';
+    const service = 's3';
+    const region = 'auto';
+
     final now = DateTime.now().toUtc();
+    String two(int n) => n.toString().padLeft(2, '0');
     final amzDate =
-        '${now.year.toString().padLeft(4, '0')}'
-        '${now.month.toString().padLeft(2, '0')}'         '${now.day.toString().padLeft(2, '0')}T'
-        '${now.hour.toString().padLeft(2, '0')}'
-        '${now.minute.toString().padLeft(2, '0')}'         '${now.second.toString().padLeft(2, '0')}Z';
-    final dateStamp =
-        '${now.year.toString().padLeft(4, '0')}'
-        '${now.month.toString().padLeft(2, '0')}'         '${now.day.toString().padLeft(2, '0')}';
+        '${now.year}${two(now.month)}${two(now.day)}T'
+        '${two(now.hour)}${two(now.minute)}${two(now.second)}Z';
+    final dateStamp = '${now.year}${two(now.month)}${two(now.day)}';
 
     final payloadHash = sha256.convert(body).toString();
     final canonicalUri = '/$bucket/$objectKey';
     final canonicalHeaders =
-        'content-type:$contentType\nhost:$host\nx-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
-    final signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
+        'content-type:$contentType\nhost:$host\n'
+        'x-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
+    const signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
     final canonicalRequest = [
       method,
       canonicalUri,
@@ -87,8 +83,7 @@ class R2StorageService {
     ].join('\n');
 
     List<int> hmacSha256(List<int> key, String data) {
-      final hmac = Hmac(sha256, key);
-      return hmac.convert(utf8.encode(data)).bytes;
+      return Hmac(sha256, key).convert(utf8.encode(data)).bytes;
     }
 
     final kDate = hmacSha256(utf8.encode('AWS4$secretKey'), dateStamp);
@@ -116,7 +111,7 @@ class R2StorageService {
     );
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('R2 আপলোড ব্যর্থ: ${res.statusCode}${res.body}');
+      throw Exception('R2 আপলোড ব্যর্থ: ${res.statusCode} ${res.body}');
     }
   }
 }
