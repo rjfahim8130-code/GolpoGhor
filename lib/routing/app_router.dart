@@ -14,6 +14,7 @@ import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/home/presentation/screens/category_list_screen.dart';
 import '../features/home/presentation/screens/discover_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
+import '../features/home/presentation/screens/popular_screen.dart';
 import '../features/home/presentation/screens/trending_screen.dart';
 import '../features/legal/presentation/screens/legal_screen.dart';
 import '../features/novel/presentation/screens/add_episode_screen.dart';
@@ -130,6 +131,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/settings', name: 'settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/trending', name: 'trending', builder: (_, __) => const TrendingScreen()),
+      GoRoute(
+        path: '/popular',
+        name: 'popular',
+        builder: (_, __) => const PopularScreen(),
+      ),
       GoRoute(
         path: '/category',
         name: 'category',
