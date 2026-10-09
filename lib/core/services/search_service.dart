@@ -4,11 +4,13 @@ import '../constants/supabase_constants.dart';
 import '../models/novel_model.dart';
 import '../models/story_model.dart';
 import '../models/user_model.dart';
+import '../models/video_model.dart'; // নতুন ভিডিও মডেল ইমপোর্ট
 
 class SearchResult {
   final List<UserModel> authors;
   final List<StoryModel> stories;
   final List<NovelModel> novels;
+  final List<VideoModel> videos; // ভিডিও লিস্ট যোগ করা হলো
   final StoryModel? exactStoryCode;
   final NovelModel? exactNovelCode;
   final UserModel? exactUserCode;
@@ -17,6 +19,7 @@ class SearchResult {
     this.authors = const [],
     this.stories = const [],
     this.novels = const [],
+    this.videos = const [],
     this.exactStoryCode,
     this.exactNovelCode,
     this.exactUserCode,
@@ -26,6 +29,7 @@ class SearchResult {
       authors.isEmpty &&
       stories.isEmpty &&
       novels.isEmpty &&
+      videos.isEmpty &&
       exactStoryCode == null &&
       exactNovelCode == null &&
       exactUserCode == null;
@@ -182,10 +186,40 @@ class SearchService {
           .toList();
     } catch (_) {}
 
+    // 3) ভিডিও সার্চ লজিক
+    List<VideoModel> videos = [];
+    try {
+      final data = await _client
+          .from(SupabaseConstants.videoPosts)
+          .select('''
+            *,
+            profiles:author_id (full_name, username, avatar_url)
+          ''')
+          .eq('is_published', true)
+          .eq('is_draft', false)
+          .or(
+            'title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern',
+          )
+          .order('view_count', ascending: false)
+          .limit(15);
+
+      videos = (data as List).map((e) {
+        final map = Map<String, dynamic>.from(e as Map);
+        final p = map['profiles'];
+        if (p is Map) {
+          map['author_name'] = p['full_name'];
+          map['author_username'] = p['username'];
+          map['author_avatar'] = p['avatar_url'];
+        }
+        return VideoModel.fromJson(map);
+      }).toList();
+    } catch (_) {}
+
     return SearchResult(
       authors: authors,
       stories: stories,
       novels: novels,
+      videos: videos, // ভিডিও রেজल्ट যুক্ত করা হলো
       exactStoryCode: exactStory,
       exactNovelCode: exactNovel,
       exactUserCode: exactUser,
