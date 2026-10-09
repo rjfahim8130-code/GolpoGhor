@@ -26,7 +26,7 @@ import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_story_reader_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/follow_list_screen.dart';
-import '../features/profile/presentation/screens/insights_screen.dart'; // নতুন ইমপোর্ট
+import '../features/profile/presentation/screens/insights_screen.dart';
 import '../features/profile/presentation/screens/my_works_screen.dart';
 import '../features/profile/presentation/screens/saved_stories_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
@@ -37,8 +37,9 @@ import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/edit_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
-import '../features/video/presentation/screens/create_video_screen.dart'; // নতুন ইমপোর্ট
-import '../features/video/presentation/screens/video_feed_screen.dart'; // নতুন ইমপোর্ট
+import '../features/video/presentation/screens/create_video_screen.dart';
+import '../features/video/presentation/screens/edit_video_screen.dart'; // নতুন ইমপোর্ট
+import '../features/video/presentation/screens/video_feed_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = AuthService();
@@ -139,6 +140,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/create-video',
         name: 'create-video',
         builder: (_, __) => const CreateVideoScreen(),
+      ),
+      GoRoute(
+        path: '/edit-video/:id',
+        name: 'edit-video',
+        builder: (_, state) => EditVideoScreen(
+          videoId: state.pathParameters['id']!,
+        ),
       ),
       // ---------------------------------------------
       GoRoute(
