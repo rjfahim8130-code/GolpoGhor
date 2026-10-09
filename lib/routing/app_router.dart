@@ -36,6 +36,9 @@ import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/edit_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
+// ভিডিও ফিচারের জন্য নতুন ইমপোর্ট
+import '../features/video/presentation/screens/video_feed_screen.dart';
+import '../features/video/presentation/screens/video_player_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = AuthService();
@@ -122,6 +125,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'search',
         builder: (_, __) => const SearchScreen(),
       ),
+      // ---------- Video Routes ----------
+      GoRoute(
+        path: '/videos',
+        name: 'videos',
+        builder: (_, __) => const VideoFeedScreen(),
+      ),
+      GoRoute(
+        path: '/video/:id',
+        name: 'video',
+        builder: (_, state) => VideoPlayerScreen(
+          videoId: state.pathParameters['id']!,
+        ),
+      ),
+      // ----------------------------------
       GoRoute(
         path: '/story/:id',
         name: 'story',
@@ -274,7 +291,6 @@ class _SplashGateState extends State<_SplashGate> {
   }
 
   Future<void> _go() async {
-    // খুব ছোট ডিলে — শুধু UI ফ্লিকার কমাতে
     await Future<void>.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
@@ -282,25 +298,20 @@ class _SplashGateState extends State<_SplashGate> {
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     final auth = AuthService();
 
-    // ১) নেট চেক — সর্বোচ্চ \~২.৫ সেকেন্ড
     final online = await NetworkCheck.isOnline();
 
     if (!online) {
-      // ডাটা বন্ধ → সরাসরি অফলাইন লিস্ট (লগইন থাকুক বা না থাকুক)
       if (!mounted) return;
       context.go('/offline');
       return;
     }
 
-    // ২) অনলাইন + লগইন নেই
     if (!auth.isLoggedIn) {
       if (!mounted) return;
       context.go(onboardingDone ? '/welcome' : '/onboarding');
       return;
     }
 
-    // ৩) অনলাইন + লগইন আছে
-    // প্রোফাইল সেটআপ — লোকাল ক্যাশ আগে; নেট কল টাইমআউটসহ
     final cachedSetup = prefs.getBool('profile_setup_done') ?? false;
     if (cachedSetup) {
       if (!mounted) return;
@@ -315,7 +326,6 @@ class _SplashGateState extends State<_SplashGate> {
           .timeout(const Duration(seconds: 4));
       await prefs.setBool('profile_setup_done', !needsSetup);
     } catch (_) {
-      // নেট ধীর/ফেল → হোমে যাও, আটকাবে না
       needsSetup = false;
     }
 
