@@ -19,6 +19,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   
   bool _loading = true;
   bool _allowed = false;
+  bool _videoOn = false; // ভিডিও ফিচারের স্টেট
   Map<String, int> _stats = {};
   List<StoryModel> _stories = [];
   List<Map<String, dynamic>> _reports = [];
@@ -40,6 +41,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return;
     }
     final stats = await _admin.stats();
+    final videoOn = await _admin.getVideoFeatureEnabled();
     final stories = await _admin.recentStories();
     
     List<Map<String, dynamic>> reports = [];
@@ -52,6 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() {
       _allowed = true;
       _stats = stats;
+      _videoOn = videoOn;
       _stories = stories;
       _reports = reports;
       _loading = false;
@@ -131,6 +134,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 _statCard('ইউজার', '${_stats['users'] ?? 0}'),
                 _statCard('কমেন্ট', '${_stats['comments'] ?? 0}'),
               ],
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: SwitchListTile(
+                title: const Text('ভিডিও ফিচার'),
+                subtitle: Text(
+                  _videoOn
+                      ? 'চালু — ফিড, আপলোড, এনগেজমেন্ট সব'
+                      : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো',
+                ),
+                value: _videoOn,
+                activeColor: AppColors.primary,
+                onChanged: (v) async {
+                  try {
+                    await _admin.setVideoFeatureEnabled(v);
+                    setState(() => _videoOn = v);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            v ? 'ভিডিও ফিচার চালু' : 'ভিডিও ফিচার বন্ধ',
+                          ),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('$e')),
+                      );
+                    }
+                  }
+                },
+              ),
             ),
             if (_reports.isNotEmpty) ...[
               const SizedBox(height: 24),
