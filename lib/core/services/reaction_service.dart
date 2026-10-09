@@ -169,4 +169,80 @@ class ReactionService {
         .from(SupabaseConstants.episodes)
         .update({'reaction_count': count}).eq('id', episodeId);
   }
+
+  // ───────── ভিডিও ─────────
+
+  Future<String?> getMyVideoReaction(String videoId) async {
+    final uid = _uid;
+    if (uid == null) return null;
+    final data = await _client
+        .from(SupabaseConstants.reactions)
+        .select('reaction_type')
+        .eq('user_id', uid)
+        .eq('video_id', videoId)
+        .maybeSingle();
+    return data?['reaction_type'] as String?;
+  }
+
+  Future<int> countVideoReactions(String videoId) async {
+    final data = await _client
+        .from(SupabaseConstants.reactions)
+        .select('id')
+        .eq('video_id', videoId);
+    return (data as List).length;
+  }
+
+  Future<String?> toggleVideoReaction({
+    required String videoId,
+    required String reactionType,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final existing = await _client
+        .from(SupabaseConstants.reactions)
+        .select('id, reaction_type')
+        .eq('user_id', uid)
+        .eq('video_id', videoId)
+        .maybeSingle();
+
+    if (existing != null) {
+      final old = existing['reaction_type'] as String?;
+      if (old == reactionType) {
+        await _client
+            .from(SupabaseConstants.reactions)
+            .delete()
+            .eq('user_id', uid)
+            .eq('video_id', videoId);
+        await _refreshVideoReactionCount(videoId);
+        return null;
+      }
+      await _client
+          .from(SupabaseConstants.reactions)
+          .update({'reaction_type': reactionType})
+          .eq('user_id', uid)
+          .eq('video_id', videoId);
+      await _refreshVideoReactionCount(videoId);
+      return reactionType;
+    }
+
+    await _client.from(SupabaseConstants.reactions).insert({
+      'user_id': uid,
+      'video_id': videoId,
+      'reaction_type': reactionType,
+    });
+    await _refreshVideoReactionCount(videoId);
+    return reactionType;
+  }
+
+  Future<void> _refreshVideoReactionCount(String videoId) async {
+    final data = await _client
+        .from(SupabaseConstants.reactions)
+        .select('id')
+        .eq('video_id', videoId);
+    final count = (data as List).length;
+    await _client
+        .from(SupabaseConstants.videoPosts)
+        .update({'reaction_count': count}).eq('id', videoId);
+  }
 }
