@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
+import '../../../../core/models/video_model.dart'; // নতুন ভিডিও মডেল ইমপোর্ট
 import '../../../../core/services/search_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/presentation/widgets/novel_card.dart';
@@ -289,6 +290,31 @@ class _SearchScreenState extends State<SearchScreen> {
               onTap: () => context.push('/novel/${n.id}'),
             ),
           ),
+        ],
+        if (r.videos.isNotEmpty) ...[
+          _sectionTitle('ভিডিও (${r.videos.length})'),
+          ...r.videos.map((v) {
+            final label = v.title.trim().isNotEmpty
+                ? v.title
+                : (v.description.trim().isNotEmpty
+                    ? v.description
+                    : 'ভিডিও');
+            return ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.play_arrow, color: Colors.white),
+              ),
+              title: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                [
+                  v.authorName ?? 'লেখক',
+                  if (v.isSeries) 'পর্ব ${v.partNumber}',
+                  '${v.viewCount} দেখা',
+                ].join(' · '),
+              ),
+              onTap: () => context.push('/videos'),
+            );
+          }),
         ],
       ],
     );
