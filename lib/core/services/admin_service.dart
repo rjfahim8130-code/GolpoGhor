@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/supabase_constants.dart';
 import '../models/story_model.dart';
 import '../models/user_model.dart';
+import 'video_service.dart';
 
 class AdminService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -84,5 +85,15 @@ class AdminService {
       'users': (users as List).length,
       'comments': (comments as List).length,
     };
+  }
+
+  // ---------- Video Feature Toggle Helpers ----------
+
+  Future<bool> getVideoFeatureEnabled() async {
+    return VideoService().isVideoFeatureEnabled();
+  }
+
+  Future<void> setVideoFeatureEnabled(bool enabled) async {
+    await VideoService().setVideoFeatureEnabled(enabled);
   }
 }
