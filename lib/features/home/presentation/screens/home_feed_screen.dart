@@ -9,6 +9,7 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
+import '../../../../core/services/video_service.dart'; // নতুন ভিডিও সার্ভিস ইমপোর্ট
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/novel_card.dart';
 import '../widgets/story_card.dart';
@@ -36,12 +37,14 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
   int _offset = 0;
   final int _limit = 15;
   UserModel? _me;
+  bool _videoOn = false; // ভিডিও টগল স্টেট
 
   @override
   void initState() {
     super.initState();
     _load();
     _loadMe();
+    _checkVideo(); // ভিডিও ফিচার স্ট্যাটাস চেক
     _scroll.addListener(_onScroll);
   }
 
@@ -55,6 +58,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     try {
       final p = await _auth.getMyProfile();
       if (mounted) setState(() => _me = p);
+    } catch (_) {}
+  }
+
+  Future<void> _checkVideo() async {
+    try {
+      final on = await VideoService().isVideoFeatureEnabled();
+      if (mounted) setState(() => _videoOn = on);
     } catch (_) {}
   }
 
@@ -166,6 +176,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
             tooltip: UiStrings.trending,
             onPressed: () => context.push('/trending'),
           ),
+          // অ্যাডমিন টগল অন থাকলে ভিডিও বাটন দেখাবে
+          if (_videoOn)
+            IconButton(
+              icon: const Icon(Icons.videocam_outlined),
+              tooltip: 'ভিডিও',
+              onPressed: () => context.push('/videos'),
+            ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/search'),
@@ -190,7 +207,6 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         ],
       ),
       body: body,
-      // FAB নেই — লেখা শুধু প্রোফাইল থেকে
     );
   }
 
