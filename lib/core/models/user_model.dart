@@ -99,7 +99,7 @@ class UserModel {
     );
   }
 
-  /// নাম দেখানোর জন্য (username কখনোই নয় — নির্দেশ অনুযায়ী)
+  /// নাম দেখানোর জন্য (username কখনোই নয়)
   String get displayName {
     if (fullName != null && fullName!.trim().isNotEmpty) {
       return fullName!.trim();
@@ -114,6 +114,10 @@ class UserModel {
   String get handle =>
       (username != null && username!.isNotEmpty) ? '@$username' : '';
 
-  String get initial =>
-      displayName.isNotEmpty ? displayName.characters.first : '?';
+  /// Avatar না থাকলে প্রথম অক্ষর দেখানোর জন্য
+  String get initial {
+    final n = displayName.trim();
+    if (n.isEmpty) return '?';
+    return n.substring(0, 1);
+  }
 }
