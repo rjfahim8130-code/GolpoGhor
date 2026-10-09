@@ -95,12 +95,62 @@ class CommentService {
     return CommentModel.fromJson(Map<String, dynamic>.from(data));
   }
 
+  // ───────── ভিডিও ─────────
+
+  Future<List<CommentModel>> getVideoComments(String videoId) async {
+    final data = await _client
+        .from(SupabaseConstants.comments)
+        .select(_selectWithProfile)
+        .eq('video_id', videoId)
+        .order('created_at', ascending: true);
+
+    return (data as List)
+        .map((e) => CommentModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<CommentModel> addVideoComment({
+    required String videoId,
+    required String body,
+    String? parentId,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+    final text = body.trim();
+    if (text.isEmpty) throw Exception('কমেন্ট খালি');
+
+    final data = await _client
+        .from(SupabaseConstants.comments)
+        .insert({
+          'user_id': uid,
+          'video_id': videoId,
+          'body': text,
+          if (parentId != null) 'parent_id': parentId,
+        })
+        .select(_selectWithProfile)
+        .single();
+
+    await _refreshVideoCommentCount(videoId);
+    return CommentModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> _refreshVideoCommentCount(String videoId) async {
+    final all = await _client
+        .from(SupabaseConstants.comments)
+        .select('id')
+        .eq('video_id', videoId);
+    await _client
+        .from(SupabaseConstants.videoPosts)
+        .update({'comment_count': (all as List).length}).eq('id', videoId);
+  }
+
   // ───────── সাধারণ ─────────
 
   Future<void> deleteComment(
     String commentId, {
     String? storyId,
     String? episodeId,
+    String? videoId,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
@@ -109,8 +159,10 @@ class CommentService {
         .delete()
         .eq('id', commentId)
         .eq('user_id', uid);
+        
     if (storyId != null) await _refreshStoryCommentCount(storyId);
     if (episodeId != null) await _refreshEpisodeCommentCount(episodeId);
+    if (videoId != null) await _refreshVideoCommentCount(videoId);
   }
 
   Future<void> toggleCommentLike(String commentId) async {
