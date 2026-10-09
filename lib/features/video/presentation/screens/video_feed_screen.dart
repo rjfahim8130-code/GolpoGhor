@@ -623,4 +623,132 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 },
               ),
               const SizedBox(height: 14),
-              
+              // সার্চ বাটন
+              _sideBtn(Icons.search, '', () => context.push('/search')),
+              const SizedBox(height: 14),
+              // মোর অপশন (...)
+              _sideBtn(Icons.more_vert, '', _openMore),
+               // সাউন্ড কন্ট্রোল বাটন (মোর অপশনের ভেতরেও আছে, এখানেও রাখা যেতে পারে)
+              const SizedBox(height: 14),
+              _sideBtn(
+                _volumeIcon,
+                '',
+                () {
+                  setState(() {
+                    _muted = !_muted;
+                     _volumeIcon = _muted ? Icons.volume_off : Icons.volume_up;
+                  });
+                  _controller?.setVolume(_muted ? 0 : 1);
+                },
+              ),
+            ],
+          ),
+        ),
+        // বটম কন্টেন্ট (লেখক, বিবরণ, স্লাইডার)
+        Positioned(
+          left: 12,
+          right: 72,
+          bottom: bottomPad + 8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // লেখকের নাম
+              GestureDetector(
+                onTap: () {
+                  if (v.authorId.isNotEmpty) {
+                    context.push('/user/${v.authorId}');
+                  }
+                },
+                child: Text(
+                  v.authorName ?? 'লেখক',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              // ভিডিও বিবরণ বা ক্যাপশন
+              if (v.description.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => setState(() => _descExpanded = !_descExpanded),
+                  child: Text(
+                    v.description,
+                    maxLines: _descExpanded ? 20 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                ),
+              ],
+              // ভিডিও প্রোগ্রেস স্লাইডার
+              if (ok) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      _fmt(pos),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 10),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
+                        ),
+                        child: Slider(
+                          value: progress.clamp(0.0, 1.0),
+                          activeColor: AppColors.primary,
+                          inactiveColor: Colors.white24,
+                          onChangeStart: (_) {
+                            _dragging = true;
+                            _dragValue = progress;
+                          },
+                          onChanged: (val) =>
+                              setState(() => _dragValue = val),
+                          onChangeEnd: (val) {
+                            _dragging = false;
+                            if (dur.inMilliseconds > 0) {
+                              c.seekTo(Duration(
+                                milliseconds:
+                                    (val * dur.inMilliseconds).round(),
+                              ));
+                            }
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _fmt(dur),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // সাইড বাটন উইজেট
+  Widget _sideBtn(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          if (label.isNotEmpty)
+            Text(label,
+                style: const TextStyle(color: Colors.white, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
