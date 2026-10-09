@@ -183,7 +183,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 return Card(
                   child: ListTile(
                     title: Text('ধরন: $type', maxLines: 1),
-                    subtitle: Text(reason, maxLines: 3),
+                    subtitle: Text(
+                      'কারণ: $reason\nআইডি: $id',
+                      maxLines: 3,
+                    ),
                     trailing: PopupMenuButton<String>(
                       onSelected: (v) async {
                         final rid = r['id']?.toString();
@@ -205,6 +208,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       if (type == 'story') context.push('/story/$id');
                       if (type == 'episode') context.push('/episode/$id');
                       if (type == 'novel') context.push('/novel/$id');
+                      if (type == 'video') context.push('/videos');
                     },
                   ),
                 );
