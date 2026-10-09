@@ -1,292 +1,245 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
-import '../../../../core/models/novel_model.dart';
-import '../../../../core/models/story_model.dart';
-import '../../../../core/services/novel_service.dart';
-import '../../../../core/services/story_service.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class MyWorksScreen extends StatefulWidget {
-  const MyWorksScreen({super.key});
+import '../constants/supabase_constants.dart';
+import '../models/content_block_model.dart';
+import '../models/episode_model.dart';
+import '../models/novel_model.dart';
+import 'r2_storage_service.dart';
 
-  @override
-  State<MyWorksScreen> createState() => _MyWorksScreenState();
-}
+class NovelService {
+  final SupabaseClient _client = Supabase.instance.client;
 
-class _MyWorksScreenState extends State<MyWorksScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tab;
-  final _storyService = StoryService();
-  final _novelService = NovelService();
+  String? get _uid => _client.auth.currentUser?.id;
 
-  List<StoryModel> _stories = [];
-  List<NovelModel> _novels = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _tab = TabController(length: 2, vsync: this);
-    _load();
+  Map<String, dynamic> _mapWithAuthor(Map<String, dynamic> json) {
+    final map = Map<String, dynamic>.from(json);
+    final profiles = map['profiles'];
+    if (profiles is Map) {
+      map['author_name'] = profiles['full_name'];
+      map['author_username'] = profiles['username'];
+      map['author_avatar'] = profiles['avatar_url'];
+    }
+    return map;
   }
 
-  @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
+  Future<List<NovelModel>> getFeed({int limit = 10, int offset = 0}) async {
+    final data = await _client
+        .from(SupabaseConstants.novels)
+        .select('''
+          *,
+          profiles:author_id (
+            full_name,
+            username,
+            avatar_url
+          )
+        ''')
+        .eq('is_published', true)
+        .eq('is_draft', false)
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
+    return (data as List)
+        .map((e) => NovelModel.fromJson(
+              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
+            ))
+        .toList();
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
+  Future<List<NovelModel>> getMyNovels() async {
+    final uid = _uid;
+    if (uid == null) return [];
+
+    final data = await _client
+        .from(SupabaseConstants.novels)
+        .select()
+        .eq('author_id', uid)
+        .order('updated_at', ascending: false);
+
+    return (data as List)
+        .map((e) => NovelModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<NovelModel?> getById(String id) async {
+    final data = await _client
+        .from(SupabaseConstants.novels)
+        .select('''
+          *,
+          profiles:author_id (
+            full_name,
+            username,
+            avatar_url
+          )
+        ''')
+        .eq('id', id)
+        .maybeSingle();
+    if (data == null) return null;
+    return NovelModel.fromJson(
+      _mapWithAuthor(Map<String, dynamic>.from(data)),
+    );
+  }
+
+  Future<List<EpisodeModel>> getEpisodes(String novelId) async {
+    final data = await _client
+        .from(SupabaseConstants.episodes)
+        .select()
+        .eq('novel_id', novelId)
+        .eq('is_published', true)
+        .order('chapter_number', ascending: true);
+
+    return (data as List)
+        .map((e) => EpisodeModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<EpisodeModel?> getEpisodeById(String id) async {
+    final data = await _client
+        .from(SupabaseConstants.episodes)
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (data == null) return null;
+    return EpisodeModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<String> uploadImage(dynamic imageFile, [String folder = 'episodes']) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    File file;
+    if (imageFile is File) {
+      file = imageFile;
+    } else if (imageFile is String) {
+      file = File(imageFile);
+    } else if (imageFile is Uint8List) {
+      final tempDir = Directory.systemTemp;
+      file = File('\( {tempDir.path}/ \){DateTime.now().millisecondsSinceEpoch}.jpg');
+      await file.writeAsBytes(imageFile);
+    } else {
+      throw Exception('অসমর্থিত ইমেজ ফরম্যাট');
+    }
+
+    final r2 = R2StorageService();
+    return r2.uploadImage(file: file, folder: folder);
+  }
+
+  Future<NovelModel> createNovel({
+    required String title,
+    String? description,
+    String? category,
+    List<String>? tags,
+    String? coverUrl,
+    bool isDraft = false,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final data = await _client
+        .from(SupabaseConstants.novels)
+        .insert({
+          'author_id': uid,
+          'title': title.trim(),
+          'description': description?.trim() ?? '',
+          'category': category,
+          'tags': tags ?? [],
+          'cover_url': coverUrl,
+          'is_published': !isDraft,
+          'is_draft': isDraft,
+        })
+        .select()
+        .single();
+
+    return NovelModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<EpisodeModel> addEpisode({
+    required String novelId,
+    required String title,
+    required List<ContentBlockModel> contentBlocks,
+    String? coverUrl,
+    int? chapterNumber,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final novel = await _client
+        .from(SupabaseConstants.novels)
+        .select('author_id')
+        .eq('id', novelId)
+        .maybeSingle();
+    if (novel == null || novel['author_id'] != uid) {
+      throw Exception('এই উপন্যাসে পর্ব যোগ করার অনুমতি নেই');
+    }
+
+    int number = chapterNumber ?? 1;
+    if (chapterNumber == null) {
+      final existing = await _client
+          .from(SupabaseConstants.episodes)
+          .select('chapter_number')
+          .eq('novel_id', novelId)
+          .order('chapter_number', ascending: false)
+          .limit(1);
+      if ((existing as List).isNotEmpty) {
+        number = ((existing.first as Map)['chapter_number'] as num).toInt() + 1;
+      }
+    }
+
+    final data = await _client
+        .from(SupabaseConstants.episodes)
+        .insert({
+          'novel_id': novelId,
+          'author_id': uid,
+          'chapter_number': number,
+          'title': title.trim(),
+          'content_blocks': contentBlocks.map((e) => e.toJson()).toList(),
+          'cover_url': coverUrl,
+          'is_published': true,
+        })
+        .select()
+        .single();
+
+    return EpisodeModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteNovel(String novelId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+    await _client
+        .from(SupabaseConstants.episodes)
+        .delete()
+        .eq('novel_id', novelId)
+        .eq('author_id', uid);
+    await _client
+        .from(SupabaseConstants.novels)
+        .delete()
+        .eq('id', novelId)
+        .eq('author_id', uid);
+  }
+
+  Future<void> deleteEpisode(String episodeId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+    await _client
+        .from(SupabaseConstants.episodes)
+        .delete()
+        .eq('id', episodeId)
+        .eq('author_id', uid);
+  }
+
+  Future<int> recordView(String type, String id) async {
     try {
-      final stories = await _storyService.getMyStories(draftsOnly: false);
-      final novels = await _novelService.getMyNovels();
-      setState(() {
-        _stories = stories.where((s) => !s.isDraft).toList();
-        _novels = novels.where((n) => !n.isDraft).toList();
-        _loading = false;
-      });
+      final result = await _client.rpc(
+        'record_view',
+        params: {'p_type': type, 'p_id': id},
+      );
+      if (result is int) return result;
+      if (result is num) return result.toInt();
+      return 0;
     } catch (_) {
-      setState(() => _loading = false);
+      return 0;
     }
-  }
-
-  Future<void> _confirmDeleteStory(StoryModel s) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('গল্প মুছবেন?'),
-        content: Text(
-          '"${s.title}" স্থায়ীভাবে মুছে যাবে। এটা ফেরানো যাবে না।',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('মুছুন'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await _storyService.deleteStory(s.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('গল্প মুছে ফেলা হয়েছে')),
-        );
-        await _load();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('মুছা যায়নি: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _confirmDeleteNovel(NovelModel n) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('উপন্যাস মুছবেন?'),
-        content: Text(
-          '"${n.title}" এবং এর সব পর্ব মুছে যাবে। ফেরানো যাবে না।',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('মুছুন'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await _novelService.deleteNovel(n.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('উপন্যাস মুছে ফেলা হয়েছে')),
-        );
-        await _load();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('মুছা যায়নি: $e')),
-        );
-      }
-    }
-  }
-
-  void _showCreate() {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.article_outlined),
-              title: const Text('নতুন গল্প'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-story');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.menu_book_outlined),
-              title: const Text('নতুন উপন্যাস'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.push('/create-novel');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('আমার লেখা'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        bottom: TabBar(
-          controller: _tab,
-          labelColor: AppColors.primary,
-          tabs: const [
-            Tab(text: 'গল্প'),
-            Tab(text: 'উপন্যাস'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _showCreate,
-          ),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tab,
-              children: [
-                _stories.isEmpty
-                    ? const Center(child: Text('এখনো কোনো গল্প নেই'))
-                    : RefreshIndicator(
-                        onRefresh: _load,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _stories.length,
-                          itemBuilder: (_, i) {
-                            final s = _stories[i];
-                            return ListTile(
-                              title: Text(
-                                s.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                s.isPublished ? 'প্রকাশিত' : 'খসড়া',
-                              ),
-                              onTap: () => context.push('/story/${s.id}'),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (v) {
-                                  if (v == 'edit') {
-                                    context.push('/edit-story/${s.id}');
-                                  }
-                                  if (v == 'delete') {
-                                    _confirmDeleteStory(s);
-                                  }
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
-                                    value: 'edit',
-                                    child: Text('সম্পাদনা'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Text(
-                                      'মুছুন',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                _novels.isEmpty
-                    ? const Center(child: Text('এখনো কোনো উপন্যাস নেই'))
-                    : RefreshIndicator(
-                        onRefresh: _load,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _novels.length,
-                          itemBuilder: (_, i) {
-                            final n = _novels[i];
-                            return ListTile(
-                              title: Text(
-                                n.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text('${n.episodeCount} পর্ব'),
-                              onTap: () => context.push('/novel/${n.id}'),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (v) {
-                                  if (v == 'open') {
-                                    context.push('/novel/${n.id}');
-                                  }
-                                  if (v == 'edit') {
-                                    context.push('/edit-novel/${n.id}');
-                                  }
-                                  if (v == 'delete') {
-                                    _confirmDeleteNovel(n);
-                                  }
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
-                                    value: 'open',
-                                    child: Text('খুলুন'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'edit',
-                                    child: Text('সম্পাদনা'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Text(
-                                      'মুছুন',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-              ],
-            ),
-    );
   }
 }
