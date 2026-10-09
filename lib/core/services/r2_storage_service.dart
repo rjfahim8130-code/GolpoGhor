@@ -28,7 +28,6 @@ class R2StorageService {
     final uid = _supabase.auth.currentUser?.id ?? 'anon';
     final bytes = await _compress.compressImageFile(file);
     
-    // পাথ (Path) এর সিনট্যাক্স ভুলটি এখানে ঠিক করা হয়েছে
     final path = '$folder/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
     await _putR2(path, bytes, contentType: 'image/jpeg');
@@ -37,6 +36,29 @@ class R2StorageService {
 
   Future<String> uploadAvatar(File file) async {
     return uploadImage(file: file, folder: 'avatars');
+  }
+
+  /// ভিডিও / যেকোনো বাইনারি → শুধু R2
+  Future<String> uploadVideoBytes({
+    required List<int> bytes,
+    String folder = 'videos',
+    String contentType = 'video/mp4',
+    String extension = 'mp4',
+  }) async {
+    if (!R2Constants.isConfigured) {
+      throw Exception(
+        'Cloudflare R2 কনফিগ নেই। R2_ACCESS_KEY ও R2_SECRET_KEY দিয়ে বিল্ড করুন।',
+      );
+    }
+    final uid = _supabase.auth.currentUser?.id ?? 'anon';
+    final path = '$folder/$uid/${DateTime.now().millisecondsSinceEpoch}.$extension';
+    
+    await _putR2(
+      path,
+      Uint8List.fromList(bytes),
+      contentType: contentType,
+    );
+    return '${R2Constants.publicBaseUrl}/$path';
   }
 
   Future<void> _putR2(
