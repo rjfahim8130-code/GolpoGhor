@@ -299,9 +299,16 @@ class _MyWorksScreenState extends State<MyWorksScreen>
                                   onTap: () => context.push('/videos'),
                                   trailing: PopupMenuButton<String>(
                                     onSelected: (x) {
+                                      if (x == 'edit') {
+                                        context.push('/edit-video/${v.id}');
+                                      }
                                       if (x == 'delete') _deleteVideo(v);
                                     },
                                     itemBuilder: (_) => const [
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Text('সম্পাদনা'),
+                                      ),
                                       PopupMenuItem(
                                         value: 'delete',
                                         child: Text(
