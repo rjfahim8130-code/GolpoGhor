@@ -73,7 +73,6 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // বিজ্ঞাপন ব্যানার বা AppBar-এর জন্য নিরাপদ টপ স্পেস (ধরে নিলাম ৬০ logical pixels)
     final double adSpaceHeight = MediaQuery.of(context).padding.top + 60;
 
     if (_loading) {
@@ -150,6 +149,29 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
                 onDeleted: () {
                   setState(() => _items.removeAt(index));
                 },
+                onJumpToSeriesPart: (next) {
+                  final i = _items.indexWhere((e) => e.id == next.id);
+                  if (i >= 0) {
+                    _pageController.animateToPage(
+                      i,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOut,
+                    );
+                  } else {
+                    setState(() {
+                      _items.insert(_currentIndex + 1, next);
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_pageController.hasClients) {
+                        _pageController.animateToPage(
+                          _currentIndex + 1,
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    });
+                  }
+                },
               );
             },
           ),
@@ -173,6 +195,7 @@ class _VideoFeedItem extends StatefulWidget {
   final bool isActive;
   final VoidCallback? onDeleted;
   final double adSpaceHeight;
+  final void Function(VideoModel next)? onJumpToSeriesPart;
 
   const _VideoFeedItem({
     super.key,
@@ -180,6 +203,7 @@ class _VideoFeedItem extends StatefulWidget {
     required this.isActive,
     required this.adSpaceHeight,
     this.onDeleted,
+    this.onJumpToSeriesPart,
   });
 
   @override
@@ -201,7 +225,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
   bool _viewRecorded = false;
   bool _autoLoop = false;
 
-  // সিরিজ ও নেক্সট পার্ট সম্পর্কিত স্টেট
   VideoModel? _nextPart;
   bool _showNextPart = false;
   bool _autoNext = true;
@@ -245,8 +268,7 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
       final r = ReactionService();
       final mine = await r.getMyVideoReaction(widget.video.id);
 
-      // যদি ভিডিওটি সিরিজ হয়, তবে পরের অংশ ফেচ করা
-      if (widget.video.isSeries) {
+      if (widget.video.isSeries || widget.video.seriesId != null) {
         final next = await _service.getNextPart(widget.video);
         if (mounted) setState(() => _nextPart = next);
       }
@@ -522,7 +544,7 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ),
           ),
 
-                // সিরিজের পরবর্তী অংশের জন্য ওভারলে ব্যানার
+         // সিরিজের পরবর্তী অংশের জন্য ওভারলে ব্যানার
         if (_showNextPart && _nextPart != null)
           Positioned(
             left: 16,
@@ -544,17 +566,18 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 ),
                 trailing: TextButton(
                   onPressed: () {
+                    final n = _nextPart;
+                    if (n == null) return;
                     setState(() => _showNextPart = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('নিচে স্ক্রল করে পরের ভিডিও দেখুন, অথবা সিরিজ ফিডে খুঁজুন'),
-                      ),
-                    );
+                    widget.onJumpToSeriesPart?.call(n);
                   },
-                  child: const Text('ঠিক আছে'),
+                  child: const Text('দেখুন'),
                 ),
                 onTap: () {
+                  final n = _nextPart;
+                  if (n == null) return;
                   setState(() => _showNextPart = false);
+                  widget.onJumpToSeriesPart?.call(n);
                 },
               ),
             ),
