@@ -90,10 +90,6 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
         ),
         body: const Center(
           child: Text(
@@ -108,15 +104,10 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
     if (_error != null || _items.isEmpty) {
       return Scaffold(
         backgroundColor: Colors.black,
-        // এই ক্ষেত্রে সাধারণ AppBar ব্যবহার করা যেতে পারে কারণ কোনো ভিডিও নেই
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: AppColors.primary,
@@ -134,7 +125,7 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true, // যাতে ভিডিওটি টপ স্পেসের নিচ থেকে শুরু হয়
+      extendBodyBehindAppBar: true,
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
@@ -145,7 +136,6 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
       ),
       body: Stack(
         children: [
-          // মেইন ভিডিও ফিড
           PageView.builder(
             controller: _pageController,
             scrollDirection: Axis.vertical,
@@ -156,23 +146,20 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
                 key: ValueKey(_items[index].id),
                 video: _items[index],
                 isActive: index == _currentIndex,
-                adSpaceHeight: adSpaceHeight, // টপ স্পেসের উচ্চতা পাস করা হলো
+                adSpaceHeight: adSpaceHeight,
                 onDeleted: () {
                   setState(() => _items.removeAt(index));
                 },
               );
             },
           ),
-          
-          // বিজ্ঞাপন ব্যানার বা টপ কন্টেন্টের জন্য ফাঁকা জায়গা (ভিডিওর ওপরে)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: adSpaceHeight,
             child: Container(
-              color: Colors.transparent, // ভবিষ্যতে বিজ্ঞাপন উইজেট এখানে বসবে
-              // child: YourAdBannerWidget(), 
+              color: Colors.transparent,
             ),
           ),
         ],
@@ -185,7 +172,7 @@ class _VideoFeedItem extends StatefulWidget {
   final VideoModel video;
   final bool isActive;
   final VoidCallback? onDeleted;
-  final double adSpaceHeight; // টপ স্পেসের উচ্চতা
+  final double adSpaceHeight;
 
   const _VideoFeedItem({
     super.key,
@@ -214,9 +201,12 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
   bool _viewRecorded = false;
   bool _autoLoop = false;
 
-  // UI কন্ট্রোল স্টেট
-  bool _showControls = false; 
-  // ব্যাক বাটন অটো হাইড করার জন্য টাইমার
+  // সিরিজ ও নেক্সট পার্ট সম্পর্কিত স্টেট
+  VideoModel? _nextPart;
+  bool _showNextPart = false;
+  bool _autoNext = true;
+
+  bool _showControls = false;
   IconData _volumeIcon = Icons.volume_up;
 
   String? _myReaction;
@@ -255,6 +245,12 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
       final r = ReactionService();
       final mine = await r.getMyVideoReaction(widget.video.id);
 
+      // যদি ভিডিওটি সিরিজ হয়, তবে পরের অংশ ফেচ করা
+      if (widget.video.isSeries) {
+        final next = await _service.getNextPart(widget.video);
+        if (mounted) setState(() => _nextPart = next);
+      }
+
       if (mounted) {
         setState(() {
           _initialized = true;
@@ -270,7 +266,20 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
   }
 
   void _tick() {
-    if (mounted && !_dragging) setState(() {});
+    if (!mounted || _dragging) return;
+    final c = _controller;
+    if (c != null && c.value.isInitialized && !_autoLoop) {
+      final pos = c.value.position;
+      final dur = c.value.duration;
+      if (dur.inMilliseconds > 0) {
+        final nearEnd = pos >= dur - const Duration(seconds: 8);
+        if (nearEnd && _nextPart != null && !_showNextPart) {
+          setState(() => _showNextPart = true);
+          return;
+        }
+      }
+    }
+    setState(() {});
   }
 
   void _recordViewOnce() {
@@ -325,11 +334,8 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
     return '$m:$s';
   }
 
-  // ব্যাক বাটন টগল করার ফাংশন
   void _toggleControls() {
     setState(() => _showControls = !_showControls);
-    
-    // কন্ট্রোল শো হলে, ৩ সেকেন্ড পর অটো হাইড করা যায় (চাইলে)
     if (_showControls) {
        Future.delayed(const Duration(milliseconds: 2500), () {
          if (mounted && _showControls) {
@@ -378,6 +384,15 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
               onChanged: (val) {
                 setState(() => _autoLoop = val);
                 _controller?.setLooping(val);
+                Navigator.pop(ctx);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.skip_next, color: Colors.white),
+              title: const Text('অটো নেক্সট', style: TextStyle(color: Colors.white)),
+              value: _autoNext,
+              onChanged: (val) {
+                setState(() => _autoNext = val);
                 Navigator.pop(ctx);
               },
             ),
@@ -448,24 +463,18 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ? _dragValue
             : pos.inMilliseconds / dur.inMilliseconds);
 
-    // বটম প্যাডিং
     final bottomPad = MediaQuery.of(context).padding.bottom;
     
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ভিডিও প্লেয়ার কন্টেইনার - যা বিজ্ঞাপন স্পেসের নিচে বসবে
         Positioned(
-          top: widget.adSpaceHeight, // ভিডিওটি বিজ্ঞাপন স্পেসের নিচ থেকে শুরু হবে
+          top: widget.adSpaceHeight,
           left: 0,
           right: 0,
-          bottom: 0, // স্ক্রিনের নিচ পর্যন্ত
+          bottom: 0,
           child: GestureDetector(
-            onTap: _togglePlay, // ভিডিওতে ট্যাপ করলে প্লে/পজ হবে
-            // ব্যাক বাটন ভিজিবিলিটি টগল করার জন্য অনলংপ্রেস বা ডাবল ট্যাপ ব্যবহার করা যেতে পারে
-            // অথবা সোয়াইপ ডিটেক্টর দিয়ে চেক করতে হবে। আপাতত শুধুমাত্র ট্যাপে প্লে/পজ রাখলাম।
-            // যদি ব্যাক বাটন দেখাতে হয় তবে ভিন্ন লজিক লাগবে। এখানে শুধুমাত্র কনটেন্ট এরিয়া।
-            // মূল GestureDetector থেকে প্লে/পজ আলাদা করা হলো।
+            onTap: _togglePlay,
             child: ok
                 ? Center(
                     child: AspectRatio(
@@ -479,16 +488,14 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
           ),
         ),
         
-        // প্লে/পজ আইকন যা ভিডিও প্লেয়ারের ওপর ভেসে উঠবে
         if (ok && !c.value.isPlaying)
           Center(
             child: IgnorePointer(
               child: Icon(Icons.play_circle_outline,
-                  size: 72, color: Colors.white70.withOpacity(0.5)),
+                  size: 72, color: Colors.white70.withValues(alpha: 0.5)),
             ),
           ),
 
-        // স্ক্রিন ট্যাপ ডিটেক্টর (কন্ট্রোল টগল করার জন্য)
         Positioned(
             top: widget.adSpaceHeight,
             left: 0,
@@ -500,10 +507,9 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ),
         ),
 
-        // *নতুন* ফ্লোটিং ব্যাক বাটন (অদৃশ্যমান সিস্টেম - কন্ট্রোল টগল হলে ভেসে উঠবে)
         if(_showControls)
            Positioned(
-            top: widget.adSpaceHeight + 8, // বিজ্ঞাপন স্পেসের ঠিক নিচে
+            top: widget.adSpaceHeight + 8,
             left: 12,
             child: Container(
               decoration: const BoxDecoration(
@@ -512,18 +518,54 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => context.pop(), // বর্তমান স্ক্রিন থেকে বের হয়ে যাবে
+                onPressed: () => context.pop(),
               ),
             ),
           ),
 
-        // ডান দিকের বাটনসমূহ (যথারীতি নিচের দিকে)
+        // সিরিজের পরবর্তী অংশের জন্য ওভারলে ব্যানার
+        if (_showNextPart && _nextPart != null)
+          Positioned(
+            left: 16,
+            right: 80,
+            bottom: bottomPad + 90,
+            child: Material(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+              child: ListTile(
+                title: const Text(
+                  'পরের অংশ দেখুন',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  _nextPart!.title.isEmpty
+                      ? 'পর্ব ${_nextPart!.partNumber}'
+                      : _nextPart!.title,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                trailing: TextButton(
+                  onPressed: () {
+                    setState(() => _showNextPart = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('নিচে স্ক্রল করে পরের ভিডিও দেখুন, অথবা সিরিজ ফিডে খুঁজুন'),
+                      ),
+                    );
+                  },
+                  child: const Text('ঠিক আছে'),
+                ),
+                onTap: () {
+                  setState(() => _showNextPart = false);
+                },
+              ),
+            ),
+          ),
+
         Positioned(
           right: 6,
-          bottom: bottomPad + 120, // বটম বার থেকে ওপরে
+          bottom: bottomPad + 120,
           child: Column(
             children: [
-              // প্রোফাইল পিক
               GestureDetector(
                 onTap: () {
                   if (v.authorId.isNotEmpty) {
@@ -542,7 +584,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                       : null,
                 ),
               ),
-              // ফলো বাটন
               Transform.translate(
                 offset: const Offset(0, -8),
                 child: GestureDetector(
@@ -573,7 +614,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 ),
               ),
               const SizedBox(height: 12),
-              // রিঅ্যাকশন বাটন
               _sideBtn(
                 _myReaction != null ? Icons.favorite : Icons.favorite_border,
                 '$_reactionCount',
@@ -600,12 +640,10 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 },
               ),
               const SizedBox(height: 14),
-              // কমেন্ট বাটন
               _sideBtn(Icons.chat_bubble_outline, '$_commentCount', () {
                 VideoCommentSheet.show(context, videoId: widget.video.id);
               }),
               const SizedBox(height: 14),
-              // সেভ বাটন
               _sideBtn(
                 _saved ? Icons.bookmark : Icons.bookmark_border,
                 'সেভ',
@@ -623,12 +661,9 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 },
               ),
               const SizedBox(height: 14),
-              // সার্চ বাটন
               _sideBtn(Icons.search, '', () => context.push('/search')),
               const SizedBox(height: 14),
-              // মোর অপশন (...)
               _sideBtn(Icons.more_vert, '', _openMore),
-               // সাউন্ড কন্ট্রোল বাটন (মোর অপশনের ভেতরেও আছে, এখানেও রাখা যেতে পারে)
               const SizedBox(height: 14),
               _sideBtn(
                 _volumeIcon,
@@ -644,7 +679,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ],
           ),
         ),
-        // বটম কন্টেন্ট (লেখক, বিবরণ, স্লাইডার)
         Positioned(
           left: 12,
           right: 72,
@@ -652,7 +686,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // লেখকের নাম
               GestureDetector(
                 onTap: () {
                   if (v.authorId.isNotEmpty) {
@@ -668,7 +701,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                   ),
                 ),
               ),
-              // ভিডিও বিবরণ বা ক্যাপশন
               if (v.description.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 GestureDetector(
@@ -681,7 +713,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                   ),
                 ),
               ],
-              // ভিডিও প্রোগ্রেস স্লাইডার
               if (ok) ...[
                 const SizedBox(height: 4),
                 Row(
@@ -737,7 +768,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
     );
   }
 
-  // সাইড বাটন উইজেট
   Widget _sideBtn(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
