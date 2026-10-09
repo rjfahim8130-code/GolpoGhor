@@ -7,8 +7,11 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/follow_service.dart';
+import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../social/presentation/widgets/reaction_picker.dart';
+import '../widgets/video_comment_sheet.dart';
 
 class VideoFeedScreen extends StatefulWidget {
   const VideoFeedScreen({super.key});
@@ -183,6 +186,10 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
   bool _viewRecorded = false;
   bool _autoLoop = false;
 
+  String? _myReaction;
+  int _reactionCount = 0;
+  int _commentCount = 0;
+
   bool get _isOwner {
     final uid = _auth.currentUser?.id;
     return uid != null && uid == widget.video.authorId;
@@ -210,10 +217,17 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
       }
 
       final saved = await _service.isSaved(widget.video.id);
+      
+      final r = ReactionService();
+      final mine = await r.getMyVideoReaction(widget.video.id);
+
       if (mounted) {
         setState(() {
           _initialized = true;
           _saved = saved;
+          _myReaction = mine;
+          _reactionCount = widget.video.reactionCount;
+          _commentCount = widget.video.commentCount;
         });
       }
     } catch (_) {
@@ -480,16 +494,34 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
                 ),
               ),
               const SizedBox(height: 12),
-              _sideBtn(Icons.favorite_border, '${v.reactionCount}', () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('প্রতিক্রিয়া শীঘ্রই')),
-                );
-              }),
+              _sideBtn(
+                _myReaction != null ? Icons.favorite : Icons.favorite_border,
+                '$_reactionCount',
+                () async {
+                  final type = await ReactionPicker.show(context) ?? 'like';
+                  try {
+                    final res = await ReactionService().toggleVideoReaction(
+                      videoId: widget.video.id,
+                      reactionType: type,
+                    );
+                    final count =
+                        await ReactionService().countVideoReactions(widget.video.id);
+                    setState(() {
+                      _myReaction = res;
+                      _reactionCount = count;
+                    });
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('$e')),
+                      );
+                    }
+                  }
+                },
+              ),
               const SizedBox(height: 14),
-              _sideBtn(Icons.chat_bubble_outline, '${v.commentCount}', () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('মন্তব্য শীঘ্রই')),
-                );
+              _sideBtn(Icons.chat_bubble_outline, '$_commentCount', () {
+                VideoCommentSheet.show(context, videoId: widget.video.id);
               }),
               const SizedBox(height: 14),
               _sideBtn(
