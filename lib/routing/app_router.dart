@@ -36,7 +36,9 @@ import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/edit_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
-// ভিডিও ফিচারের জন্য নতুন ইমপোর্ট
+
+// ভিডিও ফিচারের ইমপোর্টসমূহ
+import '../features/video/presentation/screens/create_video_screen.dart';
 import '../features/video/presentation/screens/video_feed_screen.dart';
 import '../features/video/presentation/screens/video_player_screen.dart';
 
@@ -130,6 +132,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/videos',
         name: 'videos',
         builder: (_, __) => const VideoFeedScreen(),
+      ),
+      GoRoute(
+        path: '/create-video',
+        name: 'create-video',
+        builder: (_, __) => const CreateVideoScreen(),
       ),
       GoRoute(
         path: '/video/:id',
