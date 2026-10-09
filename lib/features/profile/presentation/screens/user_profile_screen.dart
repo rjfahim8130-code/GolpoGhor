@@ -190,6 +190,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             context.push('/create-novel');
                           },
                         ),
+                        ListTile(
+                          leading: const Icon(Icons.videocam_outlined),
+                          title: const Text('নতুন ভিডিও'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            context.push('/create-video');
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -334,6 +342,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   () => context.push('/set-password')),
               _menuTile(Icons.article_outlined, 'আমার লেখা',
                   () => context.push('/my-works')),
+              _menuTile(Icons.insights_outlined, 'ইনসাইট',
+                  () => context.push('/insights')),
               _menuTile(Icons.bookmark_outline, 'সংরক্ষিত',
                   () => context.push('/saved')),
               _menuTile(Icons.drafts_outlined, 'খসড়া',
