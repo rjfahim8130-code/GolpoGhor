@@ -2,10 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
-class DiscoverScreen extends StatelessWidget {
+class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
+
+  @override
+  State<DiscoverScreen> createState() => _DiscoverScreenState();
+}
+
+class _DiscoverScreenState extends State<DiscoverScreen> {
+  bool _videoOn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkVideo();
+  }
+
+  Future<void> _checkVideo() async {
+    try {
+      final on = await VideoService().isVideoFeatureEnabled();
+      if (mounted) setState(() => _videoOn = on);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +42,30 @@ class DiscoverScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            leading: const Icon(Icons.local_fire_department, color: AppColors.accent),
+            leading: const Icon(Icons.star_outline, color: AppColors.primary),
+            title: const Text('জনপ্রিয়'),
+            subtitle: const Text('বেশি প্রতিক্রিয়া'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/popular'),
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.local_fire_department,
+              color: AppColors.primary,
+            ),
             title: const Text('ট্রেন্ডিং'),
             subtitle: const Text('সবচেয়ে বেশি পঠিত'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/trending'),
           ),
+          if (_videoOn)
+            ListTile(
+              leading: const Icon(Icons.videocam_outlined, color: AppColors.primary),
+              title: const Text('ভিডিও'),
+              subtitle: const Text('রিলস স্টাইল ফিড'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/videos'),
+            ),
           const Divider(),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
@@ -42,7 +81,10 @@ class DiscoverScreen extends StatelessWidget {
               return ActionChip(
                 label: Text(c),
                 onPressed: () => context.push(
-                  Uri(path: '/category', queryParameters: {'name': c}).toString(),
+                  Uri(
+                    path: '/category',
+                    queryParameters: {'name': c},
+                  ).toString(),
                 ),
               );
             }).toList(),
