@@ -11,6 +11,7 @@ import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../social/presentation/widgets/reaction_picker.dart';
+import '../../../social/presentation/widgets/report_sheet.dart';
 import '../widgets/video_comment_sheet.dart';
 
 class VideoFeedScreen extends StatefulWidget {
@@ -154,7 +155,6 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
     );
   }
 }
-
 class _VideoFeedItem extends StatefulWidget {
   final VideoModel video;
   final bool isActive;
@@ -315,8 +315,11 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
               title: const Text('রিপোর্ট', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('রিপোর্ট শীঘ্রই')),
+                ReportSheet.show(
+                  context,
+                  targetType: 'video',
+                  targetId: v.id,
+                  title: 'ভিডিও রিপোর্ট',
                 );
               },
             ),
