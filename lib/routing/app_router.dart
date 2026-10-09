@@ -26,6 +26,7 @@ import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_story_reader_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/follow_list_screen.dart';
+import '../features/profile/presentation/screens/insights_screen.dart'; // নতুন ইমপোর্ট
 import '../features/profile/presentation/screens/my_works_screen.dart';
 import '../features/profile/presentation/screens/saved_stories_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
@@ -36,11 +37,8 @@ import '../features/story/presentation/screens/create_story_screen.dart';
 import '../features/story/presentation/screens/drafts_screen.dart';
 import '../features/story/presentation/screens/edit_story_screen.dart';
 import '../features/story/presentation/screens/story_reader_screen.dart';
-
-// ভিডিও ফিচারের ইমপোর্টসমূহ
-import '../features/video/presentation/screens/create_video_screen.dart';
-import '../features/video/presentation/screens/video_feed_screen.dart';
-import '../features/video/presentation/screens/video_player_screen.dart';
+import '../features/video/presentation/screens/create_video_screen.dart'; // নতুন ইমপোর্ট
+import '../features/video/presentation/screens/video_feed_screen.dart'; // নতুন ইমপোর্ট
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = AuthService();
@@ -59,7 +57,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           loc == '/splash' ||
           loc == '/onboarding';
 
-      // অফলাইন — লগইন ছাড়াও ঢোকা যাবে
       final isOfflineRoute =
           loc == '/offline' || loc.startsWith('/offline-story');
 
@@ -127,7 +124,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'search',
         builder: (_, __) => const SearchScreen(),
       ),
-      // ---------- Video Routes ----------
+      // ---------- Video & Insights Routes ----------
+      GoRoute(
+        path: '/insights',
+        name: 'insights',
+        builder: (_, __) => const InsightsScreen(),
+      ),
       GoRoute(
         path: '/videos',
         name: 'videos',
@@ -138,14 +140,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'create-video',
         builder: (_, __) => const CreateVideoScreen(),
       ),
-      GoRoute(
-        path: '/video/:id',
-        name: 'video',
-        builder: (_, state) => VideoPlayerScreen(
-          videoId: state.pathParameters['id']!,
-        ),
-      ),
-      // ----------------------------------
+      // ---------------------------------------------
       GoRoute(
         path: '/story/:id',
         name: 'story',
@@ -282,7 +277,6 @@ class _AuthRefresh extends ChangeNotifier {
   }
 }
 
-/// স্প্ল্যাশ: অনলাইন → হোম/অথ; অফলাইন → অফলাইন ডাউনলোড (আটকাবে না)
 class _SplashGate extends StatefulWidget {
   const _SplashGate();
 
