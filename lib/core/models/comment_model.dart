@@ -4,6 +4,7 @@ class CommentModel {
   final String? storyId;
   final String? episodeId;
   final String? novelId;
+  final String? videoId;
   final String? parentId;
   final String body;
   final int likeCount;
@@ -19,6 +20,7 @@ class CommentModel {
     this.storyId,
     this.episodeId,
     this.novelId,
+    this.videoId,
     this.parentId,
     required this.body,
     this.likeCount = 0,
@@ -45,6 +47,7 @@ class CommentModel {
       storyId: json['story_id'] as String?,
       episodeId: json['episode_id'] as String?,
       novelId: json['novel_id'] as String?,
+      videoId: json['video_id'] as String?,
       parentId: json['parent_id'] as String?,
       body: json['body'] as String? ?? '',
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
