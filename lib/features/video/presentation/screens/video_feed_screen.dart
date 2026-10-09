@@ -319,15 +319,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
     setState(() {});
   }
 
-  void _seekRelative(double dx, double width, Duration pos, Duration dur) {
-    if (dur.inMilliseconds <= 0) return;
-    final ms = (dx / width) * dur.inMilliseconds * 2;
-    var t = pos + Duration(milliseconds: ms.round());
-    if (t < Duration.zero) t = Duration.zero;
-    if (t > dur) t = dur;
-    _controller?.seekTo(t);
-  }
-
   String _fmt(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
@@ -416,6 +407,14 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ),
             if (_isOwner) ...[
               const Divider(color: Colors.white24),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined, color: Colors.white),
+                title: const Text('সম্পাদনা', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.push('/edit-video/${v.id}');
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
                 title: const Text('মুছুন', style: TextStyle(color: Colors.red)),
@@ -523,7 +522,7 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
             ),
           ),
 
-        // সিরিজের পরবর্তী অংশের জন্য ওভারলে ব্যানার
+                // সিরিজের পরবর্তী অংশের জন্য ওভারলে ব্যানার
         if (_showNextPart && _nextPart != null)
           Positioned(
             left: 16,
