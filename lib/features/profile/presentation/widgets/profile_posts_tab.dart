@@ -1,6 +1,10 @@
+// lib/features/profile/presentation/widgets/profile_posts_tab.dart
+// সংশোধিত: localization যোগ
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/video_model.dart';
@@ -9,13 +13,10 @@ import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/app_dot_menu.dart';
 import '../../../../core/widgets/empty_view.dart';
 
-/// প্রোফাইলের ৩টি ট্যাব (গল্প · উপন্যাস · ভিডিও) —
-/// একই UI, শুধু ডেটা আলাদা
 class ProfilePostsTab {
   ProfilePostsTab._();
 
   // ---------- Stories ----------
-
   static Widget stories({
     required List<StoryModel> stories,
     required void Function(StoryModel) onOpenStory,
@@ -33,24 +34,25 @@ class ProfilePostsTab {
       itemCount: stories.length,
       itemBuilder: (context, i) {
         final s = stories[i];
+        final l10n = context.l10n;
         return _postTile(
           context: context,
           cover: s.coverUrl,
           title: s.title.isEmpty ? '(শিরোনামহীন)' : s.title,
           subtitle:
-              '${TimeAgo.compact(s.viewCount)} দেখা · ${TimeAgo.compact(s.reactionCount)} রিঅ্যাকশন · ${TimeAgo.bn(s.createdAt)}',
+              '${TimeAgo.compact(s.viewCount)} · ${TimeAgo.compact(s.reactionCount)} · ${TimeAgo.bn(s.createdAt)}',
           onTap: () => onOpenStory(s),
           menuItems: [
             if (onEditStory != null)
               AppDotMenuItem(
                 icon: Icons.edit_outlined,
-                label: 'সম্পাদনা',
+                label: l10n.edit,
                 onTap: () => onEditStory(s),
               ),
             if (onDeleteStory != null)
               AppDotMenuItem(
                 icon: Icons.delete_outline,
-                label: 'মুছুন',
+                label: l10n.delete,
                 onTap: () => onDeleteStory(s),
                 danger: true,
               ),
@@ -61,7 +63,6 @@ class ProfilePostsTab {
   }
 
   // ---------- Novels ----------
-
   static Widget novels({
     required List<NovelModel> novels,
     required void Function(NovelModel) onOpenNovel,
@@ -79,24 +80,25 @@ class ProfilePostsTab {
       itemCount: novels.length,
       itemBuilder: (context, i) {
         final n = novels[i];
+        final l10n = context.l10n;
         return _postTile(
           context: context,
           cover: n.coverUrl,
           title: n.title.isEmpty ? '(শিরোনামহীন)' : n.title,
           subtitle:
-              '${n.episodeCount} পর্ব · ${TimeAgo.compact(n.viewCount)} দেখা',
+              '${n.episodeCount} পর্ব · ${TimeAgo.compact(n.viewCount)}',
           onTap: () => onOpenNovel(n),
           menuItems: [
             if (onEditNovel != null)
               AppDotMenuItem(
                 icon: Icons.edit_outlined,
-                label: 'সম্পাদনা',
+                label: l10n.edit,
                 onTap: () => onEditNovel(n),
               ),
             if (onDeleteNovel != null)
               AppDotMenuItem(
                 icon: Icons.delete_outline,
-                label: 'মুছুন',
+                label: l10n.delete,
                 onTap: () => onDeleteNovel(n),
                 danger: true,
               ),
@@ -107,7 +109,6 @@ class ProfilePostsTab {
   }
 
   // ---------- Videos ----------
-
   static Widget videos({
     required List<VideoModel> videos,
     required void Function(VideoModel) onOpenVideo,
@@ -125,25 +126,26 @@ class ProfilePostsTab {
       itemCount: videos.length,
       itemBuilder: (context, i) {
         final v = videos[i];
+        final l10n = context.l10n;
         return _postTile(
           context: context,
           cover: v.thumbnailUrl,
           isVideo: true,
           title: v.displayTitle,
           subtitle:
-              '${TimeAgo.compact(v.viewCount)} দেখা · ${TimeAgo.compact(v.reactionCount)} রিঅ্যাকশন · ${TimeAgo.bn(v.createdAt)}',
+              '${TimeAgo.compact(v.viewCount)} · ${TimeAgo.compact(v.reactionCount)}',
           onTap: () => onOpenVideo(v),
           menuItems: [
             if (onEditVideo != null)
               AppDotMenuItem(
                 icon: Icons.edit_outlined,
-                label: 'সম্পাদনা',
+                label: l10n.edit,
                 onTap: () => onEditVideo(v),
               ),
             if (onDeleteVideo != null)
               AppDotMenuItem(
                 icon: Icons.delete_outline,
-                label: 'মুছুন',
+                label: l10n.delete,
                 onTap: () => onDeleteVideo(v),
                 danger: true,
               ),
@@ -154,7 +156,6 @@ class ProfilePostsTab {
   }
 
   // ---------- Common tile ----------
-
   static Widget _postTile({
     required BuildContext context,
     required String title,
@@ -183,7 +184,6 @@ class ProfilePostsTab {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // thumbnail
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox(
@@ -198,7 +198,8 @@ class ProfilePostsTab {
                               fit: BoxFit.cover,
                               memCacheWidth: 200,
                               placeholder: (_, __) => Container(
-                                color: AppColors.primary.withValues(alpha: 0.08),
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.08),
                               ),
                               errorWidget: (_, __, ___) =>
                                   _placeholder(isVideo),
