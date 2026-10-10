@@ -1,0 +1,71 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create Android platform if missing
+        run: |
+          echo "Checking android folder..."
+          ls -la
+          if [ ! -d android ]; then
+            echo "android/ missing — running flutter create"
+            flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          elif [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
+            echo "android/ incomplete — running flutter create"
+            flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          else
+            echo "android/ OK"
+          fi
+          ls -la android/app/ || true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+        continue-on-error: true
+
+      - name: Analyze (info only, does not fail build)
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: Test (info only)
+        run: flutter test
+        continue-on-error: true
+
+      - name: Build debug APK
+        run: |
+          flutter build apk --debug \
+            --dart-define=R2_ACCESS_KEY=${{ secrets.R2_ACCESS_KEY }} \
+            --dart-define=R2_SECRET_KEY=${{ secrets.R2_SECRET_KEY }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: golpoghor-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
