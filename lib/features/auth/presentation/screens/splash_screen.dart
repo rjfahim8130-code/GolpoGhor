@@ -1,3 +1,6 @@
+// lib/features/auth/presentation/screens/splash_screen.dart
+// সংশোধিত: safe startup, try-catch সব step-এ, slow হলেও crash না
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,9 +11,6 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
-/// হালকা splash — দ্রুত রাউটিং
-/// অফলাইন হলে সরাসরি /offline
-/// অনলাইন হলে session/onboarding চেক
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -26,39 +26,73 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _go() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    if (!mounted) return;
+    try {
+      // বেশি delay নেই — 300ms
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
 
-    final online = await ref.read(networkStatusProvider.notifier).check();
+      // Network check — fail হলেও চলবে (অনলাইন ধরে নাও)
+      bool online = true;
+      try {
+        online = await ref
+            .read(networkStatusProvider.notifier)
+            .check()
+            .timeout(const Duration(seconds: 4));
+      } catch (e) {
+        debugPrint('NETWORK_CHECK_FAILED: $e');
+        online = true;
+      }
+      if (!mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-    final auth = AuthService();
+      // Prefs — fail হলেও চলবে
+      bool onboardingDone = false;
+      bool cachedSetup = false;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        onboardingDone = prefs.getBool('onboarding_done') ?? false;
+        cachedSetup = prefs.getBool('profile_setup_done') ?? false;
+      } catch (e) {
+        debugPrint('PREFS_FAILED: $e');
+      }
+      if (!mounted) return;
 
-    if (!mounted) return;
+      // Auth check — fail হলেও চলবে
+      bool loggedIn = false;
+      try {
+        loggedIn = AuthService().isLoggedIn;
+      } catch (e) {
+        debugPrint('AUTH_CHECK_FAILED: $e');
+        loggedIn = false;
+      }
+      if (!mounted) return;
 
-    // ১) অফলাইন — সোজা offline লিস্টে
-    if (!online) {
-      context.go(RouteNames.offline);
-      return;
-    }
+      // Route decision
+      if (!online) {
+        context.go(RouteNames.offline);
+        return;
+      }
 
-    // ২) অনলাইন — auth চেক
-    if (!auth.isLoggedIn) {
-      context.go(onboardingDone ? RouteNames.welcome : RouteNames.onboarding);
-      return;
-    }
+      if (!loggedIn) {
+        context.go(
+          onboardingDone ? RouteNames.welcome : RouteNames.onboarding,
+        );
+        return;
+      }
 
-    // ৩) লগইন আছে — profile setup চেক (cache first)
-    final cachedSetup = prefs.getBool('profile_setup_done') ?? false;
-    if (cachedSetup) {
+      // লগইন আছে — cache setup থাকলে home, না থাকলে home-ই (setup পরে)
+      if (cachedSetup) {
+        context.go(RouteNames.home);
+        return;
+      }
+
       context.go(RouteNames.home);
-      return;
+    } catch (e, st) {
+      debugPrint('SPLASH_ERROR: $e');
+      debugPrint('$st');
+      if (!mounted) return;
+      // যেকোনো সমস্যায় welcome — crash না
+      context.go(RouteNames.welcome);
     }
-
-    // ৪) cache নেই — সরাসরি home; background-এ পেজ load হয়ে যাবে
-    // (profile set check আর করছি না — হালকা রাখতে)
-    context.go(RouteNames.home);
   }
 
   @override
@@ -78,9 +112,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               color: AppColors.primary,
             ),
             SizedBox(height: 16),
+            // অ্যাপের নাম সবসময় বাংলায়
             Text(
               'গল্পঘর',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 28),
             SizedBox(
