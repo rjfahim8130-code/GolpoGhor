@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/shared_plus.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/novel_model.dart';
@@ -14,7 +14,6 @@ import '../../../../core/services/offline_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -62,6 +61,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     try {
       final novel = await _novelService.getById(widget.novelId);
       if (novel == null) {
+        if (!mounted) return;
         setState(() {
           _error = 'উপন্যাস পাওয়া যায়নি';
           _loading = false;
@@ -101,10 +101,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         ),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
@@ -120,11 +119,10 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
 
   Future<void> _copyCode(String code) async {
     await Clipboard.setData(ClipboardData(text: code));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('কোড কপি হয়েছে')),
-      );
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('কোড কপি হয়েছে')),
+    );
   }
 
   Future<void> _downloadAll() async {
@@ -154,10 +152,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         SnackBar(content: Text('${_episodes.length} পর্ব অফলাইনে সেভ')),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) setState(() => _downloadingAll = false);
     }
@@ -171,6 +168,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
+  
+  // ---------- Build ----------
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +182,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     if (_loading) {
       return Scaffold(backgroundColor: bg, body: const LoadingView());
     }
+
     if (_error != null || _novel == null) {
       return Scaffold(
         backgroundColor: bg,
@@ -228,8 +228,10 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.flag_outlined,
-                          color: Colors.white),
+                      icon: const Icon(
+                        Icons.flag_outlined,
+                        color: Colors.white,
+                      ),
                       onPressed: () => ReportSheet.show(
                         context,
                         targetType: 'novel',
@@ -243,6 +245,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
             ),
           ),
 
+          // কনটেন্ট
           Expanded(
             child: RefreshIndicator(
               onRefresh: _load,
@@ -355,7 +358,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // টোটাল
+                  // মেটা
                   Wrap(
                     spacing: 16,
                     runSpacing: 8,
@@ -377,8 +380,10 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'সব পর্ব',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -500,4 +505,106 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
             ),
           ),
 
-          /
+          // নিচের বার
+          Material(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            elevation: 8,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'সব পর্ব ডাউনলোড',
+                      icon: _downloadingAll
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_outlined),
+                      onPressed: _downloadingAll ? null : _downloadAll,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        color: _bookmarked ? AppColors.primary : null,
+                      ),
+                      onPressed: _toggleBookmark,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      onPressed: _share,
+                    ),
+                    const Spacer(),
+                    if (_isAuthor)
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => context.push(
+                          '${RouteNames.addEpisode}/${n.id}',
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('পর্ব যোগ'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Helpers ----------
+
+  Widget _meta(String label, IconData icon) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _coverPlaceholder() {
+    return Container(
+      height: 160,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: const Center(
+        child: Icon(Icons.menu_book, size: 52, color: AppColors.primary),
+      ),
+    );
+  }
+
+  Widget _epPlaceholder(int num) {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.08),
+      alignment: Alignment.center,
+      child: Text(
+        'পর্ব $num',
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+}
