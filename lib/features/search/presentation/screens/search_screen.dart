@@ -1,3 +1,6 @@
+// lib/features/search/presentation/screens/search_screen.dart
+// সংশোধিত: username বাদ, nickname, localization
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
@@ -126,6 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final showIdle = !_loading && _result == null && _controller.text.isEmpty;
 
@@ -142,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
           textInputAction: TextInputAction.search,
           onChanged: _onChanged,
           onSubmitted: _runSearch,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'গল্প, লেখক বা কোড…',
             border: InputBorder.none,
           ),
@@ -164,12 +169,12 @@ class _SearchScreenState extends State<SearchScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : showIdle
-              ? _buildIdle(isDark)
-              : _buildResults(isDark),
+              ? _buildIdle(l10n, isDark)
+              : _buildResults(l10n, isDark),
     );
   }
-
-  Widget _buildIdle(bool isDark) {
+  
+  Widget _buildIdle(AppLocalizations l10n, bool isDark) {
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
@@ -179,14 +184,14 @@ class _SearchScreenState extends State<SearchScreen> {
         if (_recent.isNotEmpty) ...[
           Row(
             children: [
-              const Text(
+              Text(
                 'সাম্প্রতিক',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               TextButton(
                 onPressed: _clearRecent,
-                child: const Text('সব মুছুন'),
+                child: Text(l10n.clearAll),
               ),
             ],
           ),
@@ -204,9 +209,9 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 24),
         ],
-        const Text(
-          'ক্যাটাগরি',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          l10n.category,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -235,7 +240,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildResults(bool isDark) {
+  Widget _buildResults(AppLocalizations l10n, bool isDark) {
     final r = _result;
     if (r == null) return const SizedBox.shrink();
     final secondary =
@@ -275,14 +280,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 '${RouteNames.novel}/${r.exactNovelCode!.id}',
               ),
             ),
-          if (r.exactUserCode != null) _authorTile(r.exactUserCode!),
+          if (r.exactUserCode != null) _authorTile(r.exactUserCode!, l10n),
         ],
         if (r.authors.isNotEmpty) ...[
           _sectionTitle('লেখক (${r.authors.length})'),
-          ...r.authors.map(_authorTile),
+          ...r.authors.map((a) => _authorTile(a, l10n)),
         ],
         if (r.stories.isNotEmpty) ...[
-          _sectionTitle('গল্প (${r.stories.length})'),
+          _sectionTitle('${l10n.story} (${r.stories.length})'),
           ...r.stories.map(
             (s) => StoryCard(
               story: s,
@@ -291,7 +296,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
         if (r.novels.isNotEmpty) ...[
-          _sectionTitle('উপন্যাস (${r.novels.length})'),
+          _sectionTitle('${l10n.novel} (${r.novels.length})'),
           ...r.novels.map(
             (n) => NovelCard(
               novel: n,
@@ -300,7 +305,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
         if (r.videos.isNotEmpty) ...[
-          _sectionTitle('ভিডিও (${r.videos.length})'),
+          _sectionTitle('${l10n.video} (${r.videos.length})'),
           ...r.videos.map(_videoTile),
         ],
       ],
@@ -348,7 +353,12 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _authorTile(UserModel u) {
+  /// লেখক টাইল — শুধু নাম ও ডাক নাম দেখায়, username নয়
+  Widget _authorTile(UserModel u, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     return ListTile(
       leading: CachedAvatar(
         userId: u.id,
@@ -356,13 +366,38 @@ class _SearchScreenState extends State<SearchScreen> {
         name: u.displayName,
         radius: 22,
       ),
-      title: Text(u.displayName),
-      subtitle: Text(
-        [
-          if (u.username != null) '@${u.username}',
-          if (u.inviteCode != null) u.inviteCode!,
-        ].join(' · '),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              u.displayName,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (u.isAdmin) ...[
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.shield,
+              size: 14,
+              color: AppColors.danger,
+            ),
+          ],
+        ],
       ),
+      subtitle: u.hasNickname
+          ? Text(
+              u.displayNickname,
+              style: TextStyle(
+                fontSize: 12,
+                color: secondary,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
       onTap: () => context.push('${RouteNames.user}/${u.id}'),
     );
   }
