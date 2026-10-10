@@ -70,6 +70,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   bool get _isStory => widget.kind == ReaderKind.story;
 
+  /// কমেন্ট নোটিফিকেশনের জন্য পোস্টের মালিক
+  String? get _ownerId {
+    if (_isStory) return _story?.authorId;
+    return _episode?.authorId;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,6 +115,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       // অফলাইন fallback
       final offline = await _offlineService.get(widget.id);
       if (offline != null) {
+        if (!mounted) return;
         setState(() {
           _story = offline.toStoryModel();
           _downloaded = true;
@@ -117,6 +124,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         });
         return;
       }
+      if (!mounted) return;
       setState(() {
         _error = 'লোড করা যায়নি';
         _loading = false;
@@ -191,10 +199,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _viewCount = ep.viewCount;
       _downloaded = dl;
     });
-
-    _episodeService.recordView(ep.id);
-  }
-  
   // ---------- Helpers ----------
 
   EpisodeModel? get _prev {
@@ -331,11 +335,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
       builder: (ctx) => SizedBox(
         height: MediaQuery.of(ctx).size.height * 0.75,
         child: _isStory
-            ? CommentSection(storyId: widget.id)
-            : CommentSection(episodeId: widget.id),
+            ? CommentSection(
+                storyId: widget.id,
+                ownerId: _ownerId,
+              )
+            : CommentSection(
+                episodeId: widget.id,
+                ownerId: _ownerId,
+              ),
       ),
     ).then((_) async {
-      // রিফ্রেশ কাউন্ট
       try {
         if (_isStory) {
           final s = await _storyService.getById(widget.id);
@@ -469,26 +478,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
       );
     }
 
-    // story mode title/author
     final title = _isStory
         ? (_story?.title ?? '')
         : (_episode?.title.isNotEmpty == true
             ? _episode!.title
             : 'পর্ব ${_episode?.chapterNumber ?? 1}');
-    final authorName = _isStory ? _story?.authorName : _story?.authorName;
+    final authorName = _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _story?.authorAvatar;
     final description = _isStory ? (_story?.description ?? '') : '';
     final publicCode =
         _isStory ? _story?.publicCode : _episode?.publicCode;
-    final contentBlocks =
-        _isStory ? (_story?.contentBlocks ?? []) : (_episode?.contentBlocks ?? []);
+    final contentBlocks = _isStory
+        ? (_story?.contentBlocks ?? [])
+        : (_episode?.contentBlocks ?? []);
 
     return Scaffold(
       backgroundColor: bg,
       body: Column(
         children: [
-          // বেগুনি টপ বার
+          // সবুজ টপ বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -526,7 +535,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               context,
                               targetType: _isStory ? 'story' : 'episode',
                               targetId: widget.id,
-                              title: _isStory ? 'গল্প রিপোর্ট' : 'পর্ব রিপোর্ট',
+                              title:
+                                  _isStory ? 'গল্প রিপোর্ট' : 'পর্ব রিপোর্ট',
                             );
                           },
                         ),
@@ -553,7 +563,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                   children: [
-                    // Author
                     if (authorId != null && authorId.isNotEmpty) ...[
                       Center(
                         child: Column(
@@ -579,7 +588,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // Title + Code
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -623,7 +631,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ],
                     ),
 
-                    // Description
                     if (description.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -649,7 +656,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Content (copy disabled)
                     SelectionContainer.disabled(
                       child: ReaderContent(
                         blocks: contentBlocks,
@@ -659,7 +665,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
                     const SizedBox(height: 28),
 
-                    // Stats
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -697,7 +702,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ),
           ),
 
-          // নিচের বেগুনি বার
+          // নিচের সবুজ বার
           ReaderBottomBar(
             items: [
               ReaderBottomBarItem(
@@ -772,3 +777,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 }
+
+    _episodeService.recordView(ep.id);
+  }
+  
