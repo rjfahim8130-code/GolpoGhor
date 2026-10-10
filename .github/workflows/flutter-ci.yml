@@ -42,6 +42,24 @@ jobs:
           fi
           ls -la android/app/ || true
 
+      - name: Ensure INTERNET permission in AndroidManifest
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if [ -f "$MANIFEST" ]; then
+            echo "Manifest found: $MANIFEST"
+            if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+              echo "Adding INTERNET permission..."
+              sed -i 's|<manifest\(.*\)>|<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>|' "$MANIFEST"
+            else
+              echo "INTERNET permission already present"
+            fi
+            echo "----- Manifest -----"
+            cat "$MANIFEST"
+          else
+            echo "Manifest NOT found at $MANIFEST"
+            exit 1
+          fi
+
       - name: Pub get
         run: flutter pub get
 
@@ -49,7 +67,7 @@ jobs:
         run: dart run flutter_launcher_icons
         continue-on-error: true
 
-      - name: Analyze (info only, does not fail build)
+      - name: Analyze (info only)
         run: flutter analyze --no-fatal-infos
         continue-on-error: true
 
