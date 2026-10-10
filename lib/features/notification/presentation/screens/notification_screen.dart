@@ -1,7 +1,11 @@
+// lib/features/notification/presentation/screens/notification_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/notification_model.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -37,7 +41,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
       _error = null;
     });
     try {
-      // আগে ২ দিনের পুরনো ডিলিট
       await _service.clearOld();
       final list = await _service.getMine(
         limit: AppConstants.notificationPageSize,
@@ -57,19 +60,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _clearAll() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('সব নোটিফিকেশন মুছবেন?'),
-        content: const Text('এটি ফেরানো যাবে না।'),
+        title: Text(l10n.clearAll),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -106,6 +112,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
       case 'profile':
         context.push('${RouteNames.user}/$id');
         break;
+      case 'comment':
+        // target_type == comment — comment-এর parent target-এ যাবে
+        if (n.targetId != null && n.targetId!.isNotEmpty) {
+          // আমরা target_type-এ 'comment' হলে নিচের fallback করব
+          // পোস্টে যাওয়ার লজিক পরে যোগ হবে
+        }
+        break;
     }
   }
 
@@ -118,10 +131,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return '$name মন্তব্য করেছেন';
       case 'reply':
         return '$name আপনার মন্তব্যের উত্তর দিয়েছেন';
-      case 'follow':
-        return '$name আপনাকে ফলো করেছেন';
       case 'mention':
         return '$name আপনাকে মেনশন করেছেন';
+      case 'follow':
+        return '$name আপনাকে ফলো করেছেন';
       default:
         return n.message ?? 'নোটিফিকেশন';
     }
@@ -135,10 +148,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return Icons.chat_bubble;
       case 'reply':
         return Icons.reply;
-      case 'follow':
-        return Icons.person_add;
       case 'mention':
         return Icons.alternate_email;
+      case 'follow':
+        return Icons.person_add;
       default:
         return Icons.notifications;
     }
@@ -152,6 +165,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return AppColors.info;
       case 'reply':
         return AppColors.primary;
+      case 'mention':
+        return AppColors.warning;
       case 'follow':
         return AppColors.success;
       default:
@@ -161,13 +176,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('নোটিফিকেশন'),
+        title: Text(l10n.notifications),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -175,7 +191,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         actions: [
           if (_items.isNotEmpty)
             IconButton(
-              tooltip: 'সব মুছুন',
+              tooltip: l10n.clearAll,
               icon: const Icon(Icons.delete_sweep_outlined),
               onPressed: _clearAll,
             ),
