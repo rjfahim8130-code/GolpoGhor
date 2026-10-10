@@ -1,3 +1,6 @@
+// lib/core/services/notification_service.dart
+// সংশোধিত: সব event trigger সাপোর্ট, mention সহ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
@@ -13,7 +16,7 @@ class NotificationService {
     *,
     actor:actor_id (
       full_name,
-      username,
+      nickname,
       avatar_url
     )
   ''';
@@ -23,13 +26,13 @@ class NotificationService {
     final p = map['actor'];
     if (p is Map) {
       map['actor_name'] = p['full_name'];
-      map['actor_username'] = p['username'];
+      map['actor_nickname'] = p['nickname'];
       map['actor_avatar'] = p['avatar_url'];
     }
     return map;
   }
 
-  // ---------- Fetch ----------
+  // ---------------- Fetch ----------------
 
   Future<List<NotificationModel>> getMine({int limit = 50}) async {
     final uid = _uid;
@@ -60,7 +63,7 @@ class NotificationService {
     return (data as List).length;
   }
 
-  // ---------- Write ----------
+  // ---------------- Mark / Clear ----------------
 
   Future<void> markRead(String notificationId) async {
     await _client
@@ -87,16 +90,20 @@ class NotificationService {
   Future<void> clearOld() async {
     final uid = _uid;
     if (uid == null) return;
-    final cutoff = DateTime.now()
-        .subtract(const Duration(days: AppConstants.notificationRetentionDays))
-        .toUtc()
-        .toIso8601String();
+    try {
+      final cutoff = DateTime.now()
+          .subtract(
+            const Duration(days: AppConstants.notificationRetentionDays),
+          )
+          .toUtc()
+          .toIso8601String();
 
-    await _client
-        .from(SupabaseConstants.notifications)
-        .delete()
-        .eq('user_id', uid)
-        .lt('created_at', cutoff);
+      await _client
+          .from(SupabaseConstants.notifications)
+          .delete()
+          .eq('user_id', uid)
+          .lt('created_at', cutoff);
+    } catch (_) {}
   }
 
   /// ইউজার এক ক্লিকে সব ক্লিয়ার
@@ -109,9 +116,14 @@ class NotificationService {
         .eq('user_id', uid);
   }
 
-  // ---------- Create ----------
+  // ---------------- Create ----------------
 
-  /// ইভেন্ট ঘটালে এটা কল হবে (like, comment, reply, follow)
+  /// ইভেন্ট ঘটালে এটা কল হবে
+  /// - Like → story/episode/novel/video owner
+  /// - Comment → post owner
+  /// - Reply → parent comment owner
+  /// - Mention → যাকে mention করা হলো
+  /// - Follow → target user
   Future<void> create({
     required String targetUserId,
     required String actorId,
@@ -122,6 +134,7 @@ class NotificationService {
   }) async {
     // নিজেকে নোটিফিকেশন দেব না
     if (targetUserId == actorId) return;
+    if (targetUserId.isEmpty) return;
 
     try {
       await _client.from(SupabaseConstants.notifications).insert({
@@ -132,8 +145,28 @@ class NotificationService {
         if (targetId != null) 'target_id': targetId,
         if (message != null) 'message': message,
       });
-    } catch (_) {
-      // ব্যর্থ হলেও মূল কাজ চলবে
+    } catch (_) {}
+  }
+
+  /// একবারে একাধিক mention-এর জন্য
+  /// comment-এ একাধিক @mention থাকলে প্রত্যেকের জন্য একটা notification
+  Future<void> createMentions({
+    required List<String> mentionedUserIds,
+    required String actorId,
+    required String commentId,
+    required String targetType, // story | episode | video
+    required String targetId, // post id
+  }) async {
+    for (final uid in mentionedUserIds) {
+      if (uid == actorId) continue;
+      await create(
+        targetUserId: uid,
+        actorId: actorId,
+        type: 'mention',
+        targetType: targetType,
+        targetId: targetId,
+        message: 'আপনাকে একটি মন্তব্যে মেনশন করেছেন',
+      );
     }
   }
 }
