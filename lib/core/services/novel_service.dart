@@ -1,3 +1,6 @@
+// lib/core/services/novel_service.dart
+// সংশোধিত: select nickname, username বাদ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
@@ -13,7 +16,7 @@ class NovelService {
     *,
     profiles:author_id (
       full_name,
-      username,
+      nickname,
       avatar_url
     )
   ''';
@@ -23,13 +26,13 @@ class NovelService {
     final profiles = map['profiles'];
     if (profiles is Map) {
       map['author_name'] = profiles['full_name'];
-      map['author_username'] = profiles['username'];
+      map['author_nickname'] = profiles['nickname'];
       map['author_avatar'] = profiles['avatar_url'];
     }
     return map;
   }
 
-  // ---------- Reads ----------
+  // ---------------- Reads ----------------
 
   Future<List<NovelModel>> getFeed({
     int limit = AppConstants.feedPageSize,
@@ -94,7 +97,7 @@ class NovelService {
         .toList();
   }
 
-  // ---------- Writes ----------
+  // ---------------- Writes ----------------
 
   Future<NovelModel> createNovel({
     required String title,
@@ -167,14 +170,12 @@ class NovelService {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
 
-    // আগে সব পর্ব মুছি
     await _client
         .from(SupabaseConstants.episodes)
         .delete()
         .eq('novel_id', novelId)
         .eq('author_id', uid);
 
-    // তারপর উপন্যাস
     await _client
         .from(SupabaseConstants.novels)
         .delete()
