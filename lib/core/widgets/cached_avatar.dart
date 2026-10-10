@@ -1,7 +1,11 @@
+// lib/core/widgets/cached_avatar.dart
+// সংশোধিত: hardcode path → RouteNames, localization ready
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../routing/route_names.dart';
 import '../theme/app_colors.dart';
 
 /// সব জায়গায় একই avatar — ছবি না থাকলে অক্ষর
@@ -29,7 +33,7 @@ class CachedAvatar extends StatelessWidget {
   void _openProfile(BuildContext context) {
     if (!tappable) return;
     if (userId == null || userId!.isEmpty) return;
-    context.push('/user/$userId');
+    context.push('${RouteNames.user}/$userId');
   }
 
   @override
