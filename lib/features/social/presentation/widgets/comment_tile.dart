@@ -1,14 +1,16 @@
+// lib/features/social/presentation/widgets/comment_tile.dart
+// সংশোধিত: nickname, replyToName + mention display
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/comment_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
 
-/// একটি কমেন্ট বা reply-এর টাইল
-/// Facebook স্টাইল — reply হলে যাকে reply দেওয়া হয়েছে তার নাম অটো mention
 class CommentTile extends StatelessWidget {
   final CommentModel comment;
   final String? myId;
@@ -29,6 +31,7 @@ class CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -70,6 +73,19 @@ class CommentTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (comment.hasNickname) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          '· ${comment.authorNickname}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: secondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       const SizedBox(width: 6),
                       Text(
                         TimeAgo.bn(comment.createdAt),
@@ -80,8 +96,31 @@ class CommentTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
 
-                // বডি — reply হলে replyToName bold
+                // বডি — reply হলে replyToName bold, mention হলে হাইলাইট
                 _buildBody(isDark),
+
+                // Mention indicator
+                if (comment.hasMentions && !isReply) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.alternate_email,
+                        size: 11,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${comment.mentionedUserIds.length} mention',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 4),
 
                 // অ্যাকশন
@@ -96,8 +135,8 @@ class CommentTile extends StatelessWidget {
                       onPressed: onLike,
                       child: Text(
                         comment.likeCount > 0
-                            ? 'পছন্দ · ${comment.likeCount}'
-                            : 'পছন্দ',
+                            ? '${l10n.like} · ${comment.likeCount}'
+                            : l10n.like,
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
@@ -109,9 +148,9 @@ class CommentTile extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: onReply,
-                        child: const Text(
-                          'উত্তর',
-                          style: TextStyle(fontSize: 12),
+                        child: Text(
+                          l10n.reply,
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     if (isMine && onDelete != null)
@@ -123,9 +162,9 @@ class CommentTile extends StatelessWidget {
                           foregroundColor: AppColors.danger,
                         ),
                         onPressed: onDelete,
-                        child: const Text(
-                          'মুছুন',
-                          style: TextStyle(fontSize: 12),
+                        child: Text(
+                          l10n.delete,
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                   ],
@@ -166,6 +205,8 @@ class CommentTile extends StatelessWidget {
       );
     }
 
+    // mention highlight — @নাম কে highlight করতে চাইলে
+    // এখানে সরল রাখা হয়েছে — পুরো text দেখানো হচ্ছে
     return Text(comment.body, style: textStyle);
   }
 }
