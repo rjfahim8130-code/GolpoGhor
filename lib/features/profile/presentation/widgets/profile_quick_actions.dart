@@ -1,9 +1,11 @@
+// lib/features/profile/presentation/widgets/profile_quick_actions.dart
+// সংশোধিত: localization যোগ
+
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// প্রোফাইলে প্রাইমারি ৪টি অ্যাকশন
-/// ভিডিও টগল অফ থাকলে ভিডিও বাটন দেখাবে না
 class ProfileQuickActions extends StatelessWidget {
   final bool videoOn;
   final VoidCallback onNewStory;
@@ -22,23 +24,24 @@ class ProfileQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final actions = <_QuickAction>[
       _QuickAction(
         icon: Icons.article_outlined,
-        label: 'নতুন গল্প',
+        label: l10n.newStory,
         onTap: onNewStory,
       ),
       _QuickAction(
         icon: Icons.menu_book_outlined,
-        label: 'নতুন উপন্যাস',
+        label: l10n.newNovel,
         onTap: onNewNovel,
       ),
       if (videoOn && onNewVideo != null)
         _QuickAction(
           icon: Icons.videocam_outlined,
-          label: 'নতুন ভিডিও',
+          label: l10n.newVideo,
           onTap: onNewVideo!,
         ),
       _QuickAction(
@@ -79,6 +82,8 @@ class ProfileQuickActions extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
