@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// গল্পঘর V2 — Teal সবুজ থিম
+/// গল্পঘর — Teal সবুজ থিম
 class AppColors {
   AppColors._();
 
