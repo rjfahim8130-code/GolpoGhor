@@ -1,9 +1,13 @@
+// lib/features/offline/presentation/screens/offline_reader_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/offline_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -59,6 +63,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   }
 
   void _showFontSheet() {
+    final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
@@ -70,9 +75,9 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'লেখার আকার',
-                      style: TextStyle(
+                    Text(
+                      l10n.fontSize,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -135,20 +140,24 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   Future<void> _deleteOffline() async {
     final item = _item;
     if (item == null) return;
+    final l10n = context.l10n;
 
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('অফলাইন থেকে মুছবেন?'),
+        title: Text(l10n.delete),
         content: Text(item.title),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -162,13 +171,15 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
 
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
+    final l10n = context.l10n;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('কোড কপি হয়েছে')),
+      SnackBar(content: Text(l10n.copied)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final secondary =
@@ -194,7 +205,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
       backgroundColor: bg,
       body: Column(
         children: [
-          // সবুজ টপ বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -245,8 +255,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
               ),
             ),
           ),
-
-          // মূল
           Expanded(
             child: Stack(
               children: [
@@ -255,7 +263,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                   children: [
-                    // অফলাইন চিপ
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
@@ -267,9 +274,9 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           color: AppColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'অফলাইন মোড',
-                          style: TextStyle(
+                        child: Text(
+                          '${l10n.offline} MODE',
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -278,8 +285,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // শিরোনাম
                     Text(
                       item.title,
                       style: TextStyle(
@@ -288,8 +293,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                         height: 1.3,
                       ),
                     ),
-
-                    // লেখক + কোড
                     if (item.authorName != null ||
                         item.publicCode != null) ...[
                       const SizedBox(height: 8),
@@ -321,7 +324,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                         ],
                       ),
                     ],
-
                     const SizedBox(height: 20),
                     SelectionContainer.disabled(
                       child: ReaderContent(
@@ -334,8 +336,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
               ],
             ),
           ),
-
-          // সবুজ নিচের বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -347,17 +347,17 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   children: [
                     _barBtn(
                       Icons.text_fields,
-                      'ফন্ট',
+                      l10n.fontSize,
                       _showFontSheet,
                     ),
                     _barBtn(
                       Icons.share_outlined,
-                      'শেয়ার',
+                      l10n.share,
                       _share,
                     ),
                     _barBtn(
                       Icons.delete_outline,
-                      'মুছুন',
+                      l10n.delete,
                       _deleteOffline,
                     ),
                   ],
