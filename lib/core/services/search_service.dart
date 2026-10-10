@@ -1,3 +1,6 @@
+// lib/core/services/search_service.dart
+// সংশোধিত: username বাদ, full_name + nickname দিয়ে সার্চ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -43,7 +46,7 @@ class SearchService {
     final p = map['profiles'];
     if (p is Map) {
       map['author_name'] = p['full_name'];
-      map['author_username'] = p['username'];
+      map['author_nickname'] = p['nickname'];
       map['author_avatar'] = p['avatar_url'];
     }
     return map;
@@ -60,11 +63,11 @@ class SearchService {
     final code = q.toUpperCase();
     final pattern = '%$q%';
 
-    // Exact codes
+    // ---- Exact codes ----
     try {
       final s = await _client
           .from(SupabaseConstants.stories)
-          .select('*, profiles:author_id (full_name, username, avatar_url)')
+          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
           .or('public_code.eq.$code,public_code.ilike.$q')
           .eq('is_published', true)
           .limit(1)
@@ -79,7 +82,7 @@ class SearchService {
     try {
       final n = await _client
           .from(SupabaseConstants.novels)
-          .select('*, profiles:author_id (full_name, username, avatar_url)')
+          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
           .or('public_code.eq.$code,public_code.ilike.$q')
           .eq('is_published', true)
           .limit(1)
@@ -91,12 +94,12 @@ class SearchService {
       }
     } catch (_) {}
 
+    // Exact user — invite code দিয়ে
     try {
-      final uname = q.replaceAll('@', '');
       final u = await _client
           .from(SupabaseConstants.profiles)
           .select()
-          .or('username.ilike.$uname,invite_code.ilike.$code')
+          .or('invite_code.ilike.$code')
           .limit(1)
           .maybeSingle();
       if (u != null) {
@@ -104,15 +107,17 @@ class SearchService {
       }
     } catch (_) {}
 
-    // Partial — stories
+    // ---- Partial — stories ----
     List<StoryModel> stories = [];
     try {
       final data = await _client
           .from(SupabaseConstants.stories)
-          .select('*, profiles:author_id (full_name, username, avatar_url)')
+          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
           .eq('is_published', true)
           .eq('is_draft', false)
-          .or('title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern')
+          .or(
+            'title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern',
+          )
           .order('view_count', ascending: false)
           .limit(20);
       stories = (data as List)
@@ -123,15 +128,17 @@ class SearchService {
           .toList();
     } catch (_) {}
 
-    // Partial — novels
+    // ---- Partial — novels ----
     List<NovelModel> novels = [];
     try {
       final data = await _client
           .from(SupabaseConstants.novels)
-          .select('*, profiles:author_id (full_name, username, avatar_url)')
+          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
           .eq('is_published', true)
           .eq('is_draft', false)
-          .or('title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern')
+          .or(
+            'title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern',
+          )
           .order('view_count', ascending: false)
           .limit(15);
       novels = (data as List)
@@ -142,14 +149,13 @@ class SearchService {
           .toList();
     } catch (_) {}
 
-    // Partial — authors
+    // ---- Partial — authors (full_name + nickname) ----
     List<UserModel> authors = [];
     try {
-      final uname = q.replaceAll('@', '');
       final data = await _client
           .from(SupabaseConstants.profiles)
           .select()
-          .or('username.ilike.%$uname%,full_name.ilike.$pattern')
+          .or('full_name.ilike.$pattern,nickname.ilike.$pattern')
           .limit(12);
       authors = (data as List)
           .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map)))
@@ -157,15 +163,17 @@ class SearchService {
           .toList();
     } catch (_) {}
 
-    // Partial — videos (fail হলে খালি)
+    // ---- Partial — videos ----
     List<VideoModel> videos = [];
     try {
       final data = await _client
           .from(SupabaseConstants.videoPosts)
-          .select('*, profiles:author_id (full_name, username, avatar_url)')
+          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
           .eq('is_published', true)
           .eq('is_draft', false)
-          .or('title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern')
+          .or(
+            'title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern',
+          )
           .order('view_count', ascending: false)
           .limit(15);
       videos = (data as List)
