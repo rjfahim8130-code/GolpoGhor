@@ -1,7 +1,11 @@
+// lib/features/profile/presentation/screens/insights_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/insights_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -58,6 +62,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
@@ -65,7 +70,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ইনসাইট'),
+        title: Text(l10n.insights),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -86,9 +91,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _sectionHeader(
-                        'লেখা (গল্প · উপন্যাস · পর্ব)',
-                      ),
+                      _sectionHeader('লেখা (গল্প · উপন্যাস · পর্ব)'),
                       _periodCard(
                         'এই সপ্তাহ',
                         _data!.writingWeek,
@@ -107,7 +110,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       ),
                       if (videoOn) ...[
                         const SizedBox(height: 24),
-                        _sectionHeader('ভিডিও'),
+                        _sectionHeader(l10n.video),
                         _periodCard(
                           'এই সপ্তাহ',
                           _data!.videoWeek,
@@ -127,8 +130,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       ],
                       const SizedBox(height: 16),
                       Text(
-                        'তুলনা: আগের সপ্তাহ/মাসের তুলনায় ভিউ পরিবর্তন। '
-                        'বিস্তারিত ইম্প্রেশন হিস্ট্রি পরে আসবে।',
+                        'তুলনা: আগের সপ্তাহ/মাসের তুলনায় ভিউ পরিবর্তন।',
                         style: TextStyle(fontSize: 12, color: secondary),
                       ),
                     ],
