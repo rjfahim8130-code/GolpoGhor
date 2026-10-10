@@ -1,6 +1,10 @@
+// lib/features/profile/presentation/screens/set_password_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
@@ -33,18 +37,15 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     try {
       await _auth.setPassword(_pass.text);
       if (!mounted) return;
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'পাসওয়ার্ড সেট হয়েছে। এখন ইমেইল + পাসওয়ার্ড দিয়েও লগইন করা যাবে।',
-          ),
-        ),
+        SnackBar(content: Text('${l10n.save} ✓')),
       );
       context.pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('সমস্যা: $e')));
+          .showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -52,6 +53,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final email = _auth.currentUser?.email ?? '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
@@ -59,7 +61,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('পাসওয়ার্ড সেট'),
+        title: Text(l10n.password),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -84,7 +86,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   controller: _pass,
                   obscureText: _obscure,
                   decoration: InputDecoration(
-                    labelText: 'নতুন পাসওয়ার্ড',
+                    labelText: l10n.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -99,9 +101,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 TextFormField(
                   controller: _confirm,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'পাসওয়ার্ড আবার',
-                    prefixIcon: Icon(Icons.lock_outline),
+                  decoration: InputDecoration(
+                    labelText: '${l10n.password} (আবার)',
+                    prefixIcon: const Icon(Icons.lock_outline),
                   ),
                   validator: (v) {
                     if (v != _pass.text) return 'মিলছে না';
@@ -129,7 +131,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('সেভ করুন'),
+                        : Text(l10n.save),
                   ),
                 ),
               ],
