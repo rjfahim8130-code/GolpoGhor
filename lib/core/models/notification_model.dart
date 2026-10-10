@@ -1,3 +1,6 @@
+// lib/core/models/notification_model.dart
+// সংশোধিত: nickname যোগ, mention type সাপোর্ট
+
 /// In-app notification মডেল
 /// type: like | comment | reply | follow | mention
 class NotificationModel {
@@ -13,7 +16,7 @@ class NotificationModel {
 
   // join — actor-এর তথ্য
   final String? actorName;
-  final String? actorUsername;
+  final String? actorNickname;
   final String? actorAvatar;
 
   const NotificationModel({
@@ -27,19 +30,19 @@ class NotificationModel {
     this.isRead = false,
     required this.createdAt,
     this.actorName,
-    this.actorUsername,
+    this.actorNickname,
     this.actorAvatar,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     String? name;
-    String? username;
+    String? nickname;
     String? avatar;
 
     final profiles = json['actor'] ?? json['profiles'];
     if (profiles is Map) {
       name = profiles['full_name'] as String?;
-      username = profiles['username'] as String?;
+      nickname = profiles['nickname'] as String?;
       avatar = profiles['avatar_url'] as String?;
     }
 
@@ -55,7 +58,7 @@ class NotificationModel {
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
       actorName: name ?? json['actor_name'] as String?,
-      actorUsername: username ?? json['actor_username'] as String?,
+      actorNickname: nickname ?? json['actor_nickname'] as String?,
       actorAvatar: avatar ?? json['actor_avatar'] as String?,
     );
   }
@@ -84,7 +87,7 @@ class NotificationModel {
     bool? isRead,
     DateTime? createdAt,
     String? actorName,
-    String? actorUsername,
+    String? actorNickname,
     String? actorAvatar,
   }) {
     return NotificationModel(
@@ -98,7 +101,7 @@ class NotificationModel {
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       actorName: actorName ?? this.actorName,
-      actorUsername: actorUsername ?? this.actorUsername,
+      actorNickname: actorNickname ?? this.actorNickname,
       actorAvatar: actorAvatar ?? this.actorAvatar,
     );
   }
