@@ -1,10 +1,15 @@
+// lib/core/services/follow_service.dart
+// সংশোধিত: notification trigger + nickname select
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
 import '../models/user_model.dart';
+import 'notification_service.dart';
 
 class FollowService {
   final SupabaseClient _client = Supabase.instance.client;
+  final _notif = NotificationService();
 
   String? get _uid => _client.auth.currentUser?.id;
 
@@ -33,6 +38,7 @@ class FollowService {
         .maybeSingle();
 
     if (existing != null) {
+      // Unfollow
       await _client
           .from(SupabaseConstants.follows)
           .delete()
@@ -42,11 +48,22 @@ class FollowService {
       return false;
     }
 
+    // Follow
     await _client.from(SupabaseConstants.follows).insert({
       'follower_id': uid,
       'following_id': targetUserId,
     });
     await _adjustCounts(targetUserId, uid, delta: 1);
+
+    // Notification
+    await _notif.create(
+      targetUserId: targetUserId,
+      actorId: uid,
+      type: 'follow',
+      targetType: 'profile',
+      targetId: uid,
+    );
+
     return true;
   }
 
