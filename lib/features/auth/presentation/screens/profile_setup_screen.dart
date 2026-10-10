@@ -1,23 +1,30 @@
+// lib/features/auth/presentation/screens/profile_setup_screen.dart
+// সংশোধিত: username → nickname, localization
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
+class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
 
   @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+  ConsumerState<ProfileSetupScreen> createState() =>
+      _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _username = TextEditingController();
+  final _nickname = TextEditingController();
   final _bio = TextEditingController();
   final _auth = AuthService();
   bool _loading = false;
@@ -33,7 +40,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final p = await _auth.getMyProfile();
     if (p != null) {
       _name.text = p.fullName ?? '';
-      _username.text = p.username ?? '';
+      _nickname.text = p.nickname ?? '';
       _bio.text = p.bio ?? '';
     }
     if (mounted) setState(() => _init = false);
@@ -42,7 +49,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   void dispose() {
     _name.dispose();
-    _username.dispose();
+    _nickname.dispose();
     _bio.dispose();
     super.dispose();
   }
@@ -51,12 +58,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await _auth.updateProfile(
+      final updated = await _auth.updateProfile(
         fullName: _name.text,
-        username: _username.text,
+        nickname: _nickname.text,
         bio: _bio.text,
         profileSetupDone: true,
       );
+
+      await ref.read(sessionCacheProvider.notifier).save(updated);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('profile_setup_done', true);
@@ -65,7 +74,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('সেভ সমস্যা: $e')),
+          SnackBar(content: Text('$e')),
         );
       }
     } finally {
@@ -85,6 +94,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (_init) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -93,12 +104,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('প্রোফাইল সেটআপ'),
+        title: Text(l10n.profile),
         automaticallyImplyLeading: false,
         actions: [
           TextButton(
             onPressed: _loading ? null : _skip,
-            child: const Text('স্কিপ'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -115,34 +126,40 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   style: TextStyle(fontSize: 15),
                 ),
                 const SizedBox(height: 24),
+
+                // নাম
                 TextFormField(
                   controller: _name,
-                  decoration: const InputDecoration(
-                    labelText: 'নাম',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.fullName,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   validator: Validators.name,
                 ),
                 const SizedBox(height: 16),
+
+                // ডাক নাম
                 TextFormField(
-                  controller: _username,
-                  decoration: const InputDecoration(
-                    labelText: 'ইউজারনেম',
-                    prefixIcon: Icon(Icons.alternate_email),
-                    helperText: 'ছোট হাতের অক্ষর, সংখ্যা',
+                  controller: _nickname,
+                  decoration: InputDecoration(
+                    labelText: l10n.nickname,
+                    prefixIcon: const Icon(Icons.badge_outlined),
+                    helperText: 'যেমন: গল্প লেখক, কবি, ঔপন্যাসিক',
                   ),
-                  validator: Validators.username,
                 ),
                 const SizedBox(height: 16),
+
+                // বায়ো
                 TextFormField(
                   controller: _bio,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'বায়ো (ঐচ্ছিক)',
+                  decoration: InputDecoration(
+                    labelText: l10n.bio,
                     alignLabelWithHint: true,
                   ),
                 ),
                 const SizedBox(height: 28),
+
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
