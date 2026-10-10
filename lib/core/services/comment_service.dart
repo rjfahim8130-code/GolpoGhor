@@ -244,3 +244,109 @@ class CommentService {
       videoId: videoId,
     );
   }
+  /// পোস্ট মালিক অন্যদের কমেন্ট ডিলিট করতে পারবে
+  Future<void> deleteCommentAsOwner(String commentId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+    await _client.from(SupabaseConstants.comments).delete().eq('id', commentId);
+  }
+
+  // ---------------- Like ----------------
+
+  Future<bool> isCommentLiked(String commentId) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    final row = await _client
+        .from(SupabaseConstants.commentLikes)
+        .select('user_id')
+        .eq('user_id', uid)
+        .eq('comment_id', commentId)
+        .maybeSingle();
+    return row != null;
+  }
+
+  Future<bool> toggleCommentLike(String commentId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final existing = await _client
+        .from(SupabaseConstants.commentLikes)
+        .select('user_id')
+        .eq('user_id', uid)
+        .eq('comment_id', commentId)
+        .maybeSingle();
+
+    bool liked;
+    if (existing != null) {
+      await _client
+          .from(SupabaseConstants.commentLikes)
+          .delete()
+          .eq('user_id', uid)
+          .eq('comment_id', commentId);
+      liked = false;
+    } else {
+      await _client.from(SupabaseConstants.commentLikes).insert({
+        'user_id': uid,
+        'comment_id': commentId,
+      });
+      liked = true;
+    }
+
+    // like count refresh
+    final likes = await _client
+        .from(SupabaseConstants.commentLikes)
+        .select('user_id')
+        .eq('comment_id', commentId);
+    await _client
+        .from(SupabaseConstants.comments)
+        .update({'like_count': (likes as List).length}).eq('id', commentId);
+
+    return liked;
+  }
+
+  // ---------------- Count refresh ----------------
+
+  Future<void> _refreshCount({
+    String? storyId,
+    String? episodeId,
+    String? novelId,
+    String? videoId,
+  }) async {
+    if (storyId != null) {
+      final all = await _client
+          .from(SupabaseConstants.comments)
+          .select('id')
+          .eq('story_id', storyId);
+      await _client
+          .from(SupabaseConstants.stories)
+          .update({'comment_count': (all as List).length}).eq('id', storyId);
+    }
+    if (episodeId != null) {
+      final all = await _client
+          .from(SupabaseConstants.comments)
+          .select('id')
+          .eq('episode_id', episodeId);
+      await _client
+          .from(SupabaseConstants.episodes)
+          .update({'comment_count': (all as List).length}).eq('id', episodeId);
+    }
+    if (novelId != null) {
+      final all = await _client
+          .from(SupabaseConstants.comments)
+          .select('id')
+          .eq('novel_id', novelId);
+      await _client
+          .from(SupabaseConstants.novels)
+          .update({'comment_count': (all as List).length}).eq('id', novelId);
+    }
+    if (videoId != null) {
+      final all = await _client
+          .from(SupabaseConstants.comments)
+          .select('id')
+          .eq('video_id', videoId);
+      await _client
+          .from(SupabaseConstants.videoPosts)
+          .update({'comment_count': (all as List).length}).eq('id', videoId);
+    }
+  }
+}
