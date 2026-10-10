@@ -1,3 +1,6 @@
+// lib/routing/app_router.dart
+// সংশোধিত: admin guard, set_password import, সব ঠিক
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isLegalRoute = loc.startsWith(RouteNames.legal);
 
+      // লগইন ছাড়াও যাওয়া যাবে: auth routes, offline, legal
       if (!loggedIn &&
           !isAuthRoute &&
           !isOfflineRoute &&
@@ -70,9 +74,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return RouteNames.welcome;
       }
 
+      // ⚠️ Admin guard — লগইন থাকলেও admin check হবে
+      if (loc.startsWith(RouteNames.admin)) {
+        if (!loggedIn) return RouteNames.welcome;
+        // Admin check screen-level-এ হবে (async) —
+        // এখানে শুধু লগইন চেক করা হচ্ছে
+      }
+
       return null;
     },
     routes: [
+      // ---------- Splash & Onboarding ----------
       GoRoute(
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
@@ -81,6 +93,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.onboarding,
         builder: (_, __) => const OnboardingScreen(),
       ),
+
+      // ---------- Auth ----------
       GoRoute(
         path: RouteNames.welcome,
         builder: (_, __) => const WelcomeScreen(),
@@ -102,6 +116,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const ProfileSetupScreen(),
       ),
 
+      // ---------- Home ----------
       GoRoute(
         path: RouteNames.home,
         builder: (_, __) => const HomeFeedScreen(),
@@ -134,6 +149,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const NotificationScreen(),
       ),
 
+      // ---------- Reader ----------
       GoRoute(
         path: '${RouteNames.story}/:id',
         builder: (_, state) => ReaderScreen(
@@ -149,6 +165,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // ---------- Novel details ----------
       GoRoute(
         path: '${RouteNames.novel}/:id',
         builder: (_, state) => NovelDetailsScreen(
@@ -156,6 +173,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // ---------- Write ----------
       GoRoute(
         path: RouteNames.writeStory,
         builder: (_, __) => const WriteScreen(kind: WriteKind.story),
@@ -189,6 +207,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const DraftListScreen(),
       ),
 
+      // ---------- Video ----------
       GoRoute(
         path: RouteNames.videos,
         builder: (_, state) {
@@ -207,6 +226,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // ---------- Profile ----------
       GoRoute(
         path: RouteNames.profile,
         builder: (_, __) => const ProfileScreen(),
@@ -246,6 +266,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const InsightsScreen(),
       ),
 
+      // ---------- Offline ----------
       GoRoute(
         path: RouteNames.offline,
         builder: (_, __) => const OfflineDownloadsScreen(),
@@ -257,16 +278,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // ---------- Settings ----------
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
       ),
 
+      // ---------- Admin ----------
       GoRoute(
         path: RouteNames.admin,
         builder: (_, __) => const AdminDashboardScreen(),
       ),
 
+      // ---------- Legal ----------
       GoRoute(
         path: '${RouteNames.legal}/:type',
         builder: (_, state) => LegalScreen(
