@@ -1,3 +1,6 @@
+// lib/app.dart
+// সংশোধিত: system locale default, locale resolution, support bn+en
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +26,10 @@ class GolpoGhorApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
+
+      // null = system locale, non-null = user selected
       locale: locale,
+
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -31,6 +37,18 @@ class GolpoGhorApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
+      // বাংলা না হলে English
+      localeResolutionCallback: (deviceLocale, supportedLocales) {
+        if (deviceLocale == null) return const Locale('en');
+        for (final l in supportedLocales) {
+          if (l.languageCode == deviceLocale.languageCode) {
+            return l;
+          }
+        }
+        return const Locale('en');
+      },
+
       routerConfig: router,
     );
   }
