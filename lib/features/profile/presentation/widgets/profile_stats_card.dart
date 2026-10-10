@@ -1,27 +1,32 @@
+// lib/features/profile/presentation/widgets/profile_stats_card.dart
+// সংশোধিত: ৪টি stat — ফলোয়ার, ফলোয়িং, ভিউ, রিঅ্যাকশন
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
-/// প্রোফাইলের Stats — ফলোয়ার · ফলোয়িং · পোস্ট
-/// প্রতিটি tap-এ respective স্ক্রিনে যাবে
 class ProfileStatsCard extends StatelessWidget {
   final String userId;
   final int followerCount;
   final int followingCount;
-  final int postCount;
+  final int totalViews;
+  final int totalReactions;
 
   const ProfileStatsCard({
     super.key,
     required this.userId,
     required this.followerCount,
     required this.followingCount,
-    required this.postCount,
+    this.totalViews = 0,
+    this.totalReactions = 0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -37,7 +42,7 @@ class ProfileStatsCard extends StatelessWidget {
           Expanded(
             child: _statItem(
               value: followerCount,
-              label: 'ফলোয়ার',
+              label: l10n.followers,
               secondary: secondary,
               onTap: () => context.push(
                 '${RouteNames.follows}/$userId/followers',
@@ -48,7 +53,7 @@ class ProfileStatsCard extends StatelessWidget {
           Expanded(
             child: _statItem(
               value: followingCount,
-              label: 'ফলোয়িং',
+              label: l10n.following,
               secondary: secondary,
               onTap: () => context.push(
                 '${RouteNames.follows}/$userId/following',
@@ -58,8 +63,17 @@ class ProfileStatsCard extends StatelessWidget {
           _divider(isDark),
           Expanded(
             child: _statItem(
-              value: postCount,
-              label: 'পোস্ট',
+              value: totalViews,
+              label: 'ভিউ',
+              secondary: secondary,
+              onTap: null,
+            ),
+          ),
+          _divider(isDark),
+          Expanded(
+            child: _statItem(
+              value: totalReactions,
+              label: 'রিঅ্যাকশন',
               secondary: secondary,
               onTap: null,
             ),
@@ -85,14 +99,16 @@ class ProfileStatsCard extends StatelessWidget {
             Text(
               _compact(value),
               style: const TextStyle(
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: secondary),
+              style: TextStyle(fontSize: 11, color: secondary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -103,7 +119,7 @@ class ProfileStatsCard extends StatelessWidget {
   Widget _divider(bool isDark) {
     return Container(
       width: 1,
-      height: 34,
+      height: 30,
       color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
     );
   }
