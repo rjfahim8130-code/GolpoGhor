@@ -1,3 +1,6 @@
+// lib/features/reader/presentation/screens/reader_screen.dart
+// সংশোধিত: notification trigger, localization, ownerId reaction-এ
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
@@ -68,6 +72,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   bool get _isStory => widget.kind == ReaderKind.story;
 
+  /// কমেন্ট ও reaction-এর জন্য পোস্টের মালিক
   String? get _ownerId {
     if (_isStory) return _story?.authorId;
     return _episode?.authorId;
@@ -215,224 +220,236 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _episodeService.recordView(ep.id);
   }
   
-Future<void> _toggleBookmark() async {
-  try {
-    if (_isStory) {
-      final on = await _bookmarkService.toggleStoryBookmark(widget.id);
-      if (!mounted) return;
-      setState(() => _bookmarked = on);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(on ? 'বুকমার্ক করা হয়েছে' : 'বুকমার্ক সরানো হয়েছে'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
-  }
-}
-
-Future<void> _download() async {
-  if (_downloaded) {
-    await _offlineService.remove(_isStory ? widget.id : 'ep_${widget.id}');
-    if (!mounted) return;
-    setState(() => _downloaded = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
-    );
-    return;
-  }
-
-  setState(() => _downloading = true);
-  try {
-    if (_isStory) {
-      final s = _story;
-      if (s == null) return;
-      await _offlineService.saveStory(s);
-    } else {
-      final ep = _episode;
-      if (ep == null) return;
-      await _offlineService.saveEpisode(
-        episodeId: ep.id,
-        novelTitle: _novelTitle ?? '',
-        episodeTitle: ep.title,
-        chapterNumber: ep.chapterNumber,
-        contentBlocks: ep.contentBlocks,
-        authorName: _story?.authorName,
-        publicCode: ep.publicCode,
-      );
-    }
-    if (!mounted) return;
-    setState(() {
-      _downloaded = true;
-      _downloading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('অফলাইনে ডাউনলোড হয়েছে')),
-    );
-  } catch (e) {
-    if (!mounted) return;
-    setState(() => _downloading = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('$e')));
-  }
-}
-
-Future<void> _pickReaction() async {
-  final type = await ReactionPicker.show(context);
-  if (type == null) return;
-  try {
-    String? result;
-    int total;
-    if (_isStory) {
-      result = await _reactionService.toggleStoryReaction(
-        storyId: widget.id,
-        reactionType: type,
-      );
-      final counts =
-          await _reactionService.countStoryReactions(widget.id);
-      total = counts.values.fold(0, (a, b) => a + b);
-    } else {
-      result = await _reactionService.toggleEpisodeReaction(
-        episodeId: widget.id,
-        reactionType: type,
-      );
-      final counts =
-          await _reactionService.countEpisodeReactions(widget.id);
-      total = counts.values.fold(0, (a, b) => a + b);
-    }
-    if (!mounted) return;
-    setState(() {
-      _myReaction = result;
-      _reactionTotal = total;
-    });
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
-  }
-}
-
-void _openComments() {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (ctx) => SizedBox(
-      height: MediaQuery.of(ctx).size.height * 0.75,
-      child: _isStory
-          ? CommentSection(
-              storyId: widget.id,
-              ownerId: _ownerId,
-            )
-          : CommentSection(
-              episodeId: widget.id,
-              ownerId: _ownerId,
-            ),
-    ),
-  ).then((_) async {
+  Future<void> _toggleBookmark() async {
     try {
       if (_isStory) {
-        final s = await _storyService.getById(widget.id);
-        if (s != null && mounted) {
-          setState(() => _commentCount = s.commentCount);
-        }
-      } else {
-        final ep = await _episodeService.getById(widget.id);
-        if (ep != null && mounted) {
-          setState(() => _commentCount = ep.commentCount);
-        }
+        final on = await _bookmarkService.toggleStoryBookmark(widget.id);
+        if (!mounted) return;
+        setState(() => _bookmarked = on);
+        final l10n = context.l10n;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(on ? l10n.bookmark : l10n.bookmark),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
-    } catch (_) {}
-  });
-}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
 
-Future<void> _share() async {
-  final code = _isStory ? _story?.publicCode : _episode?.publicCode;
-  final title = _isStory
-      ? (_story?.title ?? '')
-      : '${_novelTitle ?? ''} — ${_episode?.title ?? ''}';
-  await Share.share(
-    '$title\nগল্পঘরে পড়ুন'
-    '${code != null && code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
-  );
-}
-
-void _showFontSheet() {
-  showModalBottomSheet(
-    context: context,
-    builder: (ctx) {
-      return StatefulBuilder(
-        builder: (context, setModal) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'লেখার আকার',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _fontScale = (_fontScale -
-                                    AppConstants.fontScaleStep)
-                                .clamp(AppConstants.minFontScale,
-                                    AppConstants.maxFontScale);
-                          });
-                          setModal(() {});
-                        },
-                        icon: const Icon(Icons.text_decrease),
-                      ),
-                      Text('${(_fontScale * 100).round()}%'),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _fontScale = (_fontScale +
-                                    AppConstants.fontScaleStep)
-                                .clamp(AppConstants.minFontScale,
-                                    AppConstants.maxFontScale);
-                          });
-                          setModal(() {});
-                        },
-                        icon: const Icon(Icons.text_increase),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+  Future<void> _download() async {
+    if (_downloaded) {
+      await _offlineService.remove(_isStory ? widget.id : 'ep_${widget.id}');
+      if (!mounted) return;
+      setState(() => _downloaded = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
       );
-    },
-  );
-}
+      return;
+    }
 
-void _copyCode(String code) {
-  Clipboard.setData(ClipboardData(text: code));
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('কোড কপি হয়েছে')),
-  );
-}
-  
+    setState(() => _downloading = true);
+    try {
+      if (_isStory) {
+        final s = _story;
+        if (s == null) return;
+        await _offlineService.saveStory(s);
+      } else {
+        final ep = _episode;
+        if (ep == null) return;
+        await _offlineService.saveEpisode(
+          episodeId: ep.id,
+          novelTitle: _novelTitle ?? '',
+          episodeTitle: ep.title,
+          chapterNumber: ep.chapterNumber,
+          contentBlocks: ep.contentBlocks,
+          authorName: _story?.authorName,
+          publicCode: ep.publicCode,
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _downloaded = true;
+        _downloading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('অফলাইনে ডাউনলোড হয়েছে')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _downloading = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Future<void> _pickReaction() async {
+    final type = await ReactionPicker.show(context);
+    if (type == null) return;
+    try {
+      String? result;
+      int total;
+      if (_isStory) {
+        result = await _reactionService.toggleStoryReaction(
+          storyId: widget.id,
+          reactionType: type,
+          ownerId: _ownerId,
+        );
+        final counts =
+            await _reactionService.countStoryReactions(widget.id);
+        total = counts.values.fold(0, (a, b) => a + b);
+      } else {
+        result = await _reactionService.toggleEpisodeReaction(
+          episodeId: widget.id,
+          reactionType: type,
+          ownerId: _ownerId,
+        );
+        final counts =
+            await _reactionService.countEpisodeReactions(widget.id);
+        total = counts.values.fold(0, (a, b) => a + b);
+      }
+      if (!mounted) return;
+      setState(() {
+        _myReaction = result;
+        _reactionTotal = total;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  void _openComments() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SizedBox(
+        height: MediaQuery.of(ctx).size.height * 0.75,
+        child: _isStory
+            ? CommentSection(
+                storyId: widget.id,
+                ownerId: _ownerId,
+              )
+            : CommentSection(
+                episodeId: widget.id,
+                ownerId: _ownerId,
+              ),
+      ),
+    ).then((_) async {
+      try {
+        if (_isStory) {
+          final s = await _storyService.getById(widget.id);
+          if (s != null && mounted) {
+            setState(() => _commentCount = s.commentCount);
+          }
+        } else {
+          final ep = await _episodeService.getById(widget.id);
+          if (ep != null && mounted) {
+            setState(() => _commentCount = ep.commentCount);
+          }
+        }
+      } catch (_) {}
+    });
+  }
+
+  Future<void> _share() async {
+    final code = _isStory ? _story?.publicCode : _episode?.publicCode;
+    final title = _isStory
+        ? (_story?.title ?? '')
+        : '${_novelTitle ?? ''} — ${_episode?.title ?? ''}';
+    await Share.share(
+      '$title\nগল্পঘরে পড়ুন'
+      '${code != null && code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+    );
+  }
+
+  void _showFontSheet() {
+    final l10n = context.l10n;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.fontSize,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale -
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                AppConstants.minFontScale,
+                                AppConstants.maxFontScale,
+                              );
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_decrease),
+                        ),
+                        Text('${(_fontScale * 100).round()}%'),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _fontScale = (_fontScale +
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                AppConstants.minFontScale,
+                                AppConstants.maxFontScale,
+                              );
+                            });
+                            setModal(() {});
+                          },
+                          icon: const Icon(Icons.text_increase),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _copyCode(String code) {
+    Clipboard.setData(ClipboardData(text: code));
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.copied)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final textPrimary = isDark ? AppColors.darkText : AppColors.lightText;
@@ -508,8 +525,8 @@ void _copyCode(String code) {
                         Expanded(
                           child: Text(
                             _isStory
-                                ? 'গল্প'
-                                : '${_novelTitle ?? 'উপন্যাস'} · পর্ব ${_episode?.chapterNumber ?? 1}',
+                                ? l10n.story
+                                : '${_novelTitle ?? l10n.novel} · ${l10n.episode} ${_episode?.chapterNumber ?? 1}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -527,8 +544,7 @@ void _copyCode(String code) {
                               context,
                               targetType: _isStory ? 'story' : 'episode',
                               targetId: widget.id,
-                              title:
-                                  _isStory ? 'গল্প রিপোর্ট' : 'পর্ব রিপোর্ট',
+                              title: _isStory ? 'গল্প রিপোর্ট' : 'পর্ব রিপোর্ট',
                             );
                           },
                         ),
@@ -546,7 +562,6 @@ void _copyCode(String code) {
             ),
           ),
 
-          // মূল কনটেন্ট
           Expanded(
             child: Stack(
               children: [
@@ -694,20 +709,19 @@ void _copyCode(String code) {
             ),
           ),
 
-          // নিচের সবুজ বার
           ReaderBottomBar(
             items: [
               ReaderBottomBarItem(
                 icon: _downloaded
                     ? Icons.download_done
                     : Icons.download_outlined,
-                label: 'ডাউনলোড',
+                label: l10n.download,
                 loading: _downloading,
                 onTap: _downloading ? null : _download,
               ),
               ReaderBottomBarItem(
                 icon: Icons.text_fields,
-                label: 'ফন্ট',
+                label: l10n.fontSize,
                 onTap: _showFontSheet,
               ),
               if (_isStory)
@@ -715,19 +729,19 @@ void _copyCode(String code) {
                   icon: _bookmarked
                       ? Icons.bookmark
                       : Icons.bookmark_border,
-                  label: 'বুকমার্ক',
+                  label: l10n.bookmark,
                   active: _bookmarked,
                   onTap: _toggleBookmark,
                 ),
               ReaderBottomBarItem(
                 icon: Icons.share_outlined,
-                label: 'শেয়ার',
+                label: l10n.share,
                 onTap: _share,
               ),
               if (!_isStory)
                 ReaderBottomBarItem(
                   icon: Icons.chevron_left,
-                  label: 'আগের',
+                  label: l10n.prevEpisode,
                   onTap: _prev == null
                       ? null
                       : () => context.pushReplacement(
@@ -737,7 +751,7 @@ void _copyCode(String code) {
               if (!_isStory)
                 ReaderBottomBarItem(
                   icon: Icons.chevron_right,
-                  label: 'পরের',
+                  label: l10n.nextEpisode,
                   onTap: _next == null
                       ? null
                       : () => context.pushReplacement(
