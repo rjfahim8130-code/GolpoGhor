@@ -1,7 +1,11 @@
+// lib/features/profile/presentation/screens/my_posts_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/video_model.dart';
@@ -10,13 +14,11 @@ import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
 import '../widgets/profile_posts_tab.dart';
 
-/// "আমার লেখা" — গল্প / উপন্যাস / ভিডিও tab
 class MyPostsScreen extends ConsumerStatefulWidget {
   const MyPostsScreen({super.key});
 
@@ -61,7 +63,8 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
       final videoOn = ref.read(videoFeatureProvider);
       final stories = await _storyService.getMyStories(draftsOnly: false);
       final novels = await _novelService.getMyNovels();
-      final videos = videoOn ? await _videoService.getMyVideos() : <VideoModel>[];
+      final videos =
+          videoOn ? await _videoService.getMyVideos() : <VideoModel>[];
 
       if (!mounted) return;
       setState(() {
@@ -115,6 +118,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
   }
 
   Future<bool?> _confirm(String title, String content) {
+    final l10n = context.l10n;
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -123,11 +127,14 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -136,11 +143,12 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final tabCount = _videoOn ? 3 : 2;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('আমার লেখা'),
+        title: Text(l10n.myWorks),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -152,9 +160,9 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
                 labelColor: AppColors.primary,
                 indicatorColor: AppColors.primary,
                 tabs: [
-                  const Tab(text: 'গল্প'),
-                  const Tab(text: 'উপন্যাস'),
-                  if (_videoOn) const Tab(text: 'ভিডিও'),
+                  Tab(text: l10n.story),
+                  Tab(text: l10n.novel),
+                  if (_videoOn) Tab(text: l10n.video),
                 ],
               ),
       ),
@@ -202,6 +210,3 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
     );
   }
 }
-
-// EmptyView / LoadingView / ErrorView এর জন্য import ব্যবহৃত হলেও
-// সব ফাইল আলাদা, তাই কোনো conflict নেই।
