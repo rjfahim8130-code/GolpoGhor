@@ -1,9 +1,14 @@
+// lib/features/profile/presentation/screens/profile_screen.dart
+// সম্পূর্ণ ড্যাশবোর্ড UI — ৪ stat + ইনসাইট + এডমিন conspicuous
+// এই ফাইল ৩ ভাগে। এটা ১/৩।
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
@@ -56,6 +61,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   List<NovelModel> _novels = [];
   List<VideoModel> _videos = [];
 
+  int _totalViews = 0;
+  int _totalReactions = 0;
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +88,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       _isMe = id != null && id == myId;
 
       if (id == null) {
-        // অফলাইন বা লগইন নেই — cache থেকে দেখাও
         final cached = ref.read(sessionCacheProvider);
         if (cached != null) {
           if (!mounted) return;
@@ -90,6 +97,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           });
           return;
         }
+        if (!mounted) return;
         setState(() {
           _error = 'প্রোফাইল পাওয়া যায়নি';
           _loading = false;
@@ -107,7 +115,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         return;
       }
 
-      // নিজের হলে cache update
       if (_isMe) {
         await ref.read(sessionCacheProvider.notifier).save(user);
       }
@@ -117,10 +124,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         following = await _followService.isFollowing(user.id);
       }
 
-      // video toggle check
       final videoOn = ref.read(videoFeatureProvider);
 
-      // পোস্ট লোড (parallel)
+      // Parallel load
       final results = await Future.wait([
         _storyService.getByAuthor(user.id),
         _novelService.getByAuthor(user.id),
@@ -130,14 +136,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           Future<List<VideoModel>>.value(const []),
       ]);
 
+      final stories = results[0] as List<StoryModel>;
+      final novels = results[1] as List<NovelModel>;
+      final videos = results[2] as List<VideoModel>;
+
+      int totalViews = 0;
+      int totalReactions = 0;
+      for (final s in stories) {
+        totalViews += s.viewCount;
+        totalReactions += s.reactionCount;
+      }
+      for (final n in novels) {
+        totalViews += n.viewCount;
+        totalReactions += n.reactionCount;
+      }
+      for (final v in videos) {
+        totalViews += v.viewCount;
+        totalReactions += v.reactionCount;
+      }
+
       if (!mounted) return;
       setState(() {
         _user = user;
         _following = following;
         _videoOn = videoOn;
-        _stories = results[0] as List<StoryModel>;
-        _novels = results[1] as List<NovelModel>;
-        _videos = results[2] as List<VideoModel>;
+        _stories = stories;
+        _novels = novels;
+        _videos = videos;
+        _totalViews = totalViews;
+        _totalReactions = totalReactions;
         _loading = false;
       });
     } catch (_) {
@@ -148,188 +175,336 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       });
     }
   }
-
-  Future<void> _toggleFollow() async {
-    final u = _user;
-    if (u == null || _isMe) return;
-    setState(() => _followBusy = true);
-    try {
-      final on = await _followService.toggleFollow(u.id);
-      final refreshed = await _auth.getProfile(u.id);
-      if (!mounted) return;
-      setState(() {
-        _following = on;
-        if (refreshed != null) _user = refreshed;
-        _followBusy = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _followBusy = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
-  }
-
-  Future<void> _copyCode(String code) async {
-    await Clipboard.setData(ClipboardData(text: code));
+  
+Future<void> _toggleFollow() async {
+  final u = _user;
+  if (u == null || _isMe) return;
+  setState(() => _followBusy = true);
+  try {
+    final on = await _followService.toggleFollow(u.id);
+    final refreshed = await _auth.getProfile(u.id);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('কোড কপি হয়েছে')),
-    );
+    setState(() {
+      _following = on;
+      if (refreshed != null) _user = refreshed;
+      _followBusy = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() => _followBusy = false);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$e')));
   }
+}
 
-  Future<void> _shareProfile() async {
-    final u = _user;
-    if (u == null) return;
-    final code = u.inviteCode ?? u.username ?? '';
-    await Share.share(
-      '${u.displayName} — গল্পঘরে ফলো করুন\nকোড: $code\n#গল্পঘর',
-    );
+Future<void> _copyCode(String code) async {
+  await Clipboard.setData(ClipboardData(text: code));
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(context.l10n.copied)),
+  );
+}
+
+Future<void> _shareProfile() async {
+  final u = _user;
+  if (u == null) return;
+  final code = u.inviteCode ?? '';
+  await Share.share(
+    '${u.displayName} — গল্পঘরে ফলো করুন\nকোড: $code\n#গল্পঘর',
+  );
+}
+
+Future<void> _deleteStory(StoryModel s) async {
+  final ok = await _confirm('গল্প মুছবেন?', s.title);
+  if (ok != true) return;
+  try {
+    await _storyService.deleteStory(s.id);
+    await _load();
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$e')));
   }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+Future<void> _deleteNovel(NovelModel n) async {
+  final ok = await _confirm(
+    'উপন্যাস মুছবেন?',
+    '${n.title} এবং সব পর্ব মুছে যাবে',
+  );
+  if (ok != true) return;
+  try {
+    await _novelService.deleteNovel(n.id);
+    await _load();
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$e')));
+  }
+}
 
-    if (_loading) {
-      return Scaffold(backgroundColor: bg, body: const LoadingView());
-    }
-    if (_error != null || _user == null) {
-      return Scaffold(
-        backgroundColor: bg,
-        appBar: AppBar(),
-        body: ErrorView(message: _error ?? 'সমস্যা', onRetry: _load),
-      );
-    }
+Future<void> _deleteVideo(VideoModel v) async {
+  final ok = await _confirm('ভিডিও মুছবেন?', 'একেবারে মুছে যাবে');
+  if (ok != true) return;
+  try {
+    await _videoService.deleteVideo(v.id);
+    await _load();
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$e')));
+  }
+}
 
-    final u = _user!;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+Future<bool?> _confirm(String title, String content) {
+  final l10n = context.l10n;
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: Text(content),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(l10n.cancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(
+            l10n.delete,
+            style: const TextStyle(color: AppColors.danger),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
+@override
+Widget build(BuildContext context) {
+  final l10n = context.l10n;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+
+  if (_loading) {
+    return Scaffold(backgroundColor: bg, body: const LoadingView());
+  }
+  if (_error != null || _user == null) {
     return Scaffold(
       backgroundColor: bg,
-      // নিজের হলে ড্রয়ার খুলবে
-      drawer: _isMe
-          ? AppMenuDrawer(
-              userId: u.id,
-              userName: u.displayName,
-              userAvatar: u.avatarUrl,
-              isAdmin: u.isAdmin,
+      appBar: AppBar(),
+      body: ErrorView(message: _error ?? 'সমস্যা', onRetry: _load),
+    );
+  }
+
+  final u = _user!;
+  final secondary =
+      isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+  return Scaffold(
+    backgroundColor: bg,
+    drawer: _isMe
+        ? AppMenuDrawer(
+            userId: u.id,
+            userName: u.displayName,
+            userAvatar: u.avatarUrl,
+            isAdmin: u.isAdmin,
+          )
+        : null,
+    appBar: AppBar(
+      leading: widget.userId != null
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(),
             )
           : null,
-      appBar: AppBar(
-        leading: widget.userId != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
-              )
-            : null,
-        title: Text(_isMe ? 'প্রোফাইল' : u.displayName),
-        actions: [
-          if (_isMe)
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.push(RouteNames.settings),
-            ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // হেডার
-            Container(
-              padding: const EdgeInsets.all(20),
-              color: AppColors.primary.withValues(alpha: 0.08),
-              child: Column(
-                children: [
-                  CachedAvatar(
-                    userId: u.id,
-                    imageUrl: u.avatarUrl,
-                    name: u.displayName,
-                    radius: 44,
-                    tappable: false,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    u.displayName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+      title: Text(_isMe ? l10n.profile : u.displayName),
+      actions: [
+        if (_isMe)
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push(RouteNames.settings),
+          ),
+      ],
+    ),
+    body: RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // -------------- হেডার --------------
+          Container(
+            padding: const EdgeInsets.all(20),
+            color: AppColors.primary.withValues(alpha: 0.08),
+            child: Column(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CachedAvatar(
+                      userId: u.id,
+                      imageUrl: u.avatarUrl,
+                      name: u.displayName,
+                      radius: 44,
+                      tappable: false,
                     ),
-                  ),
-                  if (u.username != null && u.username!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '@${u.username}',
-                      style: TextStyle(fontSize: 13, color: secondary),
-                    ),
-                  ],
-                  if (u.bio != null && u.bio!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      u.bio!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(height: 1.4, fontSize: 14),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-
-                  // Stats
-                  ProfileStatsCard(
-                    userId: u.id,
-                    followerCount: u.followerCount,
-                    followingCount: u.followingCount,
-                    postCount:
-                        _stories.length + _novels.length + _videos.length,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Follow/Unfollow
-                  if (!_isMe)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _following
-                              ? Colors.grey.shade600
-                              : AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // এডমিন badge conspicuous
+                    if (u.isAdmin)
+                      Positioned(
+                        right: -6,
+                        bottom: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBg
+                                  : AppColors.lightBg,
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.shield,
+                            size: 16,
+                            color: Colors.white,
                           ),
                         ),
-                        onPressed: _followBusy ? null : _toggleFollow,
-                        icon: _followBusy
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Icon(
-                                _following ? Icons.person_remove : Icons.person_add,
-                              ),
-                        label: Text(_following ? 'আনফলো' : 'ফলো'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // নাম
+                Text(
+                  u.displayName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                // ডাক নাম (থাকলে)
+                if (u.hasNickname) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '"${u.displayNickname}"',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: secondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+
+                // এডমিন লেবেল
+                if (u.isAdmin) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.danger.withValues(alpha: 0.4),
                       ),
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.shield,
+                          size: 14,
+                          color: AppColors.danger,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'ADMIN',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.danger,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+
+                // বায়ো
+                if (u.bio != null && u.bio!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    u.bio!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(height: 1.4, fontSize: 14),
+                  ),
+                ],
+                const SizedBox(height: 16),
+
+                // -------------- Stats --------------
+                ProfileStatsCard(
+                  userId: u.id,
+                  followerCount: u.followerCount,
+                  followingCount: u.followingCount,
+                  totalViews: _totalViews,
+                  totalReactions: _totalReactions,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Follow/Unfollow
+                if (!_isMe)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _following
+                            ? Colors.grey.shade600
+                            : AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _followBusy ? null : _toggleFollow,
+                      icon: _followBusy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              _following
+                                  ? Icons.person_remove
+                                  : Icons.person_add,
+                            ),
+                      label: Text(
+                        _following ? l10n.unfollow : l10n.follow,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            
-            // কোড + প্রাইমারি অ্যাকশন
+          ),
+          
+            // -------------- কোড + প্রাইমারি অ্যাকশন --------------
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // invite code
+                  // Invite code
                   if (u.inviteCode != null && u.inviteCode!.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -375,7 +550,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
                     ),
 
-                  // প্রাইমারি ৪ বাটন (নিজের হলে)
+                  // Quick actions (নিজের হলে)
                   if (_isMe)
                     ProfileQuickActions(
                       videoOn: _videoOn,
@@ -395,7 +570,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
 
-            // TabBar
+            // -------------- TabBar --------------
             Container(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               child: TabBar(
@@ -403,14 +578,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 labelColor: AppColors.primary,
                 indicatorColor: AppColors.primary,
                 tabs: [
-                  const Tab(text: 'গল্প'),
-                  const Tab(text: 'উপন্যাস'),
-                  if (_videoOn) const Tab(text: 'ভিডিও'),
+                  Tab(text: l10n.story),
+                  Tab(text: l10n.novel),
+                  if (_videoOn) Tab(text: l10n.video),
                 ],
               ),
             ),
 
-            // TabBarView — fixed height, তবে inner scroll
+            // -------------- TabBarView --------------
             SizedBox(
               height: 500,
               child: TabBarView(
@@ -467,103 +642,5 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ),
       ),
     );
-  }
-
-  // ---------- Delete helpers ----------
-
-  Future<void> _deleteStory(StoryModel s) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('গল্প মুছবেন?'),
-        content: Text(s.title),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'মুছুন',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await _storyService.deleteStory(s.id);
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
-  }
-
-  Future<void> _deleteNovel(NovelModel n) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('উপন্যাস মুছবেন?'),
-        content: Text('${n.title} এবং সব পর্ব মুছে যাবে'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'মুছুন',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await _novelService.deleteNovel(n.id);
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
-  }
-
-  Future<void> _deleteVideo(VideoModel v) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('ভিডিও মুছবেন?'),
-        content: const Text('একেবারে মুছে যাবে'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'মুছুন',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await _videoService.deleteVideo(v.id);
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
-    }
   }
 }
