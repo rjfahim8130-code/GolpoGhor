@@ -1,3 +1,6 @@
+// lib/features/profile/presentation/screens/edit_profile_screen.dart
+// সংশোধিত: username বাদ, nickname যোগ, avatar delete R2, localization
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
@@ -22,7 +26,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _username = TextEditingController();
+  final _nickname = TextEditingController();
   final _bio = TextEditingController();
   final _auth = AuthService();
   final _storage = R2StorageService();
@@ -43,7 +47,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void dispose() {
     _name.dispose();
-    _username.dispose();
+    _nickname.dispose();
     _bio.dispose();
     super.dispose();
   }
@@ -52,7 +56,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final p = await _auth.getMyProfile();
     if (p != null) {
       _name.text = p.fullName ?? '';
-      _username.text = p.username ?? '';
+      _nickname.text = p.nickname ?? '';
       _bio.text = p.bio ?? '';
       _avatarUrl = p.avatarUrl;
       _oldAvatarUrl = p.avatarUrl;
@@ -75,7 +79,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('ছবি: $e')));
+          .showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -87,7 +91,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       final updated = await _auth.updateProfile(
         fullName: _name.text,
-        username: _username.text,
+        nickname: _nickname.text,
         bio: _bio.text,
         avatarUrl: _avatarUrl,
       );
@@ -104,8 +108,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await ref.read(sessionCacheProvider.notifier).save(updated);
 
       if (!mounted) return;
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('প্রোফাইল আপডেট হয়েছে')),
+        SnackBar(content: Text('${l10n.save} ✓')),
       );
       context.pop();
     } catch (e) {
@@ -119,6 +124,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (_loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -127,7 +134,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('প্রোফাইল এডিট'),
+        title: Text('${l10n.profile} ${l10n.edit}'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -135,9 +142,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
-            child: const Text(
-              'সেভ',
-              style: TextStyle(
+            child: Text(
+              l10n.save,
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
               ),
@@ -192,38 +199,43 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'ছবি পরিবর্তন করলে পুরনো ছবি ডিলিট হবে',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).hintColor,
+                ),
               ),
               const SizedBox(height: 24),
 
+              // নাম
               TextFormField(
                 controller: _name,
-                decoration: const InputDecoration(
-                  labelText: 'নাম',
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.fullName,
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 validator: Validators.name,
               ),
               const SizedBox(height: 16),
 
+              // ডাক নাম
               TextFormField(
-                controller: _username,
-                decoration: const InputDecoration(
-                  labelText: 'ইউজারনেম',
-                  prefixIcon: Icon(Icons.alternate_email),
-                  helperText: 'ছোট হাতের অক্ষর, সংখ্যা',
+                controller: _nickname,
+                decoration: InputDecoration(
+                  labelText: l10n.nickname,
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  helperText: 'যেমন: গল্প লেখক, কবি, ঔপন্যাসিক',
                 ),
-                validator: Validators.username,
               ),
               const SizedBox(height: 16),
 
+              // বায়ো
               TextFormField(
                 controller: _bio,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'বায়ো',
+                decoration: InputDecoration(
+                  labelText: l10n.bio,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -250,7 +262,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('সংরক্ষণ'),
+                      : Text(l10n.save),
                 ),
               ),
             ],
