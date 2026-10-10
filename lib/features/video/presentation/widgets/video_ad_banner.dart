@@ -1,0 +1,87 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+
+/// ভিডিওর উপরে ব্যানার বিজ্ঞাপনের জন্য ফাঁকা জায়গা
+/// এখন খালি রাখা হয়েছে — পরে কনটেন্ট ভরে দিবেন
+class VideoAdBanner extends StatelessWidget {
+  final double height;
+  final String? imageUrl;
+  final String? text;
+  final VoidCallback? onTap;
+
+  const VideoAdBanner({
+    super.key,
+    this.height = 60,
+    this.imageUrl,
+    this.text,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // কনটেন্ট না থাকলে খালি জায়গা (transparent)
+    if (imageUrl == null && text == null) {
+      return SizedBox(height: height);
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(10),
+          image: imageUrl != null
+              ? DecorationImage(
+                  image: CachedNetworkImageProvider(imageUrl!),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: text != null
+            ? Text(
+                text!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+/// জায়গা রাখার জন্য একটা helper
+class VideoAdSpace extends StatelessWidget {
+  final double height;
+  const VideoAdSpace({super.key, this.height = 60});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      color: Colors.transparent,
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.black26,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Text(
+          'বিজ্ঞাপন',
+          style: TextStyle(
+            color: Colors.white38,
+            fontSize: 9,
+          ),
+        ),
+      ),
+    );
+  }
+}
