@@ -1,3 +1,6 @@
+// lib/core/services/auth_service.dart
+// সংশোধিত: username বাদ, nickname যোগ, avatar_url দিয়ে পুরনো ছবি সংরক্ষণ
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,7 +16,7 @@ class AuthService {
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
-  // ---------- Auth ----------
+  // ---------------- Auth ----------------
 
   Future<AuthResponse> signUpWithEmail({
     required String email,
@@ -68,7 +71,7 @@ class AuthService {
     await _client.auth.signOut();
   }
 
-  // ---------- Profile ----------
+  // ---------------- Profile ----------------
 
   Future<UserModel?> getMyProfile() async {
     final uid = currentUser?.id;
@@ -86,9 +89,13 @@ class AuthService {
     return UserModel.fromJson(Map<String, dynamic>.from(data));
   }
 
+  /// প্রোফাইল আপডেট
+  /// - username সরানো হয়েছে
+  /// - nickname যোগ করা হয়েছে
+  /// - আগের avatarUrl ফেরত দেয় যাতে কলার পুরনো ছবি ডিলিট করতে পারে
   Future<UserModel> updateProfile({
     String? fullName,
-    String? username,
+    String? nickname,
     String? bio,
     String? avatarUrl,
     bool? profileSetupDone,
@@ -100,9 +107,7 @@ class AuthService {
       'updated_at': DateTime.now().toIso8601String(),
     };
     if (fullName != null) map['full_name'] = fullName.trim();
-    if (username != null) {
-      map['username'] = username.trim().toLowerCase().replaceAll(' ', '');
-    }
+    if (nickname != null) map['nickname'] = nickname.trim();
     if (bio != null) map['bio'] = bio.trim();
     if (avatarUrl != null) map['avatar_url'] = avatarUrl;
     if (profileSetupDone != null) {
@@ -140,5 +145,29 @@ class AuthService {
     final p = await getMyProfile();
     if (p == null) return true;
     return !p.profileSetupDone;
+  }
+
+  /// অ্যাকাউন্ট ডিলিট — ৭ দিনের grace period-এ schedule করে
+  /// (প্রকৃত ডিলিট Supabase-এ scheduled function/RPC দিয়ে হবে)
+  Future<void> scheduleAccountDeletion() async {
+    final uid = currentUser?.id;
+    if (uid == null) throw Exception('লগইন নেই');
+    final deleteAt = DateTime.now().add(const Duration(days: 7)).toUtc();
+    await _client.from(SupabaseConstants.profiles).update({
+      'deletion_scheduled_at': deleteAt.toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', uid);
+  }
+
+  /// ডিলিট বাতিল — ইউজার আবার লগইন করলে কল হবে
+  Future<void> cancelAccountDeletion() async {
+    final uid = currentUser?.id;
+    if (uid == null) return;
+    try {
+      await _client.from(SupabaseConstants.profiles).update({
+        'deletion_scheduled_at': null,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+    } catch (_) {}
   }
 }
