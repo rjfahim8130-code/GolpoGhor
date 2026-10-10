@@ -1,7 +1,11 @@
+// lib/features/offline/presentation/screens/offline_downloads_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/offline_service.dart';
@@ -41,19 +45,23 @@ class _OfflineDownloadsScreenState
   }
 
   Future<void> _delete(OfflineItem item) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('মুছে ফেলবেন?'),
-        content: Text('"${item.title}" অফলাইন থেকে সরবে।'),
+        title: Text(l10n.delete),
+        content: Text('"${item.title}" ${l10n.offline} থেকে সরবে।'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -78,6 +86,7 @@ class _OfflineDownloadsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -85,13 +94,12 @@ class _OfflineDownloadsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('অফলাইন'),
+        title: Text(l10n.offline),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
-          // অনলাইনে যাওয়ার চেষ্টা
           IconButton(
             icon: Icon(online ? Icons.wifi : Icons.wifi_off),
             tooltip: online ? 'অনলাইনে যান' : 'ইন্টারনেট নেই',
@@ -101,22 +109,23 @@ class _OfflineDownloadsScreenState
           if (_items.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
-              tooltip: 'সব মুছুন',
+              tooltip: l10n.clearAll,
               onPressed: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('সব মুছবেন?'),
-                    content: const Text('সব অফলাইন ডাউনলোড মুছে যাবে।'),
+                    title: Text(l10n.clearAll),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('না'),
+                        child: Text(l10n.cancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('হ্যাঁ',
-                            style: TextStyle(color: Colors.red)),
+                        child: Text(
+                          l10n.delete,
+                          style: const TextStyle(color: AppColors.danger),
+                        ),
                       ),
                     ],
                   ),
@@ -133,7 +142,6 @@ class _OfflineDownloadsScreenState
           ? const LoadingView()
           : Column(
               children: [
-                // অফলাইন হলে ছোট সতর্কতা
                 if (!online)
                   Container(
                     width: double.infinity,
@@ -142,8 +150,8 @@ class _OfflineDownloadsScreenState
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(Icons.wifi_off,
                             size: 16, color: AppColors.warning),
                         SizedBox(width: 8),
@@ -195,7 +203,7 @@ class _OfflineDownloadsScreenState
                                       item.subtitle!,
                                     if (item.authorName != null)
                                       item.authorName!,
-                                    'সেভ: ${_fmt(item.savedAt)}',
+                                    '${_fmt(item.savedAt)}',
                                   ].join(' · '),
                                   style: TextStyle(
                                     fontSize: 12,
