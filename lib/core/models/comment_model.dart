@@ -1,5 +1,7 @@
+// lib/core/models/comment_model.dart
+// সংশোধিত: mentionedUserIds যোগ
+
 /// কমেন্ট মডেল — গল্প, পর্ব, উপন্যাস, ভিডিও সবখানে একই মডেল
-/// reply-এর ক্ষেত্রে parentId সেট হবে
 class CommentModel {
   final String id;
   final String userId;
@@ -8,7 +10,8 @@ class CommentModel {
   final String? novelId;
   final String? videoId;
   final String? parentId;
-  final String? replyToName; // reply-এর ক্ষেত্রে যাকে reply দেওয়া হচ্ছে তার নাম
+  final String? replyToName; // reply-এর ক্ষেত্রে যাকে reply দেওয়া হচ্ছে
+  final List<String> mentionedUserIds; // @mention করা users
   final String body;
   final int likeCount;
   final bool isDeleted;
@@ -16,7 +19,7 @@ class CommentModel {
 
   // join
   final String? authorName;
-  final String? authorUsername;
+  final String? authorNickname;
   final String? authorAvatar;
 
   const CommentModel({
@@ -28,25 +31,33 @@ class CommentModel {
     this.videoId,
     this.parentId,
     this.replyToName,
+    this.mentionedUserIds = const [],
     required this.body,
     this.likeCount = 0,
     this.isDeleted = false,
     required this.createdAt,
     this.authorName,
-    this.authorUsername,
+    this.authorNickname,
     this.authorAvatar,
   });
 
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     String? name;
-    String? username;
+    String? nickname;
     String? avatar;
 
     final profiles = json['profiles'];
     if (profiles is Map) {
       name = profiles['full_name'] as String?;
-      username = profiles['username'] as String?;
+      nickname = profiles['nickname'] as String?;
       avatar = profiles['avatar_url'] as String?;
+    }
+
+    // mentioned_user_ids — list অথবা null
+    List<String> mentions = [];
+    final mu = json['mentioned_user_ids'];
+    if (mu is List) {
+      mentions = mu.map((e) => e.toString()).toList();
     }
 
     return CommentModel(
@@ -58,13 +69,14 @@ class CommentModel {
       videoId: json['video_id'] as String?,
       parentId: json['parent_id'] as String?,
       replyToName: json['reply_to_name'] as String?,
+      mentionedUserIds: mentions,
       body: json['body'] as String? ?? '',
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
       isDeleted: json['is_deleted'] as bool? ?? false,
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
       authorName: name ?? json['author_name'] as String?,
-      authorUsername: username ?? json['author_username'] as String?,
+      authorNickname: nickname ?? json['author_nickname'] as String?,
       authorAvatar: avatar ?? json['author_avatar'] as String?,
     );
   }
@@ -79,6 +91,7 @@ class CommentModel {
       'video_id': videoId,
       'parent_id': parentId,
       'reply_to_name': replyToName,
+      'mentioned_user_ids': mentionedUserIds,
       'body': body,
       'like_count': likeCount,
     };
@@ -93,12 +106,13 @@ class CommentModel {
     String? videoId,
     String? parentId,
     String? replyToName,
+    List<String>? mentionedUserIds,
     String? body,
     int? likeCount,
     bool? isDeleted,
     DateTime? createdAt,
     String? authorName,
-    String? authorUsername,
+    String? authorNickname,
     String? authorAvatar,
   }) {
     return CommentModel(
@@ -110,12 +124,13 @@ class CommentModel {
       videoId: videoId ?? this.videoId,
       parentId: parentId ?? this.parentId,
       replyToName: replyToName ?? this.replyToName,
+      mentionedUserIds: mentionedUserIds ?? this.mentionedUserIds,
       body: body ?? this.body,
       likeCount: likeCount ?? this.likeCount,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
       authorName: authorName ?? this.authorName,
-      authorUsername: authorUsername ?? this.authorUsername,
+      authorNickname: authorNickname ?? this.authorNickname,
       authorAvatar: authorAvatar ?? this.authorAvatar,
     );
   }
@@ -125,10 +140,15 @@ class CommentModel {
           ? authorName!.trim()
           : 'ইউজার';
 
+  bool get hasNickname =>
+      authorNickname != null && authorNickname!.trim().isNotEmpty;
+
   String get initial {
     final n = displayAuthor.trim();
     return n.isNotEmpty ? n.substring(0, 1) : '?';
   }
 
   bool get isReply => parentId != null && parentId!.isNotEmpty;
+
+  bool get hasMentions => mentionedUserIds.isNotEmpty;
 }
