@@ -1,24 +1,30 @@
+// lib/core/services/comment_service.dart
+// সংশোধিত: mention support, nickname join, notification trigger
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
 import '../constants/supabase_constants.dart';
 import '../models/comment_model.dart';
+import 'notification_service.dart';
 
 class CommentService {
   final SupabaseClient _client = Supabase.instance.client;
+  final _notif = NotificationService();
 
   String? get _uid => _client.auth.currentUser?.id;
 
+  // username বাদ, nickname যোগ
   static const String _selectWithProfile = '''
     *,
     profiles:user_id (
       full_name,
-      username,
+      nickname,
       avatar_url
     )
   ''';
 
-  // ---------- Generic helpers ----------
+  // ---------------- Generic helpers ----------------
 
   Future<List<CommentModel>> _fetch({
     String? storyId,
@@ -26,7 +32,9 @@ class CommentService {
     String? novelId,
     String? videoId,
   }) async {
-    var query = _client.from(SupabaseConstants.comments).select(_selectWithProfile);
+    var query = _client
+        .from(SupabaseConstants.comments)
+        .select(_selectWithProfile);
 
     if (storyId != null) query = query.eq('story_id', storyId);
     if (episodeId != null) query = query.eq('episode_id', episodeId);
@@ -40,6 +48,9 @@ class CommentService {
         .toList();
   }
 
+  /// কমেন্ট যোগ
+  /// - notification তৈরি হবে post owner-এর জন্য (comment/reply)
+  /// - mentioned_user_ids-এ যাদের নাম আছে তাদের জন্য mention notification
   Future<CommentModel> _insert({
     required String body,
     String? storyId,
@@ -48,6 +59,8 @@ class CommentService {
     String? videoId,
     String? parentId,
     String? replyToName,
+    List<String> mentionedUserIds = const [],
+    String? postOwnerId,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
@@ -69,6 +82,8 @@ class CommentService {
           if (parentId != null) 'parent_id': parentId,
           if (replyToName != null && replyToName.trim().isNotEmpty)
             'reply_to_name': replyToName.trim(),
+          if (mentionedUserIds.isNotEmpty)
+            'mentioned_user_ids': mentionedUserIds,
           'body': text,
         })
         .select(_selectWithProfile)
@@ -81,10 +96,64 @@ class CommentService {
       videoId: videoId,
     );
 
-    return CommentModel.fromJson(Map<String, dynamic>.from(data));
+    final created = CommentModel.fromJson(Map<String, dynamic>.from(data));
+
+    // ---------- Notifications ----------
+    // ১) Post owner-কে
+    if (postOwnerId != null && postOwnerId.isNotEmpty) {
+      final type = parentId != null ? 'reply' : 'comment';
+      final targetType = _targetTypeFor(
+        storyId: storyId,
+        episodeId: episodeId,
+        novelId: novelId,
+        videoId: videoId,
+      );
+      final targetId = storyId ?? episodeId ?? novelId ?? videoId;
+
+      await _notif.create(
+        targetUserId: postOwnerId,
+        actorId: uid,
+        type: type,
+        targetType: targetType,
+        targetId: targetId,
+      );
+    }
+
+    // ২) Mentioned users-দের জন্য
+    if (mentionedUserIds.isNotEmpty) {
+      final targetType = _targetTypeFor(
+        storyId: storyId,
+        episodeId: episodeId,
+        novelId: novelId,
+        videoId: videoId,
+      );
+      final targetId = storyId ?? episodeId ?? novelId ?? videoId ?? '';
+      await _notif.createMentions(
+        mentionedUserIds: mentionedUserIds,
+        actorId: uid,
+        commentId: created.id,
+        targetType: targetType ?? 'story',
+        targetId: targetId,
+      );
+    }
+
+    return created;
   }
 
-  // ---------- Story ----------
+  String? _targetTypeFor({
+    String? storyId,
+    String? episodeId,
+    String? novelId,
+    String? videoId,
+  }) {
+    if (storyId != null) return 'story';
+    if (episodeId != null) return 'episode';
+    if (novelId != null) return 'novel';
+    if (videoId != null) return 'video';
+    return null;
+  }
+
+  // ---------------- Story ----------------
 
   Future<List<CommentModel>> getStoryComments(String storyId) =>
       _fetch(storyId: storyId);
@@ -94,15 +163,19 @@ class CommentService {
     required String body,
     String? parentId,
     String? replyToName,
+    List<String> mentionedUserIds = const [],
+    String? postOwnerId,
   }) =>
       _insert(
         storyId: storyId,
         body: body,
         parentId: parentId,
         replyToName: replyToName,
+        mentionedUserIds: mentionedUserIds,
+        postOwnerId: postOwnerId,
       );
 
-  // ---------- Episode ----------
+  // ---------------- Episode ----------------
 
   Future<List<CommentModel>> getEpisodeComments(String episodeId) =>
       _fetch(episodeId: episodeId);
@@ -112,33 +185,19 @@ class CommentService {
     required String body,
     String? parentId,
     String? replyToName,
+    List<String> mentionedUserIds = const [],
+    String? postOwnerId,
   }) =>
       _insert(
         episodeId: episodeId,
         body: body,
         parentId: parentId,
         replyToName: replyToName,
+        mentionedUserIds: mentionedUserIds,
+        postOwnerId: postOwnerId,
       );
 
-  // ---------- Novel ----------
-
-  Future<List<CommentModel>> getNovelComments(String novelId) =>
-      _fetch(novelId: novelId);
-
-  Future<CommentModel> addNovelComment({
-    required String novelId,
-    required String body,
-    String? parentId,
-    String? replyToName,
-  }) =>
-      _insert(
-        novelId: novelId,
-        body: body,
-        parentId: parentId,
-        replyToName: replyToName,
-      );
-
-  // ---------- Video ----------
+  // ---------------- Video ----------------
 
   Future<List<CommentModel>> getVideoComments(String videoId) =>
       _fetch(videoId: videoId);
@@ -148,15 +207,19 @@ class CommentService {
     required String body,
     String? parentId,
     String? replyToName,
+    List<String> mentionedUserIds = const [],
+    String? postOwnerId,
   }) =>
       _insert(
         videoId: videoId,
         body: body,
         parentId: parentId,
         replyToName: replyToName,
+        mentionedUserIds: mentionedUserIds,
+        postOwnerId: postOwnerId,
       );
 
-  // ---------- Delete ----------
+  // ---------------- Delete ----------------
 
   Future<void> deleteComment(
     String commentId, {
@@ -181,110 +244,3 @@ class CommentService {
       videoId: videoId,
     );
   }
-
-  /// পোস্ট মালিক অন্যদের কমেন্ট ডিলিট করতে পারবে
-  Future<void> deleteCommentAsOwner(String commentId) async {
-    final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-    await _client.from(SupabaseConstants.comments).delete().eq('id', commentId);
-  }
-
-  // ---------- Like ----------
-
-  Future<bool> isCommentLiked(String commentId) async {
-    final uid = _uid;
-    if (uid == null) return false;
-    final row = await _client
-        .from(SupabaseConstants.commentLikes)
-        .select('user_id')
-        .eq('user_id', uid)
-        .eq('comment_id', commentId)
-        .maybeSingle();
-    return row != null;
-  }
-
-  Future<bool> toggleCommentLike(String commentId) async {
-    final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-
-    final existing = await _client
-        .from(SupabaseConstants.commentLikes)
-        .select('user_id')
-        .eq('user_id', uid)
-        .eq('comment_id', commentId)
-        .maybeSingle();
-
-    bool liked;
-    if (existing != null) {
-      await _client
-          .from(SupabaseConstants.commentLikes)
-          .delete()
-          .eq('user_id', uid)
-          .eq('comment_id', commentId);
-      liked = false;
-    } else {
-      await _client.from(SupabaseConstants.commentLikes).insert({
-        'user_id': uid,
-        'comment_id': commentId,
-      });
-      liked = true;
-    }
-
-    // like count refresh
-    final likes = await _client
-        .from(SupabaseConstants.commentLikes)
-        .select('user_id')
-        .eq('comment_id', commentId);
-    await _client
-        .from(SupabaseConstants.comments)
-        .update({'like_count': (likes as List).length}).eq('id', commentId);
-
-    return liked;
-  }
-
-  // ---------- Count refresh ----------
-
-  Future<void> _refreshCount({
-    String? storyId,
-    String? episodeId,
-    String? novelId,
-    String? videoId,
-  }) async {
-    if (storyId != null) {
-      final all = await _client
-          .from(SupabaseConstants.comments)
-          .select('id')
-          .eq('story_id', storyId);
-      await _client
-          .from(SupabaseConstants.stories)
-          .update({'comment_count': (all as List).length}).eq('id', storyId);
-    }
-    if (episodeId != null) {
-      final all = await _client
-          .from(SupabaseConstants.comments)
-          .select('id')
-          .eq('episode_id', episodeId);
-      await _client
-          .from(SupabaseConstants.episodes)
-          .update({'comment_count': (all as List).length}).eq('id', episodeId);
-    }
-    if (novelId != null) {
-      final all = await _client
-          .from(SupabaseConstants.comments)
-          .select('id')
-          .eq('novel_id', novelId);
-      await _client
-          .from(SupabaseConstants.novels)
-          .update({'comment_count': (all as List).length}).eq('id', novelId);
-    }
-    if (videoId != null) {
-      final all = await _client
-          .from(SupabaseConstants.comments)
-          .select('id')
-          .eq('video_id', videoId);
-      await _client
-          .from(SupabaseConstants.videoPosts)
-          .update({'comment_count': (all as List).length}).eq('id', videoId);
-    }
-  }
-}
