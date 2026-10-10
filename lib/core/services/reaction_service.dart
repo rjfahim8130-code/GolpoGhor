@@ -1,13 +1,18 @@
+// lib/core/services/reaction_service.dart
+// সংশোধিত: notification trigger সব reaction-এ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
+import 'notification_service.dart';
 
 class ReactionService {
   final SupabaseClient _client = Supabase.instance.client;
+  final _notif = NotificationService();
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  // ---------- Generic ----------
+  // ---------------- Generic ----------------
 
   Future<String?> _getMine({
     String? storyId,
@@ -18,7 +23,10 @@ class ReactionService {
     final uid = _uid;
     if (uid == null) return null;
 
-    var q = _client.from(SupabaseConstants.reactions).select('reaction_type').eq('user_id', uid);
+    var q = _client
+        .from(SupabaseConstants.reactions)
+        .select('reaction_type')
+        .eq('user_id', uid);
     if (storyId != null) q = q.eq('story_id', storyId);
     if (episodeId != null) q = q.eq('episode_id', episodeId);
     if (novelId != null) q = q.eq('novel_id', novelId);
@@ -34,7 +42,9 @@ class ReactionService {
     String? novelId,
     String? videoId,
   }) async {
-    var q = _client.from(SupabaseConstants.reactions).select('reaction_type');
+    var q = _client
+        .from(SupabaseConstants.reactions)
+        .select('reaction_type');
     if (storyId != null) q = q.eq('story_id', storyId);
     if (episodeId != null) q = q.eq('episode_id', episodeId);
     if (novelId != null) q = q.eq('novel_id', novelId);
@@ -56,6 +66,7 @@ class ReactionService {
     String? episodeId,
     String? novelId,
     String? videoId,
+    String? ownerId,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
@@ -72,9 +83,12 @@ class ReactionService {
     final existing = await find.maybeSingle();
 
     String? result;
+    bool shouldNotify = false;
+
     if (existing != null) {
       final old = existing['reaction_type'] as String?;
       if (old == reactionType) {
+        // সরানো
         var del = _client
             .from(SupabaseConstants.reactions)
             .delete()
@@ -86,6 +100,7 @@ class ReactionService {
         await del;
         result = null;
       } else {
+        // পরিবর্তন
         var upd = _client
             .from(SupabaseConstants.reactions)
             .update({'reaction_type': reactionType}).eq('user_id', uid);
@@ -97,6 +112,7 @@ class ReactionService {
         result = reactionType;
       }
     } else {
+      // নতুন
       await _client.from(SupabaseConstants.reactions).insert({
         'user_id': uid,
         if (storyId != null) 'story_id': storyId,
@@ -106,6 +122,7 @@ class ReactionService {
         'reaction_type': reactionType,
       });
       result = reactionType;
+      shouldNotify = true;
     }
 
     await _refreshCount(
@@ -115,10 +132,41 @@ class ReactionService {
       videoId: videoId,
     );
 
+    // Notification — শুধু নতুন বা পরিবর্তনের সময়
+    if (shouldNotify && ownerId != null && ownerId.isNotEmpty) {
+      final targetType = _targetTypeFor(
+        storyId: storyId,
+        episodeId: episodeId,
+        novelId: novelId,
+        videoId: videoId,
+      );
+      final targetId = storyId ?? episodeId ?? novelId ?? videoId;
+      await _notif.create(
+        targetUserId: ownerId,
+        actorId: uid,
+        type: 'like',
+        targetType: targetType,
+        targetId: targetId,
+      );
+    }
+
     return result;
   }
 
-  // ---------- Story ----------
+  String? _targetTypeFor({
+    String? storyId,
+    String? episodeId,
+    String? novelId,
+    String? videoId,
+  }) {
+    if (storyId != null) return 'story';
+    if (episodeId != null) return 'episode';
+    if (novelId != null) return 'novel';
+    if (videoId != null) return 'video';
+    return null;
+  }
+
+  // ---------------- Story ----------------
 
   Future<String?> getMyStoryReaction(String storyId) =>
       _getMine(storyId: storyId);
@@ -129,10 +177,15 @@ class ReactionService {
   Future<String?> toggleStoryReaction({
     required String storyId,
     required String reactionType,
+    String? ownerId,
   }) =>
-      _toggle(storyId: storyId, reactionType: reactionType);
+      _toggle(
+        storyId: storyId,
+        reactionType: reactionType,
+        ownerId: ownerId,
+      );
 
-  // ---------- Episode ----------
+  // ---------------- Episode ----------------
 
   Future<String?> getMyEpisodeReaction(String episodeId) =>
       _getMine(episodeId: episodeId);
@@ -143,10 +196,15 @@ class ReactionService {
   Future<String?> toggleEpisodeReaction({
     required String episodeId,
     required String reactionType,
+    String? ownerId,
   }) =>
-      _toggle(episodeId: episodeId, reactionType: reactionType);
+      _toggle(
+        episodeId: episodeId,
+        reactionType: reactionType,
+        ownerId: ownerId,
+      );
 
-  // ---------- Novel ----------
+  // ---------------- Novel ----------------
 
   Future<String?> getMyNovelReaction(String novelId) =>
       _getMine(novelId: novelId);
@@ -157,10 +215,15 @@ class ReactionService {
   Future<String?> toggleNovelReaction({
     required String novelId,
     required String reactionType,
+    String? ownerId,
   }) =>
-      _toggle(novelId: novelId, reactionType: reactionType);
+      _toggle(
+        novelId: novelId,
+        reactionType: reactionType,
+        ownerId: ownerId,
+      );
 
-  // ---------- Video ----------
+  // ---------------- Video ----------------
 
   Future<String?> getMyVideoReaction(String videoId) =>
       _getMine(videoId: videoId);
@@ -176,10 +239,15 @@ class ReactionService {
   Future<String?> toggleVideoReaction({
     required String videoId,
     required String reactionType,
+    String? ownerId,
   }) =>
-      _toggle(videoId: videoId, reactionType: reactionType);
+      _toggle(
+        videoId: videoId,
+        reactionType: reactionType,
+        ownerId: ownerId,
+      );
 
-  // ---------- Count refresh ----------
+  // ---------------- Count refresh ----------------
 
   Future<void> _refreshCount({
     String? storyId,
