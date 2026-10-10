@@ -1,15 +1,17 @@
+// lib/core/widgets/app_menu_drawer.dart
+// সংশোধিত: username বাদ, এডমিন conspicuous, localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../localization/app_localizations.dart';
-import '../providers/theme_provider.dart';
-import '../providers/video_feature_provider.dart';
-import '../theme/app_colors.dart';
+import '../../core/localization/app_localizations.dart';
+import '../../core/providers/theme_provider.dart';
+import '../../core/providers/video_feature_provider.dart';
+import '../../core/theme/app_colors.dart';
+import '../../routing/route_names.dart';
 import 'cached_avatar.dart';
 
-/// সাইড ড্রয়ার — থ্রি-লাইন মেনু
-/// প্রোফাইল থেকে খোলা হবে
 class AppMenuDrawer extends ConsumerWidget {
   final String? userId;
   final String? userName;
@@ -34,75 +36,191 @@ class AppMenuDrawer extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // হেডার
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              color: AppColors.primary.withValues(alpha: 0.1),
-              child: Row(
-                children: [
-                  CachedAvatar(
-                    userId: userId,
-                    imageUrl: userAvatar,
-                    name: userName ?? 'ইউজার',
-                    radius: 26,
-                    tappable: false,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      userName ?? 'ইউজার',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            // ---------------- হেডার ----------------
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                if (userId != null && userId!.isNotEmpty) {
+                  context.push('${RouteNames.user}/$userId');
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                color: AppColors.primary.withValues(alpha: 0.1),
+                child: Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CachedAvatar(
+                          userId: userId,
+                          imageUrl: userAvatar,
+                          name: userName ?? 'ইউজার',
+                          radius: 26,
+                          tappable: false,
+                        ),
+                        if (isAdmin)
+                          Positioned(
+                            right: -4,
+                            bottom: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: AppColors.danger,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.shield,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName ?? 'ইউজার',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (isAdmin) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.danger.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: AppColors.danger
+                                      .withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: const Text(
+                                'ADMIN',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.danger,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _tile(context, Icons.home_outlined, l10n.home, '/home'),
+                  _tile(context, Icons.home_outlined, l10n.home,
+                      RouteNames.home),
                   _tile(context, Icons.explore_outlined, l10n.discover,
-                      '/discover'),
-                  _tile(context, Icons.star_outline, l10n.popular, '/popular'),
+                      RouteNames.discover),
+                  _tile(context, Icons.star_outline, l10n.popular,
+                      RouteNames.popular),
                   _tile(context, Icons.local_fire_department_outlined,
-                      l10n.trending, '/trending'),
-                  _tile(context, Icons.search, l10n.search, '/search'),
+                      l10n.trending, RouteNames.trending),
+                  _tile(context, Icons.search, l10n.search,
+                      RouteNames.search),
                   if (videoOn)
                     _tile(context, Icons.videocam_outlined, l10n.videos,
-                        '/videos'),
+                        RouteNames.videos),
                   _tile(context, Icons.notifications_outlined,
-                      l10n.notifications, '/notifications'),
+                      l10n.notifications, RouteNames.notifications),
                   const Divider(),
                   _tile(context, Icons.article_outlined, l10n.myWorks,
-                      '/my-works'),
+                      RouteNames.myWorks),
                   _tile(context, Icons.insights_outlined, l10n.insights,
-                      '/insights'),
-                  _tile(context, Icons.bookmark_outline, l10n.saved, '/saved'),
-                  _tile(context, Icons.drafts_outlined, l10n.drafts, '/drafts'),
+                      RouteNames.insights),
+                  _tile(context, Icons.bookmark_outline, l10n.saved,
+                      RouteNames.saved),
+                  _tile(context, Icons.drafts_outlined, l10n.drafts,
+                      RouteNames.drafts),
                   _tile(context, Icons.download_outlined, l10n.download,
-                      '/offline'),
+                      RouteNames.offline),
                   const Divider(),
+
+                  // এডমিন সেকশন conspicuous
+                  if (isAdmin) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.danger.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.admin_panel_settings,
+                            size: 16,
+                            color: AppColors.danger,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'ADMIN SECTIONS',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.danger,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _tile(
+                      context,
+                      Icons.admin_panel_settings_outlined,
+                      l10n.adminDashboard,
+                      RouteNames.admin,
+                      color: AppColors.danger,
+                    ),
+                    const Divider(),
+                  ],
+
                   _tile(context, Icons.settings_outlined, l10n.settings,
-                      '/settings'),
+                      RouteNames.settings),
                   _tile(context, Icons.description_outlined, l10n.terms,
-                      '/legal/terms'),
+                      '${RouteNames.legal}/terms'),
                   _tile(context, Icons.privacy_tip_outlined, l10n.privacy,
-                      '/legal/privacy'),
-                  if (isAdmin)
-                    _tile(context, Icons.admin_panel_settings_outlined,
-                        l10n.admin, '/admin'),
+                      '${RouteNames.legal}/privacy'),
                   const Divider(),
-                  // থিম shortcut
+
+                  // Theme shortcut
                   ListTile(
                     leading: Icon(_themeIcon(themeMode)),
-                    title: Text('${l10n.theme}: ${_themeLabel(themeMode)}'),
+                    title: Text(
+                      '${l10n.theme}: ${_themeLabel(themeMode, l10n)}',
+                    ),
                     onTap: () {
                       final next = themeMode == ThemeMode.light
                           ? ThemeMode.dark
@@ -126,13 +244,17 @@ class AppMenuDrawer extends ConsumerWidget {
     BuildContext context,
     IconData icon,
     String label,
-    String route,
-  ) {
+    String route, {
+    Color? color,
+  }) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
+      leading: Icon(icon, color: color),
+      title: Text(
+        label,
+        style: color != null ? TextStyle(color: color) : null,
+      ),
       onTap: () {
-        Navigator.pop(context); // close drawer
+        Navigator.pop(context);
         context.push(route);
       },
     );
@@ -149,14 +271,14 @@ class AppMenuDrawer extends ConsumerWidget {
     }
   }
 
-  String _themeLabel(ThemeMode m) {
+  String _themeLabel(ThemeMode m, AppLocalizations l10n) {
     switch (m) {
       case ThemeMode.light:
-        return 'লাইট';
+        return l10n.light;
       case ThemeMode.dark:
-        return 'ডার্ক';
+        return l10n.dark;
       case ThemeMode.system:
-        return 'সিস্টেম';
+        return l10n.system;
     }
   }
 }
