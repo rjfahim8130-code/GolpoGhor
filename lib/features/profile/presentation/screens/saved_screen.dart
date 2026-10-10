@@ -1,6 +1,10 @@
+// lib/features/profile/presentation/screens/saved_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
@@ -67,9 +71,11 @@ class _SavedScreenState extends State<SavedScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('সংরক্ষিত'),
+        title: Text(l10n.saved),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -78,9 +84,9 @@ class _SavedScreenState extends State<SavedScreen>
           controller: _tab,
           labelColor: AppColors.primary,
           indicatorColor: AppColors.primary,
-          tabs: const [
-            Tab(text: 'গল্প'),
-            Tab(text: 'উপন্যাস'),
+          tabs: [
+            Tab(text: l10n.story),
+            Tab(text: l10n.novel),
           ],
         ),
       ),
