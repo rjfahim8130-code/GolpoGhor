@@ -1,3 +1,6 @@
+// lib/core/services/story_service.dart
+// সংশোধিত: select nickname, username বাদ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
@@ -10,11 +13,12 @@ class StoryService {
 
   String? get _uid => _client.auth.currentUser?.id;
 
+  // username বাদ, nickname যোগ
   static const String _selectWithAuthor = '''
     *,
     profiles:author_id (
       full_name,
-      username,
+      nickname,
       avatar_url
     )
   ''';
@@ -24,13 +28,13 @@ class StoryService {
     final profiles = map['profiles'];
     if (profiles is Map) {
       map['author_name'] = profiles['full_name'];
-      map['author_username'] = profiles['username'];
+      map['author_nickname'] = profiles['nickname'];
       map['author_avatar'] = profiles['avatar_url'];
     }
     return map;
   }
 
-  // ---------- Reads ----------
+  // ---------------- Reads ----------------
 
   Future<List<StoryModel>> getFeed({
     int limit = AppConstants.feedPageSize,
@@ -153,7 +157,7 @@ class StoryService {
         .toList();
   }
 
-  // ---------- Writes ----------
+  // ---------------- Writes ----------------
 
   Future<StoryModel> createStory({
     required String title,
@@ -237,8 +241,6 @@ class StoryService {
         .eq('id', storyId)
         .eq('author_id', uid);
   }
-
-  // ---------- View ----------
 
   Future<int> recordView(String storyId) async {
     try {
