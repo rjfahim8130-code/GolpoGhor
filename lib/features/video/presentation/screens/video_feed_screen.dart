@@ -21,7 +21,6 @@ import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
 import '../../../social/presentation/widgets/comment_section.dart';
 import '../../../social/presentation/widgets/reaction_picker.dart';
-import '../../../social/presentation/widgets/reaction_summary.dart';
 import '../../../social/presentation/widgets/report_sheet.dart';
 
 class VideoFeedScreen extends ConsumerStatefulWidget {
@@ -61,7 +60,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     try {
       final list = await _service.getFeed(limit: 40);
       if (!mounted) return;
-      // focus থাকলে সেই ভিডিওকে সবার আগে
       if (widget.focusVideoId != null) {
         final i = list.indexWhere((v) => v.id == widget.focusVideoId);
         if (i > 0) {
@@ -86,7 +84,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
   Widget build(BuildContext context) {
     final videoOn = ref.watch(videoFeatureProvider);
 
-    // admin toggle বন্ধ → সরাসরি বাইরে
     if (!videoOn) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -196,7 +193,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
               );
             },
           ),
-          // উপরে invisible Safe Area — banner এলে এখানে বসবে
           Positioned(
             top: 0,
             left: 0,
@@ -237,6 +233,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   final _follow = FollowService();
   final _notif = NotificationService();
   final _auth = AuthService();
+  final _reaction = ReactionService();
 
   VideoPlayerController? _controller;
   bool _initialized = false;
@@ -251,13 +248,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   VideoModel? _nextPart;
   bool _showNextPart = false;
 
-  // Back button শুধু ট্যাপে দেখাবে
   bool _showBack = false;
 
   String? _myReaction;
   int _reactionCount = 0;
   int _commentCount = 0;
-  Map<String, int> _reactionCounts = {};
 
   bool get _isOwner {
     final uid = _auth.currentUser?.id;
@@ -293,9 +288,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       }
 
       final saved = await _service.isSaved(widget.video.id);
-      final r = ReactionService();
-      final mine = await r.getMyVideoReaction(widget.video.id);
-      final counts = await r.countVideoReactions(widget.video.id);
+      final mine = await _reaction.getMyVideoReaction(widget.video.id);
+      final count = await _reaction.countVideoReactions(widget.video.id);
 
       if (widget.video.isSeries) {
         final next = await _service.getNextPart(widget.video);
@@ -307,18 +301,12 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
         _initialized = true;
         _saved = saved;
         _myReaction = mine;
-        _reactionCount = counts;
-        _reactionCounts = await _reactionCountsMap();
+        _reactionCount = count;
         _commentCount = widget.video.commentCount;
       });
     } catch (_) {
       if (mounted) setState(() => _initialized = false);
     }
-  }
-
-  Future<Map<String, int>> _reactionCountsMap() async {
-    // ভিডিওর জন্য শুধু মোট জানা দরকার, তবুও map আকারে দেবার জন্য
-    return {};
   }
 
   void _tick() {
@@ -383,8 +371,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     return '$m:$s';
   }
   
-  // ---------- More menu ----------
-
   void _openMore() {
     final v = widget.video;
     showModalBottomSheet(
@@ -498,8 +484,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 
-  // ---------- Build ----------
-
   @override
   Widget build(BuildContext context) {
     final v = widget.video;
@@ -514,13 +498,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             : pos.inMilliseconds / dur.inMilliseconds);
 
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    // ভিডিও সাইজ — উপরে ও নিচে ছোট (ব্যানারের জন্য জায়গা)
     final topSpace = widget.topPad + 60;
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ভিডিও — উপরে ও নিচে ছোট করে বসানো (ব্যানার এলে ঢাকা পড়বে না)
         Positioned(
           top: topSpace,
           left: 0,
@@ -545,7 +527,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           ),
         ),
 
-        // play icon (pause অবস্থায়)
         if (ok && !c.value.isPlaying)
           Center(
             child: IgnorePointer(
@@ -557,7 +538,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
-        // Back button (ট্যাপে দেখাবে)
         if (_showBack)
           Positioned(
             top: topSpace + 8,
@@ -574,7 +554,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
-        // সিরিজ পরবর্তী অংশ ওভারলে
         if (_showNextPart && _nextPart != null)
           Positioned(
             left: 16,
@@ -619,13 +598,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
-        // ডান পাশের বাটন
         Positioned(
           right: 6,
           bottom: bottomPad + 120,
           child: Column(
             children: [
-              // avatar + follow
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -679,7 +656,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 22),
 
-              // reaction
               _sideBtn(
                 _myReaction != null
                     ? Icons.favorite
@@ -689,14 +665,13 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   final type =
                       await ReactionPicker.show(context) ?? 'like';
                   try {
-                    final res = await ReactionService().toggleVideoReaction(
+                    final res = await _reaction.toggleVideoReaction(
                       videoId: widget.video.id,
                       reactionType: type,
                     );
-                    final count = await ReactionService()
+                    final count = await _reaction
                         .countVideoReactions(widget.video.id);
 
-                    // নোটিফিকেশন
                     final myId = _auth.currentUser?.id;
                     if (myId != null && myId != v.authorId) {
                       await _notif.create(
@@ -726,7 +701,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 14),
 
-              // comment
               _sideBtn(
                 Icons.chat_bubble_outline,
                 '$_commentCount',
@@ -752,7 +726,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 14),
 
-              // save
               _sideBtn(
                 _saved ? Icons.bookmark : Icons.bookmark_border,
                 'সেভ',
@@ -772,7 +745,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 14),
 
-              // search
               _sideBtn(
                 Icons.search,
                 '',
@@ -780,11 +752,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 14),
 
-              // more
               _sideBtn(Icons.more_vert, '', _openMore),
               const SizedBox(height: 14),
 
-              // volume
               _sideBtn(
                 _muted ? Icons.volume_off : Icons.volume_up,
                 '',
@@ -797,7 +767,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           ),
         ),
 
-        // নিচের তথ্য (নাম, description, slider)
         Positioned(
           left: 12,
           right: 72,
@@ -805,7 +774,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // author
               GestureDetector(
                 onTap: () {
                   if (v.authorId.isNotEmpty) {
@@ -821,7 +789,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   ),
                 ),
               ),
-              // description
               if (v.description.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 GestureDetector(
@@ -839,7 +806,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   ),
                 ),
               ],
-              // time ago
               const SizedBox(height: 2),
               Text(
                 TimeAgo.bn(v.createdAt),
@@ -848,7 +814,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   fontSize: 11,
                 ),
               ),
-              // progress slider
               if (ok) ...[
                 const SizedBox(height: 4),
                 Row(
