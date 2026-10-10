@@ -1,8 +1,11 @@
+// lib/core/models/user_model.dart
+// সংশোধিত: username বাদ, nickname যোগ
+
 class UserModel {
   final String id;
   final String? email;
   final String? fullName;
-  final String? username;
+  final String? nickname;
   final String? bio;
   final String? avatarUrl;
   final String? inviteCode;
@@ -17,7 +20,7 @@ class UserModel {
     required this.id,
     this.email,
     this.fullName,
-    this.username,
+    this.nickname,
     this.bio,
     this.avatarUrl,
     this.inviteCode,
@@ -34,7 +37,7 @@ class UserModel {
       id: json['id'] as String,
       email: json['email'] as String?,
       fullName: json['full_name'] as String?,
-      username: json['username'] as String?,
+      nickname: json['nickname'] as String?,
       bio: json['bio'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       inviteCode: json['invite_code'] as String?,
@@ -56,7 +59,7 @@ class UserModel {
       'id': id,
       'email': email,
       'full_name': fullName,
-      'username': username,
+      'nickname': nickname,
       'bio': bio,
       'avatar_url': avatarUrl,
       'invite_code': inviteCode,
@@ -71,7 +74,7 @@ class UserModel {
     String? id,
     String? email,
     String? fullName,
-    String? username,
+    String? nickname,
     String? bio,
     String? avatarUrl,
     String? inviteCode,
@@ -86,7 +89,7 @@ class UserModel {
       id: id ?? this.id,
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
-      username: username ?? this.username,
+      nickname: nickname ?? this.nickname,
       bio: bio ?? this.bio,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       inviteCode: inviteCode ?? this.inviteCode,
@@ -99,22 +102,23 @@ class UserModel {
     );
   }
 
-  /// নাম দেখানোর জন্য (username কখনোই নয়)
+  /// নাম দেখানোর জন্য
   String get displayName {
     if (fullName != null && fullName!.trim().isNotEmpty) {
       return fullName!.trim();
     }
-    if (username != null && username!.trim().isNotEmpty) {
-      return username!.trim();
-    }
     return 'ইউজার';
   }
 
-  /// শুধু প্রোফাইল স্ক্রিনে ব্যবহৃত হবে
-  String get handle =>
-      (username != null && username!.isNotEmpty) ? '@$username' : '';
+  /// ডাক নাম (ঐচ্ছিক)
+  String get displayNickname =>
+      (nickname != null && nickname!.trim().isNotEmpty)
+          ? nickname!.trim()
+          : '';
 
-  /// Avatar না থাকলে প্রথম অক্ষর দেখানোর জন্য
+  bool get hasNickname => displayNickname.isNotEmpty;
+
+  /// Avatar না থাকলে প্রথম অক্ষর
   String get initial {
     final n = displayName.trim();
     if (n.isEmpty) return '?';
