@@ -1,5 +1,5 @@
 // lib/main.dart
-// সংশোধিত: startup safe, error handling, runZonedGuarded
+// startup safe, error handling, runZonedGuarded
 
 import 'dart:async';
 
@@ -25,7 +25,7 @@ Future<void> main() async {
       };
 
       SystemChrome.setSystemUIOverlayStyle(
-        const const SystemUiOverlayStyle(
+        const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
         ),
       );
