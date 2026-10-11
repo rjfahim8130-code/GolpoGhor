@@ -1,6 +1,10 @@
+// lib/features/profile/presentation/screens/follow_list_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/follow_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -55,7 +59,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
@@ -63,13 +67,14 @@ class _FollowListScreenState extends State<FollowListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isFollowers ? 'ফলোয়ার' : 'ফলোয়িং'),
+        title: Text(_isFollowers ? l10n.followers : l10n.following),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -83,8 +88,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
                   ? EmptyView(
                       icon: Icons.people_outline,
                       title: _isFollowers
-                          ? 'কোনো ফলোয়ার নেই'
-                          : 'কাউকে ফলো করছেন না',
+                          ? l10n.noFollowers
+                          : l10n.notFollowingAnyone,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
