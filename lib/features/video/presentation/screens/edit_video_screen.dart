@@ -46,6 +46,14 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -56,7 +64,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       if (v == null) {
         if (!mounted) return;
         setState(() {
-          _error = 'ভিডিও পাওয়া যায়নি';
+          _error = 'videoNotFound';
           _loading = false;
         });
         return;
@@ -73,7 +81,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -104,8 +112,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -116,8 +125,8 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('${l10n.delete} (${l10n.video})'),
-        content: const Text('একেবারে মুছে যাবে। ফেরানো যাবে না।'),
+        title: Text(l10n.deleteVideoConfirm),
+        content: Text(l10n.cannotUndoLong),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -140,8 +149,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -181,7 +191,11 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       body: _loading
           ? const LoadingView()
           : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
+              ? ErrorView(
+                  message: l10n.t(_error!),
+                  onRetry: _load,
+                  retryLabel: l10n.retry,
+                )
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -204,8 +218,8 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                             Expanded(
                               child: Text(
                                 '${_video!.durationSeconds}s'
-                                ' · ${TimeAgo.bn(_video!.createdAt)}'
-                                '${_video!.isSeries ? " · পর্ব ${_video!.partNumber}" : ""}',
+                                ' · ${TimeAgo.of(context, _video!.createdAt)}'
+                                '${_video!.isSeries ? " · ${l10n.episodeLabel} ${_video!.partNumber}" : ""}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: secondary,
