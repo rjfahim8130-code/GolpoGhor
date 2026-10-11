@@ -46,18 +46,18 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
   }
 
   String _delta(int cur, int prev) {
-    if (prev == 0) return cur > 0 ? '+$cur' : '০';
+    if (prev == 0) return cur > 0 ? '+$cur' : '0';
     final d = cur - prev;
     if (d > 0) return '+$d';
     if (d < 0) return '$d';
-    return '০';
+    return '0';
   }
 
   @override
@@ -91,9 +91,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _sectionHeader('লেখা (গল্প · উপন্যাস · পর্ব)'),
+                      _sectionHeader(l10n.insightsWritingHeader),
                       _periodCard(
-                        'এই সপ্তাহ',
+                        l10n.thisWeek,
                         _data!.writingWeek,
                         _delta(
                           _data!.writingWeek.views,
@@ -101,7 +101,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         ),
                       ),
                       _periodCard(
-                        'এই মাস',
+                        l10n.thisMonth,
                         _data!.writingMonth,
                         _delta(
                           _data!.writingMonth.views,
@@ -112,7 +112,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         const SizedBox(height: 24),
                         _sectionHeader(l10n.video),
                         _periodCard(
-                          'এই সপ্তাহ',
+                          l10n.thisWeek,
                           _data!.videoWeek,
                           _delta(
                             _data!.videoWeek.views,
@@ -120,7 +120,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           ),
                         ),
                         _periodCard(
-                          'এই মাস',
+                          l10n.thisMonth,
                           _data!.videoMonth,
                           _delta(
                             _data!.videoMonth.views,
@@ -130,7 +130,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       ],
                       const SizedBox(height: 16),
                       Text(
-                        'তুলনা: আগের সপ্তাহ/মাসের তুলনায় ভিউ পরিবর্তন।',
+                        l10n.insightsCompareHint,
                         style: TextStyle(fontSize: 12, color: secondary),
                       ),
                     ],
@@ -154,6 +154,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     InsightsPeriodStats s,
     String viewDelta,
   ) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -174,7 +175,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  'ভিউ $viewDelta',
+                  '${l10n.views} $viewDelta',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -188,10 +189,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
               spacing: 20,
               runSpacing: 8,
               children: [
-                _chip('দেখা', '${s.views}'),
-                _chip('প্রতিক্রিয়া', '${s.reactions}'),
-                _chip('মন্তব্য', '${s.comments}'),
-                if (s.saves > 0) _chip('সেভ', '${s.saves}'),
+                _chip(l10n.seen, '${s.views}'),
+                _chip(l10n.reactions, '${s.reactions}'),
+                _chip(l10n.comments, '${s.comments}'),
+                if (s.saves > 0) _chip(l10n.saves, '${s.saves}'),
               ],
             ),
           ],
