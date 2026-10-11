@@ -1,11 +1,14 @@
+// lib/features/admin/presentation/widgets/admin_content_list.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
-/// অ্যাডমিন প্যানেলে সাম্প্রতিক গল্প লিস্ট (মডারেশন)
 class AdminContentList extends StatelessWidget {
   final List<StoryModel> stories;
   final Future<void> Function(StoryModel) onUnpublish;
@@ -20,6 +23,8 @@ class AdminContentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (stories.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
@@ -60,25 +65,27 @@ class AdminContentList extends StatelessWidget {
             ),
             trailing: PopupMenuButton<String>(
               onSelected: (v) {
-                if (v == 'open') context.push('${RouteNames.story}/${s.id}');
+                if (v == 'open') {
+                  context.push('${RouteNames.story}/${s.id}');
+                }
                 if (v == 'unpublish') onUnpublish(s);
                 if (v == 'delete') onDelete(s);
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'open',
-                  child: Text('খুলুন'),
+                  child: Text(l10n.read),
                 ),
                 if (s.isPublished)
                   const PopupMenuItem(
                     value: 'unpublish',
                     child: Text('আনপাবলিশ'),
                   ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Text(
-                    'মুছুন',
-                    style: TextStyle(color: Colors.red),
+                    l10n.delete,
+                    style: const TextStyle(color: AppColors.danger),
                   ),
                 ),
               ],
