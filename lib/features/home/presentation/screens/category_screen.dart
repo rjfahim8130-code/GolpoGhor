@@ -1,5 +1,6 @@
 // lib/features/home/presentation/screens/category_screen.dart
 // সংশোধিত: localization
+// widget.category এখন locale-aware display value হিসেবে আসবে
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -57,6 +58,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.category),
@@ -68,11 +71,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
       body: _loading
           ? const LoadingView()
           : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
+              ? ErrorView(
+                  message: l10n.t(_error!),
+                  onRetry: _load,
+                  retryLabel: l10n.retry,
+                )
               : _stories.isEmpty
                   ? EmptyView(
                       icon: Icons.menu_book_outlined,
-                      title: 'এই ক্যাটাগরিতে এখনো গল্প নেই',
+                      title: l10n.noStoriesInCategory,
                       subtitle: widget.category,
                     )
                   : RefreshIndicator(
