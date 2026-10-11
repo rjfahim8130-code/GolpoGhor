@@ -108,8 +108,8 @@ class AdminService {
   Future<Map<String, int>> stats() async {
     Future<int> count(String table) async {
       try {
-        final data = await _client.from(table).select('id');
-        return (data as List).length;
+        // শুধু COUNT — সব row আনে না
+        return await _client.from(table).count(CountOption.exact);
       } catch (_) {
         return 0;
       }
@@ -128,18 +128,16 @@ class AdminService {
       final monthStart = DateTime.utc(now.year, now.month, 1);
       final prevMonthStart = DateTime.utc(now.year, now.month - 1, 1);
 
-      final thisMonth = await _client
+      thisMonthNew = await _client
           .from(SupabaseConstants.profiles)
-          .select('id')
+          .count(CountOption.exact)
           .gte('created_at', monthStart.toIso8601String());
-      thisMonthNew = (thisMonth as List).length;
 
-      final lastMonth = await _client
+      lastMonthNew = await _client
           .from(SupabaseConstants.profiles)
-          .select('id')
+          .count(CountOption.exact)
           .gte('created_at', prevMonthStart.toIso8601String())
           .lt('created_at', monthStart.toIso8601String());
-      lastMonthNew = (lastMonth as List).length;
     } catch (_) {}
 
     return {
