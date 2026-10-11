@@ -54,6 +54,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -72,11 +80,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
       if (mounted) context.go(RouteNames.home);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -109,7 +116,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         actions: [
           TextButton(
             onPressed: _loading ? null : _skip,
-            child: Text(l10n.close),
+            child: Text(l10n.skip),
           ),
         ],
       ),
@@ -121,9 +128,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'চাইলে এখনই প্রোফাইল ঠিক করুন — পরেও বদলানো যাবে।',
-                  style: TextStyle(fontSize: 15),
+                Text(
+                  l10n.setupProfileHint,
+                  style: const TextStyle(fontSize: 15),
                 ),
                 const SizedBox(height: 24),
 
@@ -134,7 +141,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     labelText: l10n.fullName,
                     prefixIcon: const Icon(Icons.person_outline),
                   ),
-                  validator: Validators.name,
+                  validator: (v) => Validators.name(context, v),
                 ),
                 const SizedBox(height: 16),
 
@@ -144,7 +151,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   decoration: InputDecoration(
                     labelText: l10n.nickname,
                     prefixIcon: const Icon(Icons.badge_outlined),
-                    helperText: 'যেমন: গল্প লেখক, কবি, ঔপন্যাসিক',
+                    helperText: l10n.nicknameHelper,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -180,7 +187,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('সংরক্ষণ করে এগোও'),
+                        : Text(l10n.saveAndContinue),
                   ),
                 ),
               ],
