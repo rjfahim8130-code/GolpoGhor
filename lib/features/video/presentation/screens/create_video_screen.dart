@@ -181,3 +181,202 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       if (mounted) setState(() => _uploading = false);
     }
   }
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.newVideo),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: _uploading ? null : () => context.pop(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _uploading || _checking
+                ? null
+                : () => _publish(asDraft: true),
+            child: Text(l10n.draft),
+          ),
+          TextButton(
+            onPressed: _uploading || _checking
+                ? null
+                : () => _publish(asDraft: false),
+            child: _uploading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    l10n.publish,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // প্রিভিউ / পিকার
+          GestureDetector(
+            onTap: _checking || _uploading ? null : _pick,
+            child: Container(
+              height: 220,
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: _preview != null && _preview!.value.isInitialized
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Center(
+                          child: AspectRatio(
+                            aspectRatio: _preview!.value.aspectRatio == 0
+                                ? 9 / 16
+                                : _preview!.value.aspectRatio,
+                            child: VideoPlayer(_preview!),
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$_durationSec সে. / ১৫ মিনিট',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Center(
+                      child: _checking
+                          ? const CircularProgressIndicator(
+                              color: Colors.white)
+                          : const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.video_library_outlined,
+                                  size: 48,
+                                  color: Colors.white70,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'গ্যালারি থেকে ভিডিও বেছে নিন',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: _titleCtrl,
+            decoration: InputDecoration(
+              labelText: '${l10n.title} (ঐচ্ছিক)',
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: _descCtrl,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: l10n.description,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: _tagsCtrl,
+            decoration: InputDecoration(
+              labelText: '${l10n.tags} (স্পেস বা কমা দিয়ে)',
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppColors.primary,
+            title: const Text('পর্বভিত্তিক সিরিজ'),
+            subtitle: Text(
+              'একাধিক পর্ব একই সিরিজে সংযুক্ত হবে',
+              style: TextStyle(fontSize: 12, color: secondary),
+            ),
+            value: _asSeries,
+            onChanged: _uploading
+                ? null
+                : (v) => setState(() {
+                      _asSeries = v;
+                      if (v && _seriesId == null) {
+                        _seriesId = const Uuid().v4();
+                      }
+                    }),
+          ),
+
+          if (_asSeries) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _seriesTitleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'সিরিজের নাম',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _partCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'পর্ব নম্বর',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ],
+
+          if (_uploading) ...[
+            const SizedBox(height: 24),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            Text(
+              'আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: secondary),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
