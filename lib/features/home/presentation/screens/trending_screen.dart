@@ -47,7 +47,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -68,11 +68,15 @@ class _TrendingScreenState extends State<TrendingScreen> {
       body: _loading
           ? const LoadingView()
           : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
+              ? ErrorView(
+                  message: l10n.t(_error!),
+                  onRetry: _load,
+                  retryLabel: l10n.retry,
+                )
               : _stories.isEmpty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.local_fire_department_outlined,
-                      title: 'এখনো ট্রেন্ডিং নেই',
+                      title: l10n.noTrendingYet,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
