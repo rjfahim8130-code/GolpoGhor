@@ -1,6 +1,10 @@
+// lib/features/home/presentation/screens/category_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/widgets/empty_view.dart';
