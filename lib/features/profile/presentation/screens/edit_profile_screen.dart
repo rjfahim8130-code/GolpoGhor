@@ -215,7 +215,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   labelText: l10n.fullName,
                   prefixIcon: const Icon(Icons.person_outline),
                 ),
-                validator: Validators.name,
+                validator: (v) => Validators.name(context, v),
               ),
               const SizedBox(height: 16),
 
