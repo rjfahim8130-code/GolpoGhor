@@ -30,7 +30,7 @@ class CommentSection extends ConsumerStatefulWidget {
     this.ownerId,
   }) : assert(
           storyId != null || episodeId != null || videoId != null,
-          'অন্তত একটি id দিতে হবে',
+          'needAtLeastOneId',
         );
 
   @override
@@ -73,6 +73,14 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
     _scroll.dispose();
     _mentionQuery.dispose();
     super.dispose();
+  }
+
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
   }
 
   void _onTextChanged() {
@@ -170,21 +178,23 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
-  
+
   Future<void> _like(CommentModel c) async {
     try {
       await _service.toggleCommentLike(c.id);
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -200,8 +210,9 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -235,7 +246,7 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
       _showMentionList = false;
     });
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -310,9 +321,9 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
           child: _loading && _comments.isEmpty
               ? const LoadingView()
               : _roots.isEmpty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.chat_bubble_outline,
-                      title: 'এখনো কোনো মন্তব্য নেই',
+                      title: l10n.noComments,
                     )
                   : ListView.builder(
                       controller: _scroll,
@@ -331,7 +342,8 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                               onReply: () {
                                 setState(() {
                                   _replyToId = c.id;
-                                  _replyToName = c.displayAuthor;
+                                  _replyToName =
+                                      c.displayAuthorOr(l10n.user);
                                 });
                               },
                               onDelete: () => _delete(c),
@@ -366,7 +378,7 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                   .map(
                     (u) => Chip(
                       label: Text(
-                        u.displayName,
+                        u.displayNameOr(l10n.user),
                         style: const TextStyle(fontSize: 11),
                       ),
                       avatar: CircleAvatar(
@@ -409,7 +421,7 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                     maxLines: 4,
                     decoration: InputDecoration(
                       hintText: l10n.writeComment,
-                      helperText: 'টাইপ করুন @ mention করতে',
+                      helperText: l10n.mentionHint,
                       helperStyle: const TextStyle(fontSize: 10),
                       isDense: true,
                       filled: true,
@@ -543,6 +555,7 @@ class _MentionPickerState extends State<_MentionPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -577,11 +590,11 @@ class _MentionPickerState extends State<_MentionPicker> {
             leading: CachedAvatar(
               userId: u.id,
               imageUrl: u.avatarUrl,
-              name: u.displayName,
+              name: u.displayNameOr(l10n.user),
               radius: 16,
               tappable: false,
             ),
-            title: Text(u.displayName, maxLines: 1),
+            title: Text(u.displayNameOr(l10n.user), maxLines: 1),
             subtitle: u.hasNickname
                 ? Text(
                     u.displayNickname,
