@@ -1,16 +1,19 @@
+// lib/features/admin/presentation/widgets/admin_feature_toggles.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// অ্যাডমিন ফিচার কন্ট্রোল সেকশন
-/// বর্তমানে শুধু ভিডিও; ভবিষ্যতে আরো
 class AdminFeatureToggles extends ConsumerWidget {
   const AdminFeatureToggles({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
@@ -23,7 +26,7 @@ class AdminFeatureToggles extends ConsumerWidget {
       ),
       child: SwitchListTile(
         activeColor: AppColors.primary,
-        title: const Text('ভিডিও ফিচার'),
+        title: Text(l10n.videoFeature),
         subtitle: Text(
           videoOn
               ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
