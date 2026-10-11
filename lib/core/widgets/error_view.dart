@@ -1,21 +1,29 @@
+// lib/core/widgets/error_view.dart
+// সংশোধিত: localization যোগ
+
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 class ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
-  final String retryLabel;
+  final String? retryLabel;
 
   const ErrorView({
     super.key,
-    this.message = 'কিছু সমস্যা হয়েছে',
+    this.message = '',
     this.onRetry,
-    this.retryLabel = 'আবার চেষ্টা',
+    this.retryLabel,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final finalMessage = message.isEmpty ? l10n.somethingWentWrong : message;
+    final finalRetry = retryLabel ?? l10n.retry;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -29,7 +37,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              message,
+              finalMessage,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15),
             ),
@@ -41,7 +49,7 @@ class ErrorView extends StatelessWidget {
                   foregroundColor: Colors.white,
                 ),
                 onPressed: onRetry,
-                child: Text(retryLabel),
+                child: Text(finalRetry),
               ),
             ],
           ],
