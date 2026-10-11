@@ -1,9 +1,12 @@
+// lib/features/social/presentation/widgets/reaction_picker.dart
+// সংশোধিত: localization-ready
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// রিঅ্যাকশন পিকার — নিচ থেকে শিটে ইমোজি
 class ReactionPicker {
   ReactionPicker._();
 
@@ -15,7 +18,7 @@ class ReactionPicker {
     'fire': '🔥',
   };
 
-  static const Map<String, String> _names = {
+  static const Map<String, String> _namesBn = {
     'like': 'লাইক',
     'love': 'ভালোবাসা',
     'wow': 'অবাক',
@@ -23,9 +26,20 @@ class ReactionPicker {
     'fire': 'দুর্দান্ত',
   };
 
+  static const Map<String, String> _namesEn = {
+    'like': 'Like',
+    'love': 'Love',
+    'wow': 'Wow',
+    'sad': 'Sad',
+    'fire': 'Fire',
+  };
+
   static String emoji(String? type) => _labels[type] ?? '👍';
 
-  static String name(String? type) => _names[type] ?? 'লাইক';
+  static String name(String? type, {bool bn = true}) {
+    final map = bn ? _namesBn : _namesEn;
+    return map[type] ?? _labels[type] ?? '👍';
+  }
 
   static Color color(String? type) {
     switch (type) {
@@ -45,6 +59,9 @@ class ReactionPicker {
   }
 
   static Future<String?> show(BuildContext context) {
+    final l10n = context.l10n;
+    final isBn = Localizations.localeOf(context).languageCode == 'bn';
+
     return showModalBottomSheet<String>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -67,9 +84,9 @@ class ReactionPicker {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'প্রতিক্রিয়া',
-                  style: TextStyle(
+                Text(
+                  l10n.reaction,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -92,7 +109,7 @@ class ReactionPicker {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _names[type] ?? '',
+                              name(type, bn: isBn),
                               style: const TextStyle(fontSize: 11),
                             ),
                           ],
