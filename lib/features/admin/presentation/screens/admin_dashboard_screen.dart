@@ -107,10 +107,10 @@ class _AdminDashboardScreenState
             onPressed: () => context.pop(),
           ),
         ),
-        body: const EmptyView(
+        body: EmptyView(
           icon: Icons.lock_outline,
-          title: 'অ্যাক্সেস নেই',
-          subtitle: 'এই স্ক্রিন শুধু অ্যাডমিনের জন্য।',
+          title: l10n.accessDenied,
+          subtitle: l10n.adminOnlyScreen,
         ),
       );
     }
@@ -292,9 +292,7 @@ class _AdminDashboardScreenState
                 activeColor: AppColors.primary,
                 title: Text(l10n.videoFeature),
                 subtitle: Text(
-                  videoOn
-                      ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
-                      : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+                  videoOn ? l10n.videoFeatureDescOn : l10n.videoFeatureDescOff,
                   style: const TextStyle(fontSize: 12),
                 ),
                 secondary: Icon(
@@ -437,8 +435,7 @@ class _AdminDashboardScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'গল্প/ভিডিও মডারেশন আরও ফিচার পরে আসবে। '
-                        'এখন রিপোর্ট প্রসেস করতে পারবেন।',
+                        l10n.moderationHint,
                         style: TextStyle(
                           fontSize: 12,
                           color: secondary,
