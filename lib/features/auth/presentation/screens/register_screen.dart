@@ -36,6 +36,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -54,9 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         // Email confirm দরকার — Login screen
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('অ্যাকাউন্ট তৈরি হয়েছে — লগইন করুন'),
-          ),
+          SnackBar(content: Text(l10n.accountCreatedLogin)),
         );
         context.go(RouteNames.login);
       }
@@ -64,7 +70,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.registerFailed}: $e')),
+        SnackBar(
+          content:
+              Text('${l10n.registerFailed}: ${_translateError(context, e)}'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -113,10 +122,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 12),
 
                   // ============ অ্যাপের নাম (সবসময় বাংলা) ============
-                  const Text(
-                    'গল্পঘর',
+                  Text(
+                    l10n.appName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -124,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 6),
 
                   Text(
-                    'নতুন অ্যাকাউন্ট তৈরি করুন',
+                    l10n.createNewAccount,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -145,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: const Icon(Icons.person_outline),
                       border: const OutlineInputBorder(),
                     ),
-                    validator: Validators.name,
+                    validator: (v) => Validators.name(context, v),
                   ),
                   const SizedBox(height: 16),
 
@@ -159,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: const OutlineInputBorder(),
                     ),
-                    validator: Validators.email,
+                    validator: (v) => Validators.email(context, v),
                   ),
                   const SizedBox(height: 16),
 
@@ -181,9 +190,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             setState(() => _obscure = !_obscure),
                       ),
                       border: const OutlineInputBorder(),
-                      helperText: 'কমপক্ষে ৬ অক্ষর',
+                      helperText: l10n.minSixChars,
                     ),
-                    validator: Validators.password,
+                    validator: (v) => Validators.password(context, v),
                   ),
                   const SizedBox(height: 16),
 
@@ -194,16 +203,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: 'পাসওয়ার্ড আবার',
+                      labelText: l10n.passwordAgain,
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                     ),
                     validator: (v) {
                       if (v == null || v.isEmpty) {
-                        return 'পাসওয়ার্ড আবার লিখুন';
+                        return l10n.enterPasswordAgain;
                       }
                       if (v != _password.text) {
-                        return 'দুটি পাসওয়ার্ড মিলছে না';
+                        return l10n.passwordsDoNotMatch;
                       }
                       return null;
                     },
@@ -251,7 +260,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // ============ Terms Notice ============
                   const SizedBox(height: 20),
                   Text(
-                    'রেজিস্টার করে আপনি আমাদের শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত হচ্ছেন',
+                    l10n.registerConsent,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
