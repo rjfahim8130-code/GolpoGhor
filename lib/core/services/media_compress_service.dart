@@ -1,19 +1,18 @@
 // lib/core/services/media_compress_service.dart
-// ছবি + ভিডিও কমপ্রেস — দুটোই
+// ছবি + ভিডিও কমপ্রেস — video_compressor_plus দিয়ে
 
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
-import 'package:video_compress/video_compress.dart';
+import 'package:video_compressor_plus/video_compressor_plus.dart';
 
 class MediaCompressService {
   // ============================================================
   // ছবি কমপ্রেস
   // ============================================================
 
-  /// JPEG ~100–200KB লক্ষ্য, max width 1280
   Future<Uint8List> compressImageFile(
     File file, {
     int maxWidth = 1280,
@@ -44,31 +43,31 @@ class MediaCompressService {
     return Uint8List.fromList(jpg);
   }
 
-  /// Avatar — একটু ছোট (৮০০ px)
   Future<Uint8List> compressAvatar(File file) =>
       compressImageFile(file, maxWidth: 800, quality: 78);
 
   // ============================================================
-  // ভিডিও কমপ্রেস
+  // ভিডিও কমপ্রেস (video_compressor_plus)
   // ============================================================
 
   /// ভিডিও ফাইল কমপ্রেস করে নতুন File ফেরত দেয়
-  ///
-  /// - [quality]: LowQuality / MediumQuality / HighQuality / VeryHighQuality
-  /// - [targetWidth]: সর্বোচ্চ প্রস্থ (auto = aspect ratio রাখে)
+  /// 
+  /// - [quality]: VideoQuality.LowQuality / MediumQuality / HighQuality / VeryHighQuality
   /// - [deleteOriginal]: true হলে original ফাইল ডিলিট হবে
-  ///
-  /// Progress দেখতে চাইলে `getVideoProgress(file.path)` স্ট্রিম ব্যবহার করুন।
+  /// 
+  /// Error হলে original file ফেরত দেয় (safe)
   Future<File?> compressVideoFile(
     File file, {
     VideoQuality quality = VideoQuality.MediumQuality,
     bool deleteOriginal = false,
   }) async {
     try {
-      // যদি ফাইল আগেই ছোট হয় (১০ MB-র নিচে) — কমপ্রেস না
+      // ১০ MB-র নিচে হলে কমপ্রেস skip
       final sizeInMB = await file.length() / (1024 * 1024);
       if (sizeInMB < 10) {
-        debugPrint('VIDEO_COMPRESS: skipped (${sizeInMB.toStringAsFixed(1)} MB)');
+        debugPrint(
+          'VIDEO_COMPRESS: skipped (${sizeInMB.toStringAsFixed(1)} MB)',
+        );
         return file;
       }
 
@@ -76,7 +75,7 @@ class MediaCompressService {
         'VIDEO_COMPRESS: starting (${sizeInMB.toStringAsFixed(1)} MB)',
       );
 
-      final info = await VideoCompress.compressVideo(
+      final info = await VideoCompressor.compressVideo(
         file.path,
         quality: quality,
         deleteOrigin: deleteOriginal,
@@ -98,39 +97,40 @@ class MediaCompressService {
       return info.file;
     } catch (e) {
       debugPrint('VIDEO_COMPRESS_ERROR: $e');
-      return file; // fail হলে original ফেরত
+      return file;
     }
   }
 
-  /// প্রগ্রেস stream — UI-তে দেখানোর জন্য
-  Stream<double> videoProgressStream(String path) {
-    return VideoCompress.compressProgress$.map((progress) {
-      // progress 0..100
-      return (progress / 100).clamp(0.0, 1.0);
-    });
+  /// Progress stream (0.0 .. 1.0)
+  /// 
+  /// video_compressor_plus থেকে progress 0..100 আসে
+  /// এই মেথড সেটাকে 0.0..1.0-এ রূপান্তর করে
+  Stream<double> videoProgressStream() {
+    return VideoCompressor.compressProgress$.map(
+      (progress) => (progress / 100).clamp(0.0, 1.0),
+    );
   }
 
-  /// কমপ্রেসের আগে ভিডিওর তথ্য (duration, size, resolution)
+  /// কমপ্রেসের আগে ভিডিওর তথ্য
   Future<MediaInfo?> getVideoInfo(String path) async {
     try {
-      return await VideoCompress.getMediaInfo(path);
+      return await VideoCompressor.getMediaInfo(path);
     } catch (_) {
       return null;
     }
   }
 
-  /// কমপ্রেস বাতিল (ইউজার চাইলে)
+  /// কমপ্রেস বাতিল
   Future<void> cancelCompress() async {
     try {
-      await VideoCompress.cancelCompression();
+      await VideoCompressor.cancelCompression();
     } catch (_) {}
   }
 
-  /// ছবি/ভিডিও কমপ্রেস শেষে temp files clear
-  /// (app বন্ধ হলে এই ফাইল auto-ডিলিট হয়)
+  /// Temp files clear
   Future<void> deleteAllCache() async {
     try {
-      await VideoCompress.deleteAllCache();
+      await VideoCompressor.deleteAllCache();
     } catch (_) {}
   }
 }
