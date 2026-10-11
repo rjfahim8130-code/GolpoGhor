@@ -278,148 +278,148 @@ class _AdminDashboardScreenState
                 ),
               ),
             ),
-const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-// ---------------- Feature toggle ----------------
-_sectionHeader('ফিচার কন্ট্রোল'),
-Card(
-  elevation: 0,
-  color: cardColor,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(12),
-  ),
-  child: SwitchListTile(
-    activeColor: AppColors.primary,
-    title: Text(l10n.videoFeature),
-    subtitle: Text(
-      videoOn
-          ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
-          : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
-      style: const TextStyle(fontSize: 12),
-    ),
-    secondary: Icon(
-      videoOn ? Icons.videocam : Icons.videocam_off,
-      color: videoOn ? AppColors.primary : Colors.grey,
-    ),
-    value: videoOn,
-    onChanged: (v) async {
-      try {
-        await ref
-            .read(videoFeatureProvider.notifier)
-            .setEnabled(v);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              v ? 'ভিডিও ফিচার চালু' : 'ভিডিও ফিচার বন্ধ',
-            ),
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
-      }
-    },
-  ),
-),
-
-const SizedBox(height: 24),
-
-// ---------------- Reports ----------------
-_sectionHeader(l10n.openReports),
-if (_reports.isEmpty)
-  const Padding(
-    padding: EdgeInsets.symmetric(vertical: 20),
-    child: Center(
-      child: Text(
-        'কোনো খোলা রিপোর্ট নেই',
-        style: TextStyle(color: Colors.grey),
-      ),
-    ),
-  )
-else
-  ..._reports.map((r) {
-    final type = '${r['target_type'] ?? ''}';
-    final id = '${r['target_id'] ?? ''}';
-    final reason = '${r['reason'] ?? ''}';
-    final createdAtRaw = r['created_at']?.toString();
-    final createdAt = createdAtRaw != null
-        ? DateTime.tryParse(createdAtRaw)
-        : null;
-
-    return Card(
-      elevation: 0,
-      color: cardColor,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AppColors.danger,
-          child: Icon(Icons.flag, color: Colors.white, size: 18),
-        ),
-        title: Text(
-          'ধরন: $type',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 2),
-            Text(
-              'কারণ: $reason',
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              'ID: $id'
-              '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
+            // ---------------- Feature toggle ----------------
+            _sectionHeader('ফিচার কন্ট্রোল'),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SwitchListTile(
+                activeColor: AppColors.primary,
+                title: Text(l10n.videoFeature),
+                subtitle: Text(
+                  videoOn
+                      ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
+                      : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                secondary: Icon(
+                  videoOn ? Icons.videocam : Icons.videocam_off,
+                  color: videoOn ? AppColors.primary : Colors.grey,
+                ),
+                value: videoOn,
+                onChanged: (v) async {
+                  try {
+                    await ref
+                        .read(videoFeatureProvider.notifier)
+                        .setEnabled(v);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          v ? l10n.videoFeatureOn : l10n.videoFeatureOff,
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$e')),
+                    );
+                  }
+                },
               ),
             ),
-          ],
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (v) async {
-            final rid = r['id']?.toString();
-            if (rid == null) return;
-            if (v == 'reviewed') {
-              await _reportService.markReviewed(rid);
-            }
-            if (v == 'dismiss') {
-              await _reportService.dismiss(rid);
-            }
-            if (v == 'open') {
-              _openTarget(type, id);
-            }
-            await _init();
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'open', child: Text('খুলুন')),
-            PopupMenuItem(
-                value: 'reviewed', child: Text('রিভিউড')),
-            PopupMenuItem(
-                value: 'dismiss', child: Text('বাতিল')),
-          ],
-        ),
-        onTap: () => _openTarget(type, id),
-      ),
-    );
-  }),
-            
+
+            const SizedBox(height: 24),
+
+            // ---------------- Reports ----------------
+            _sectionHeader(l10n.openReports),
+            if (_reports.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Text(
+                    l10n.noOpenReports,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ..._reports.map((r) {
+                final type = '${r['target_type'] ?? ''}';
+                final id = '${r['target_id'] ?? ''}';
+                final reason = '${r['reason'] ?? ''}';
+                final createdAtRaw = r['created_at']?.toString();
+                final createdAt = createdAtRaw != null
+                    ? DateTime.tryParse(createdAtRaw)
+                    : null;
+
+                return Card(
+                  elevation: 0,
+                  color: cardColor,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: AppColors.danger,
+                      child: Icon(Icons.flag, color: Colors.white, size: 18),
+                    ),
+                    title: Text(
+                      '${l10n.typeLabel}: $type',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 2),
+                        Text(
+                          '${l10n.reasonLabel}: $reason',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        Text(
+                          'ID: $id'
+                          '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (v) async {
+                        final rid = r['id']?.toString();
+                        if (rid == null) return;
+                        if (v == 'reviewed') {
+                          await _reportService.markReviewed(rid);
+                        }
+                        if (v == 'dismiss') {
+                          await _reportService.dismiss(rid);
+                        }
+                        if (v == 'open') {
+                          _openTarget(type, id);
+                        }
+                        await _init();
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'open', child: Text(l10n.open)),
+                        PopupMenuItem(
+                            value: 'reviewed', child: Text(l10n.reviewed)),
+                        PopupMenuItem(
+                            value: 'dismiss', child: Text(l10n.cancel)),
+                      ],
+                    ),
+                    onTap: () => _openTarget(type, id),
+                  ),
+                );
+              }),
+
             const SizedBox(height: 24),
 
             // ---------------- Moderation hint ----------------
-            _sectionHeader('মডারেশন'),
+            _sectionHeader(l10n.moderation),
             Card(
               elevation: 0,
               color: cardColor,
@@ -437,7 +437,7 @@ else
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'গল্প/ভিডিও মডারেশন আরো ফিচার পরে আসবে। '
+                        'গল্প/ভিডিও মডারেশন আরও ফিচার পরে আসবে। '
                         'এখন রিপোর্ট প্রসেস করতে পারবেন।',
                         style: TextStyle(
                           fontSize: 12,
