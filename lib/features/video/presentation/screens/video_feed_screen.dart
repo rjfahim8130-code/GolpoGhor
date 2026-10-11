@@ -1,3 +1,6 @@
+// lib/features/video/presentation/screens/video_feed_screen.dart
+// সংশোধিত: localization
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/auth_service.dart';
@@ -82,6 +86,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
 
     if (!videoOn) {
@@ -206,7 +211,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
   }
 }
 
-// ---------- Individual video item ----------
+// ---------------- Individual video item ----------------
 
 class _VideoFeedItem extends ConsumerStatefulWidget {
   final VideoModel video;
@@ -372,6 +377,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   }
   
   void _openMore() {
+    final l10n = context.l10n;
     final v = widget.video;
     showModalBottomSheet(
       context: context,
@@ -385,8 +391,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           children: [
             ListTile(
               leading: const Icon(Icons.share_outlined, color: Colors.white),
-              title: const Text('শেয়ার',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.share,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 Share.share(
@@ -396,8 +404,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.white),
-              title: const Text('রিপোর্ট',
-                  style: TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.report,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 ReportSheet.show(
@@ -410,8 +420,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
             SwitchListTile(
               secondary: const Icon(Icons.loop, color: Colors.white),
-              title: const Text('অটো লুপ',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'অটো লুপ',
+                style: TextStyle(color: Colors.white),
+              ),
               value: _autoLoop,
               activeColor: AppColors.primary,
               onChanged: (val) {
@@ -440,8 +452,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ListTile(
                 leading:
                     const Icon(Icons.edit_outlined, color: Colors.white),
-                title: const Text('সম্পাদনা',
-                    style: TextStyle(color: Colors.white)),
+                title: Text(
+                  l10n.edit,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   context.push('${RouteNames.createVideo}/${v.id}');
@@ -449,9 +463,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               ListTile(
                 leading:
-                    const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('মুছুন',
-                    style: TextStyle(color: Colors.red)),
+                    const Icon(Icons.delete_outline, color: AppColors.danger),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: AppColors.danger),
+                ),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final ok = await showDialog<bool>(
@@ -461,12 +477,14 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(d, false),
-                          child: const Text('না'),
+                          child: Text(l10n.cancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(d, true),
-                          child: const Text('মুছুন',
-                              style: TextStyle(color: Colors.red)),
+                          child: Text(
+                            l10n.delete,
+                            style: const TextStyle(color: AppColors.danger),
+                          ),
                         ),
                       ],
                     ),
@@ -486,6 +504,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final v = widget.video;
     final c = _controller;
     final ok = _initialized && c != null && c.value.isInitialized;
@@ -503,6 +522,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     return Stack(
       fit: StackFit.expand,
       children: [
+        // ভিডিও — উপরে ও নিচে ছোট করে বসানো (ব্যানার এলে ঢাকা পড়বে না)
         Positioned(
           top: topSpace,
           left: 0,
@@ -527,6 +547,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           ),
         ),
 
+        // Play icon (pause অবস্থায়)
         if (ok && !c.value.isPlaying)
           Center(
             child: IgnorePointer(
@@ -538,6 +559,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
+        // Back button (ট্যাপে দেখাবে)
         if (_showBack)
           Positioned(
             top: topSpace + 8,
@@ -554,6 +576,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
+        // সিরিজ পরবর্তী অংশ
         if (_showNextPart && _nextPart != null)
           Positioned(
             left: 16,
@@ -598,11 +621,13 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
+        // ডান পাশের বাটন
         Positioned(
           right: 6,
           bottom: bottomPad + 120,
           child: Column(
             children: [
+              // avatar + follow
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -668,20 +693,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     final res = await _reaction.toggleVideoReaction(
                       videoId: widget.video.id,
                       reactionType: type,
+                      ownerId: v.authorId,
                     );
                     final count = await _reaction
                         .countVideoReactions(widget.video.id);
-
-                    final myId = _auth.currentUser?.id;
-                    if (myId != null && myId != v.authorId) {
-                      await _notif.create(
-                        targetUserId: v.authorId,
-                        actorId: myId,
-                        type: 'like',
-                        targetType: 'video',
-                        targetId: v.id,
-                      );
-                    }
 
                     if (mounted) {
                       setState(() {
@@ -714,8 +729,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                           BorderRadius.vertical(top: Radius.circular(16)),
                     ),
                     builder: (ctx) => SizedBox(
-                      height:
-                          MediaQuery.of(ctx).size.height * 0.75,
+                      height: MediaQuery.of(ctx).size.height * 0.75,
                       child: CommentSection(
                         videoId: widget.video.id,
                         ownerId: v.authorId,
@@ -728,7 +742,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
 
               _sideBtn(
                 _saved ? Icons.bookmark : Icons.bookmark_border,
-                'সেভ',
+                l10n.saved,
                 () async {
                   try {
                     final r = await _service.toggleSave(v.id);
@@ -767,6 +781,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           ),
         ),
 
+        // নিচের তথ্য
         Positioned(
           left: 12,
           right: 72,
