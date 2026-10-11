@@ -1,5 +1,6 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
 // video_compress ^3.1.3 — subscribe API
+// সংশোধিত: localization
 
 import 'dart:async';
 import 'dart:io';
@@ -65,7 +66,16 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _pick() async {
+    final l10n = context.l10n;
     setState(() => _checking = true);
     try {
       final x = await _picker.pickVideo(
@@ -92,7 +102,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         await ctrl.dispose();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(VideoConstants.maxDurationMessage)),
+          SnackBar(content: Text(l10n.videoTooLong)),
         );
         setState(() {
           _file = null;
@@ -117,7 +127,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       if (!mounted) return;
       setState(() => _checking = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
+        SnackBar(content: Text(_translateError(context, e))),
       );
     }
   }
@@ -131,9 +141,10 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   }
 
   Future<void> _publish({bool asDraft = false}) async {
+    final l10n = context.l10n;
     if (_file == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('আগে একটি ভিডিও বেছে নিন')),
+        SnackBar(content: Text(l10n.pickVideoFirst)),
       );
       return;
     }
@@ -148,7 +159,6 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       // ---------- Step 1: Video Compress ----------
       setState(() => _compressing = true);
 
-      // progress subscribe — video_compress API
       _progressSub?.unsubscribe();
       _progressSub = _compress.subscribeProgress((p) {
         if (mounted) setState(() => _compressProgress = p);
@@ -176,7 +186,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       int part = 1;
       if (_asSeries) {
         seriesTitle = _seriesTitleCtrl.text.trim();
-        if (seriesTitle.isEmpty) seriesTitle = 'সিরিজ';
+        if (seriesTitle.isEmpty) seriesTitle = l10n.series;
         seriesId ??= const Uuid().v4();
         part = int.tryParse(_partCtrl.text.trim()) ?? 1;
       }
@@ -196,7 +206,6 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       await _compress.deleteAllCache();
 
       if (!mounted) return;
-      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(asDraft ? l10n.draft : l10n.publish),
@@ -210,7 +219,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
+        SnackBar(content: Text(_translateError(context, e))),
       );
     } finally {
       _progressSub?.unsubscribe();
@@ -223,7 +232,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -303,7 +312,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              '$_durationSec সে. / ১৫ মিনিট',
+                              '$_durationSec ${l10n.durationOfMax}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -317,18 +326,18 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       child: _checking
                           ? const CircularProgressIndicator(
                               color: Colors.white)
-                          : const Column(
+                          : Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.video_library_outlined,
                                   size: 48,
                                   color: Colors.white70,
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
-                                  'গ্যালারি থেকে ভিডিও বেছে নিন',
-                                  style: TextStyle(color: Colors.white70),
+                                  l10n.pickFromGallery,
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
@@ -358,7 +367,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'ভিডিও কমপ্রেস হচ্ছে… ${(_compressProgress * 100).toStringAsFixed(0)}%',
+                          '${l10n.compressingVideo} ${(_compressProgress * 100).toStringAsFixed(0)}%',
                           style: const TextStyle(fontSize: 13),
                         ),
                       ),
@@ -382,7 +391,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           TextField(
             controller: _titleCtrl,
             decoration: InputDecoration(
-              labelText: '${l10n.title} (ঐচ্ছিক)',
+              labelText: '${l10n.title} (${l10n.optional})',
               border: const OutlineInputBorder(),
               isDense: true,
             ),
@@ -404,7 +413,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           TextField(
             controller: _tagsCtrl,
             decoration: InputDecoration(
-              labelText: '${l10n.tags} (স্পেস বা কমা দিয়ে)',
+              labelText: l10n.tagsHint,
               border: const OutlineInputBorder(),
               isDense: true,
             ),
@@ -415,9 +424,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             activeColor: AppColors.primary,
-            title: const Text('পর্বভিত্তিক সিরিজ'),
+            title: Text(l10n.seriesMode),
             subtitle: Text(
-              'একাধিক পর্ব একই সিরিজে সংযুক্ত হবে',
+              l10n.seriesModeDesc,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
             value: _asSeries,
@@ -435,9 +444,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _seriesTitleCtrl,
-              decoration: const InputDecoration(
-                labelText: 'সিরিজের নাম',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.seriesName,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -445,9 +454,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             TextField(
               controller: _partCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'পর্ব নম্বর',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.partNumber,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -459,7 +468,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             const LinearProgressIndicator(),
             const SizedBox(height: 8),
             Text(
-              'R2-তে আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
+              l10n.uploadingPleaseWait,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
