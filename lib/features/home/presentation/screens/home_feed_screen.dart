@@ -94,7 +94,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -146,9 +146,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
             ),
             const SizedBox(width: 8),
             // ============ অ্যাপের নাম (সবসময় বাংলা) ============
-            const Text(
-              'গল্পঘর',
-              style: TextStyle(
+            Text(
+              l10n.appName,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
                 color: Colors.white,
@@ -188,7 +188,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
             child: CachedAvatar(
               userId: me?.id,
               imageUrl: me?.avatarUrl,
-              name: me?.displayName ?? 'আমি',
+              name: me?.displayNameOr(l10n.me) ?? l10n.me,
               radius: 16,
             ),
           ),
@@ -197,7 +197,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       body: _buildBody(l10n),
     );
   }
-  
+
   Widget _buildBody(AppLocalizations l10n) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -207,7 +207,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_error!),
+            Text(l10n.t(_error!)),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _load,
@@ -228,9 +228,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
               color: AppColors.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'এখনো কোনো গল্প নেই',
-              style: TextStyle(fontSize: 15),
+            Text(
+              l10n.noStoriesYet,
+              style: const TextStyle(fontSize: 15),
             ),
           ],
         ),
