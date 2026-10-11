@@ -132,6 +132,17 @@ class AppBn {
     'thisMonthNew': 'এই মাসে নতুন',
     'lastMonthNew': 'গত মাসে নতুন',
     'totalUsers': 'মোট ইউজার',
+    'setPassword': 'পাসওয়ার্ড সেট / পরিবর্তন',
+    'open': 'খুলুন',
+    'reviewed': 'রিভিউড',
+    'unpublish': 'আনপাবলিশ',
+    'moderation': 'মডারেশন',
+    'videoFeatureOn': 'ভিডিও ফিচার চালু',
+    'videoFeatureOff': 'ভিডিও ফিচার বন্ধ',
+    'published': 'প্রকাশিত',
+    'noOpenReports': 'কোনো খোলা রিপোর্ট নেই',
+    'typeLabel': 'ধরন',
+    'reasonLabel': 'কারণ',
 
     // Errors
     'somethingWentWrong': 'কিছু একটা সমস্যা হয়েছে',
