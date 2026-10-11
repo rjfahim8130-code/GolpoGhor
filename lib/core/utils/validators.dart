@@ -1,3 +1,6 @@
+// lib/core/utils/validators.dart
+// username validator বাদ (username feature নেই)
+
 class Validators {
   Validators._();
 
@@ -22,11 +25,12 @@ class Validators {
     return null;
   }
 
-  static String? username(String? v) {
-    if (v == null || v.trim().length < 3) return 'কমপক্ষে ৩ অক্ষর';
-    if (!RegExp(r'^[a-z0-9_]+$').hasMatch(v.trim().toLowerCase())) {
-      return 'শুধু a-z, 0-9, _';
-    }
+  /// ডাক নাম — ঐচ্ছিক (খালি থাকলে valid)
+  static String? nickname(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    final t = v.trim();
+    if (t.length < 2) return 'কমপক্ষে ২ অক্ষর';
+    if (t.length > 30) return 'সর্বোচ্চ ৩০ অক্ষর';
     return null;
   }
 
