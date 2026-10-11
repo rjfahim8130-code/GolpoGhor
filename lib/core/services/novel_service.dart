@@ -1,5 +1,6 @@
 // lib/core/services/novel_service.dart
 // সংশোধিত: select nickname, username বাদ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -108,7 +109,7 @@ class NovelService {
     bool isDraft = false,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final data = await _client
         .from(SupabaseConstants.novels)
@@ -139,7 +140,7 @@ class NovelService {
     bool? isPublished,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -168,7 +169,7 @@ class NovelService {
 
   Future<void> deleteNovel(String novelId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     await _client
         .from(SupabaseConstants.episodes)
