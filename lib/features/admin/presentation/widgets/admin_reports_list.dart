@@ -27,12 +27,12 @@ class AdminReportsList extends StatelessWidget {
     final l10n = context.l10n;
 
     if (reports.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: Center(
           child: Text(
-            'কোনো খোলা রিপোর্ট নেই',
-            style: TextStyle(color: Colors.grey),
+            l10n.noOpenReports,
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
       );
@@ -64,7 +64,7 @@ class AdminReportsList extends StatelessWidget {
               child: Icon(Icons.flag, color: Colors.white, size: 18),
             ),
             title: Text(
-              'ধরন: $type',
+              '${l10n.typeLabel}: $type',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -75,7 +75,7 @@ class AdminReportsList extends StatelessWidget {
               children: [
                 const SizedBox(height: 2),
                 Text(
-                  'কারণ: $reason',
+                  '${l10n.reasonLabel}: $reason',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12),
@@ -110,13 +110,13 @@ class AdminReportsList extends StatelessWidget {
                   value: 'open',
                   child: Text(l10n.story),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'reviewed',
-                  child: Text('রিভিউড'),
+                  child: Text(l10n.reviewed),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'dismiss',
-                  child: Text('বাতিল'),
+                  child: Text(l10n.cancel),
                 ),
               ],
             ),
