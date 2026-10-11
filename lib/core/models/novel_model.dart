@@ -1,3 +1,6 @@
+// lib/core/models/novel_model.dart
+// authorUsername বাদ, authorNickname যোগ
+
 class NovelModel {
   final String id;
   final String authorId;
@@ -18,7 +21,7 @@ class NovelModel {
 
   // join
   final String? authorName;
-  final String? authorUsername;
+  final String? authorNickname;
   final String? authorAvatar;
   final int authorFollowerCount;
 
@@ -40,7 +43,7 @@ class NovelModel {
     required this.createdAt,
     this.updatedAt,
     this.authorName,
-    this.authorUsername,
+    this.authorNickname,
     this.authorAvatar,
     this.authorFollowerCount = 0,
   });
@@ -73,7 +76,7 @@ class NovelModel {
           ? DateTime.tryParse(json['updated_at'].toString())
           : null,
       authorName: json['author_name'] as String?,
-      authorUsername: json['author_username'] as String?,
+      authorNickname: json['author_nickname'] as String?,
       authorAvatar: json['author_avatar'] as String?,
       authorFollowerCount:
           (json['author_follower_count'] as num?)?.toInt() ??
@@ -119,7 +122,7 @@ class NovelModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? authorName,
-    String? authorUsername,
+    String? authorNickname,
     String? authorAvatar,
     int? authorFollowerCount,
   }) {
@@ -141,9 +144,16 @@ class NovelModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       authorName: authorName ?? this.authorName,
-      authorUsername: authorUsername ?? this.authorUsername,
+      authorNickname: authorNickname ?? this.authorNickname,
       authorAvatar: authorAvatar ?? this.authorAvatar,
       authorFollowerCount: authorFollowerCount ?? this.authorFollowerCount,
     );
   }
+
+  String get displayNickname =>
+      (authorNickname != null && authorNickname!.trim().isNotEmpty)
+          ? authorNickname!.trim()
+          : '';
+
+  bool get hasNickname => displayNickname.isNotEmpty;
 }
