@@ -63,7 +63,7 @@ class _SavedScreenState extends State<SavedScreen>
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
@@ -98,9 +98,9 @@ class _SavedScreenState extends State<SavedScreen>
                   controller: _tab,
                   children: [
                     _stories.isEmpty
-                        ? const EmptyView(
+                        ? EmptyView(
                             icon: Icons.bookmark_outline,
-                            title: 'কোনো সংরক্ষিত গল্প নেই',
+                            title: l10n.noSavedStories,
                           )
                         : RefreshIndicator(
                             onRefresh: _load,
@@ -120,9 +120,9 @@ class _SavedScreenState extends State<SavedScreen>
                             ),
                           ),
                     _novels.isEmpty
-                        ? const EmptyView(
+                        ? EmptyView(
                             icon: Icons.bookmark_outline,
-                            title: 'কোনো সংরক্ষিত উপন্যাস নেই',
+                            title: l10n.noSavedNovels,
                           )
                         : RefreshIndicator(
                             onRefresh: _load,
