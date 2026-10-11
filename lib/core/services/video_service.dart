@@ -34,7 +34,10 @@ class VideoService {
 
   // ---------- Feed ----------
 
-  Future<List<VideoModel>> getFeed({int limit = 20, int offset = 0}) async {
+  Future<List<VideoModel>> getFeed({
+    int limit = 20,
+    int offset = 0,
+  }) async {
     final data = await _client
         .from(SupabaseConstants.videoPosts)
         .select(_selectWithAuthor)
