@@ -1,6 +1,10 @@
+// lib/features/auth/presentation/screens/forgot_password_screen.dart
+// Localization সহ
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
@@ -32,11 +36,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _sendOtp() async {
+    final l10n = context.l10n;
     final e = _email.text.trim();
     if (e.isEmpty || !e.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('সঠিক ইমেইল লিখুন')),
+        SnackBar(content: Text(l10n.enterValidEmail)),
       );
       return;
     }
@@ -49,21 +62,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _loading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('ইমেইলে OTP পাঠানো হয়েছে। Spam ফোল্ডারও চেক করুন।'),
-        ),
+        SnackBar(content: Text(l10n.otpSent)),
       );
     } catch (err) {
-      if (mounted) {
-        setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$err')),
-        );
-      }
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, err))),
+      );
     }
   }
 
   Future<void> _confirmReset() async {
+    final l10n = context.l10n;
     final e = _email.text.trim();
     final token = _otp.text.trim();
     final p1 = _pass.text;
@@ -71,19 +82,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (token.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('সঠিক OTP লিখুন')),
+        SnackBar(content: Text(l10n.enterValidOtp)),
       );
       return;
     }
     if (p1.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর')),
+        SnackBar(content: Text(l10n.passwordMinSix)),
       );
       return;
     }
     if (p1 != p2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পাসওয়ার্ড মিলছে না')),
+        SnackBar(content: Text(l10n.passwordMismatch)),
       );
       return;
     }
@@ -97,15 +108,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পাসওয়ার্ড পরিবর্তন হয়েছে')),
+        SnackBar(content: Text(l10n.passwordChanged)),
       );
       context.go(RouteNames.login);
     } catch (err) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$err')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, err))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -113,9 +123,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('পাসওয়ার্ড রিসেট'),
+        title: Text(l10n.passwordReset),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -129,26 +141,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: _step == 0 ? _emailStep() : _otpStep(),
+        child: _step == 0 ? _emailStep(l10n) : _otpStep(l10n),
       ),
     );
   }
 
-  Widget _emailStep() {
+  Widget _emailStep(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'আপনার ইমেইলে একটি OTP পাঠানো হবে।',
-          style: TextStyle(fontSize: 14),
+        Text(
+          l10n.otpEmailHint,
+          style: const TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 24),
         TextField(
           controller: _email,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: 'ইমেইল',
-            prefixIcon: Icon(Icons.email_outlined),
+          decoration: InputDecoration(
+            labelText: l10n.email,
+            prefixIcon: const Icon(Icons.email_outlined),
           ),
         ),
         const SizedBox(height: 24),
@@ -169,19 +181,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('OTP পাঠান', style: TextStyle(fontSize: 16)),
+                : Text(
+                    l10n.sendOtp,
+                    style: const TextStyle(fontSize: 16),
+                  ),
           ),
         ),
       ],
     );
   }
 
-  Widget _otpStep() {
+  Widget _otpStep(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${_email.text.trim()} — OTP পাঠানো হয়েছে।',
+          '${_email.text.trim()} — ${l10n.otpSentTo}',
           style: const TextStyle(fontSize: 14, height: 1.4),
         ),
         const SizedBox(height: 20),
@@ -198,10 +213,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           controller: _pass,
           obscureText: _obscure,
           decoration: InputDecoration(
-            labelText: 'নতুন পাসওয়ার্ড',
+            labelText: l10n.newPassword,
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
-              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(
+                _obscure ? Icons.visibility_off : Icons.visibility,
+              ),
               onPressed: () => setState(() => _obscure = !_obscure),
             ),
           ),
@@ -210,9 +227,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         TextField(
           controller: _pass2,
           obscureText: _obscure,
-          decoration: const InputDecoration(
-            labelText: 'পাসওয়ার্ড আবার',
-            prefixIcon: Icon(Icons.lock_outline),
+          decoration: InputDecoration(
+            labelText: l10n.passwordAgain,
+            prefixIcon: const Icon(Icons.lock_outline),
           ),
         ),
         const SizedBox(height: 24),
@@ -233,13 +250,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('সেট করুন', style: TextStyle(fontSize: 16)),
+                : Text(
+                    l10n.setPasswordAction,
+                    style: const TextStyle(fontSize: 16),
+                  ),
           ),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: _loading ? null : _sendOtp,
-          child: const Text('OTP আবার পাঠান'),
+          child: Text(l10n.resendOtp),
         ),
       ],
     );
