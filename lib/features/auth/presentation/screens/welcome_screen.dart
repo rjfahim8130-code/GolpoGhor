@@ -44,10 +44,10 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ============ অ্যাপের নাম (সবসময় বাংলা) ============
-              const Text(
-                'গল্পঘর',
+              Text(
+                l10n.appName,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
                 ),
@@ -56,7 +56,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // ============ Tagline ============
               Text(
-                'বাংলা গল্প, উপন্যাস ও ভিডিওর ঘর',
+                l10n.appTagline,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -75,7 +75,7 @@ class WelcomeScreen extends StatelessWidget {
                     Icons.download_done_outlined,
                     size: 20,
                   ),
-                  label: const Text('অফলাইন গল্প পড়ুন'),
+                  label: Text(l10n.readOfflineStories),
                 ),
               ),
 
@@ -129,7 +129,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // ============ Footer ============
               Text(
-                'গল্পঘর — বাংলা সাহিত্যের ডিজিটাল ঘর',
+                l10n.welcomeFooter,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
