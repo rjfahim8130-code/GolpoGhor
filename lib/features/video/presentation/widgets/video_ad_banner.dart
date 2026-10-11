@@ -1,8 +1,11 @@
 // lib/features/video/presentation/widgets/video_ad_banner.dart
 // ব্যানার বিজ্ঞাপনের জন্য ফাঁকা জায়গা
+// সংশোধিত: localization
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/localization/app_localizations.dart';
 
 class VideoAdBanner extends StatelessWidget {
   final double height;
@@ -61,6 +64,8 @@ class VideoAdSpace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Container(
       height: height,
       color: Colors.transparent,
@@ -72,9 +77,9 @@ class VideoAdSpace extends StatelessWidget {
           color: Colors.black26,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: const Text(
-          'বিজ্ঞাপন',
-          style: TextStyle(
+        child: Text(
+          l10n.advertisement,
+          style: const TextStyle(
             color: Colors.white38,
             fontSize: 9,
           ),
