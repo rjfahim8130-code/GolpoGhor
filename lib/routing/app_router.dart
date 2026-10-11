@@ -1,11 +1,12 @@
 // lib/routing/app_router.dart
-// সংশোধিত: admin guard, set_password import, সব ঠিক
+// সংশোধিত: admin guard, set_password import, localization-aware category default
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/localization/app_localizations.dart';
 import '../core/services/auth_service.dart';
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -136,7 +137,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.category,
         builder: (_, state) {
-          final name = state.uri.queryParameters['name'] ?? 'অন্যান্য';
+          final l10n = state.context.l10n;
+          final name =
+              state.uri.queryParameters['name'] ?? l10n.catOther;
           return CategoryScreen(category: name);
         },
       ),
