@@ -1,9 +1,12 @@
+// lib/features/social/presentation/widgets/report_sheet.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// সব জায়গায় একই রিপোর্ট শিট
 class ReportSheet {
   ReportSheet._();
 
@@ -11,7 +14,7 @@ class ReportSheet {
     BuildContext context, {
     required String targetType,
     required String targetId,
-    String title = 'রিপোর্ট',
+    String? title,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -32,12 +35,12 @@ class ReportSheet {
 class _ReportBody extends StatefulWidget {
   final String targetType;
   final String targetId;
-  final String title;
+  final String? title;
 
   const _ReportBody({
     required this.targetType,
     required this.targetId,
-    required this.title,
+    this.title,
   });
 
   @override
@@ -50,12 +53,20 @@ class _ReportBodyState extends State<_ReportBody> {
   String? _preset;
   bool _sending = false;
 
-  static const _presets = [
+  static const _presetsBn = [
     'কপিরাইট চুরি',
     'অশ্লীল বা আপত্তিকর',
     'স্প্যাম বা বিভ্রান্তিকর',
     'হয়রানি বা আক্রমণাত্মক',
     'অন্যান্য',
+  ];
+
+  static const _presetsEn = [
+    'Copyright infringement',
+    'Obscene or offensive',
+    'Spam or misleading',
+    'Harassment or abusive',
+    'Other',
   ];
 
   @override
@@ -65,14 +76,18 @@ class _ReportBodyState extends State<_ReportBody> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final reason = [
-      if (_preset != null && _preset != 'অন্যান্য') _preset!,
+      if (_preset != null &&
+          _preset != _presetsBn.last &&
+          _preset != _presetsEn.last)
+        _preset!,
       _controller.text.trim(),
     ].where((e) => e.isNotEmpty).join(' — ');
 
     if (reason.trim().length < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('কারণ লিখুন বা বেছে নিন')),
+        SnackBar(content: Text('${l10n.report} — কারণ লিখুন')),
       );
       return;
     }
@@ -100,6 +115,9 @@ class _ReportBodyState extends State<_ReportBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isBn = Localizations.localeOf(context).languageCode == 'bn';
+    final presets = isBn ? _presetsBn : _presetsEn;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -109,8 +127,11 @@ class _ReportBodyState extends State<_ReportBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            widget.title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            widget.title ?? l10n.report,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -121,7 +142,7 @@ class _ReportBodyState extends State<_ReportBody> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _presets.map((p) {
+            children: presets.map((p) {
               final selected = _preset == p;
               return ChoiceChip(
                 label: Text(p, style: const TextStyle(fontSize: 12)),
@@ -160,7 +181,7 @@ class _ReportBodyState extends State<_ReportBody> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('রিপোর্ট পাঠান'),
+                : Text('${l10n.report} পাঠান'),
           ),
         ],
       ),
