@@ -74,7 +74,7 @@ class _AdminDashboardScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
@@ -198,7 +198,7 @@ class _AdminDashboardScreenState
             const SizedBox(height: 24),
 
             // ---------------- Monthly Users ----------------
-            _sectionHeader('মাসিক ইউজার'),
+            _sectionHeader(l10n.monthlyUsers),
             Card(
               elevation: 0,
               color: cardColor,
@@ -264,7 +264,7 @@ class _AdminDashboardScreenState
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Supabase Free Plan MAU লিমিট: ৫০,০০০ / মাস',
+                              l10n.mauLimitNote,
                               style: TextStyle(
                                 fontSize: 11,
                                 color: secondary,
@@ -281,7 +281,7 @@ class _AdminDashboardScreenState
             const SizedBox(height: 24),
 
             // ---------------- Feature toggle ----------------
-            _sectionHeader('ফিচার কন্ট্রোল'),
+            _sectionHeader(l10n.featureControl),
             Card(
               elevation: 0,
               color: cardColor,
@@ -378,7 +378,7 @@ class _AdminDashboardScreenState
                         ),
                         Text(
                           'ID: $id'
-                          '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
+                          '${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
