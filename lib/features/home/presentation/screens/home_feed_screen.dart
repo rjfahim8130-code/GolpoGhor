@@ -1,7 +1,13 @@
+// lib/features/home/presentation/screens/home_feed_screen.dart
+// সংশোধিত: localization, sessionCache avatar, সব ঠিক
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/novel_model.dart';
+import '../../../../core/models/story_model.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/novel_service.dart';
@@ -9,15 +15,9 @@ import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
-import '../../../../core/models/novel_model.dart';
-import '../../../../core/models/story_model.dart';
 import '../widgets/novel_card.dart';
 import '../widgets/story_card.dart';
 
-/// হোম ফিড
-/// - সব বাটন উপরে
-/// - নিচে ফাঁকা
-/// - ভিডিও বাটন admin toggle-এর উপর নির্ভর
 class HomeFeedScreen extends ConsumerStatefulWidget {
   const HomeFeedScreen({super.key});
 
@@ -119,6 +119,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final videoOn = ref.watch(videoFeatureProvider);
     final me = ref.watch(sessionCacheProvider);
@@ -132,17 +133,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         titleSpacing: 12,
         title: Row(
           children: [
-            Image.asset(
-              'assets/images/logo_watermark.png',
-              height: 26,
-              color: Colors.white,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.auto_stories_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 8),
+            // অ্যাপের নাম সবসময় বাংলা
             const Text(
               'গল্পঘর',
               style: TextStyle(
@@ -156,26 +147,28 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.star_outline),
-            tooltip: 'জনপ্রিয়',
+            tooltip: l10n.popular,
             onPressed: () => context.push(RouteNames.popular),
           ),
           IconButton(
             icon: const Icon(Icons.local_fire_department_outlined),
-            tooltip: 'ট্রেন্ডিং',
+            tooltip: l10n.trending,
             onPressed: () => context.push(RouteNames.trending),
           ),
           if (videoOn)
             IconButton(
               icon: const Icon(Icons.videocam_outlined),
-              tooltip: 'ভিডিও',
+              tooltip: l10n.videos,
               onPressed: () => context.push(RouteNames.videos),
             ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
+            tooltip: l10n.notifications,
             onPressed: () => context.push(RouteNames.notifications),
           ),
           IconButton(
             icon: const Icon(Icons.search),
+            tooltip: l10n.search,
             onPressed: () => context.push(RouteNames.search),
           ),
           Padding(
@@ -189,11 +182,11 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -206,7 +199,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _load,
-              child: const Text('আবার চেষ্টা'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
