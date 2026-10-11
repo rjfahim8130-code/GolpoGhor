@@ -167,6 +167,17 @@ class AppLocalizations {
   String get thisMonthNew => t('thisMonthNew');
   String get lastMonthNew => t('lastMonthNew');
   String get totalUsers => t('totalUsers');
+  String get setPassword => t('setPassword');
+  String get open => t('open');
+  String get reviewed => t('reviewed');
+  String get unpublish => t('unpublish');
+  String get moderation => t('moderation');
+  String get videoFeatureOn => t('videoFeatureOn');
+  String get videoFeatureOff => t('videoFeatureOff');
+  String get published => t('published');
+  String get noOpenReports => t('noOpenReports');
+  String get typeLabel => t('typeLabel');
+  String get reasonLabel => t('reasonLabel');
 
   // ---- Errors ----
   String get somethingWentWrong => t('somethingWentWrong');
