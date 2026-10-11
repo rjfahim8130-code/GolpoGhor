@@ -26,12 +26,12 @@ class AdminContentList extends StatelessWidget {
     final l10n = context.l10n;
 
     if (stories.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: Center(
           child: Text(
-            'কোনো কনটেন্ট নেই',
-            style: TextStyle(color: Colors.grey),
+            l10n.noData,
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
       );
@@ -60,7 +60,7 @@ class AdminContentList extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              '${s.authorName ?? ''} · ${s.isPublished ? "প্রকাশিত" : "খসড়া"} · ${s.viewCount} দেখা',
+              '${s.authorName ?? ''} · ${s.isPublished ? l10n.published : l10n.draft} · ${s.viewCount}',
               style: const TextStyle(fontSize: 12),
             ),
             trailing: PopupMenuButton<String>(
@@ -77,9 +77,9 @@ class AdminContentList extends StatelessWidget {
                   child: Text(l10n.read),
                 ),
                 if (s.isPublished)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'unpublish',
-                    child: Text('আনপাবলিশ'),
+                    child: Text(l10n.unpublish),
                   ),
                 PopupMenuItem(
                   value: 'delete',
