@@ -1,5 +1,6 @@
 // lib/core/services/bookmark_service.dart
 // username বাদ, nickname যোগ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -78,7 +79,7 @@ class BookmarkService {
   /// Returns: নতুন state (true = bookmarked, false = removed)
   Future<bool> toggleStoryBookmark(String storyId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final existing = await _client
         .from(SupabaseConstants.bookmarks)
@@ -129,7 +130,7 @@ class BookmarkService {
   /// Novel bookmark toggle
   Future<bool> toggleNovelBookmark(String novelId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final existing = await _client
         .from(SupabaseConstants.bookmarks)
