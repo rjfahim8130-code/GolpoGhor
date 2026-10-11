@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/video_feed_screen.dart
-// সংশোধিত: localization
+// সংশোধিত: localization, floating action button removed
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -134,11 +134,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: AppColors.primary,
-          onPressed: () => context.push(RouteNames.createVideo),
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
         body: EmptyView(
           icon: Icons.videocam_outlined,
           title: l10n.noVideosYet,
@@ -152,14 +147,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () async {
-          await context.push(RouteNames.createVideo);
-          _load();
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: Stack(
         children: [
           PageView.builder(
@@ -512,8 +499,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       ),
     );
   }
-  
-  @override
+    @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final v = widget.video;
@@ -533,7 +519,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ভিডিও — উপরে ও নিচে ছোট করে বসানো (ব্যানার এলে ঢাকা পড়বে না)
+        // ভিডিও — উপরে ও নিচে ছোট করে বসানো
         Positioned(
           top: topSpace,
           left: 0,
