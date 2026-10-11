@@ -1,3 +1,6 @@
+// lib/core/services/admin_service.dart
+// email-ভিত্তিক এডমিন চেক (app_admins টেবিল)
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -7,15 +10,35 @@ import '../models/user_model.dart';
 class AdminService {
   final SupabaseClient _client = Supabase.instance.client;
 
+  /// এডমিন চেক
+  /// ১) app_admins টেবিলে email চেক করে
+  /// ২) না পেলে profiles.is_admin ফ্যালব্যাক
   Future<bool> isAdmin() async {
-    final uid = _client.auth.currentUser?.id;
-    if (uid == null) return false;
-    final data = await _client
-        .from(SupabaseConstants.profiles)
-        .select('is_admin')
-        .eq('id', uid)
-        .maybeSingle();
-    return data?['is_admin'] as bool? ?? false;
+    try {
+      final email = _client.auth.currentUser?.email;
+      if (email == null || email.isEmpty) return false;
+
+      // ১) app_admins টেবিল চেক
+      final row = await _client
+          .from('app_admins')
+          .select('email')
+          .eq('email', email.toLowerCase().trim())
+          .maybeSingle();
+
+      if (row != null) return true;
+
+      // ২) Fallback: profiles.is_admin
+      final uid = _client.auth.currentUser?.id;
+      if (uid == null) return false;
+      final profile = await _client
+          .from(SupabaseConstants.profiles)
+          .select('is_admin')
+          .eq('id', uid)
+          .maybeSingle();
+      return profile?['is_admin'] as bool? ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ---------- Stories ----------
@@ -23,7 +46,14 @@ class AdminService {
   Future<List<StoryModel>> recentStories({int limit = 30}) async {
     final data = await _client
         .from(SupabaseConstants.stories)
-        .select('*, profiles:author_id (full_name, username, avatar_url)')
+        .select('''
+          *,
+          profiles:author_id (
+            full_name,
+            nickname,
+            avatar_url
+          )
+        ''')
         .order('created_at', ascending: false)
         .limit(limit);
 
@@ -32,7 +62,7 @@ class AdminService {
       final p = map['profiles'];
       if (p is Map) {
         map['author_name'] = p['full_name'];
-        map['author_username'] = p['username'];
+        map['author_nickname'] = p['nickname'];
         map['author_avatar'] = p['avatar_url'];
       }
       return StoryModel.fromJson(map);
@@ -91,12 +121,35 @@ class AdminService {
     final c = await count(SupabaseConstants.comments);
     final v = await count(SupabaseConstants.videoPosts);
 
+    int thisMonthNew = 0;
+    int lastMonthNew = 0;
+    try {
+      final now = DateTime.now().toUtc();
+      final monthStart = DateTime.utc(now.year, now.month, 1);
+      final prevMonthStart = DateTime.utc(now.year, now.month - 1, 1);
+
+      final thisMonth = await _client
+          .from(SupabaseConstants.profiles)
+          .select('id')
+          .gte('created_at', monthStart.toIso8601String());
+      thisMonthNew = (thisMonth as List).length;
+
+      final lastMonth = await _client
+          .from(SupabaseConstants.profiles)
+          .select('id')
+          .gte('created_at', prevMonthStart.toIso8601String())
+          .lt('created_at', monthStart.toIso8601String());
+      lastMonthNew = (lastMonth as List).length;
+    } catch (_) {}
+
     return {
       'stories': s,
       'novels': n,
       'users': u,
       'comments': c,
       'videos': v,
+      'this_month_new': thisMonthNew,
+      'last_month_new': lastMonthNew,
     };
   }
 }
