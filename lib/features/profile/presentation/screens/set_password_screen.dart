@@ -95,7 +95,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  validator: Validators.password,
+                  validator: (v) => Validators.password(context, v),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
