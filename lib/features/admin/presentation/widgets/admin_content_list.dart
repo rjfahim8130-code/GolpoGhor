@@ -51,7 +51,7 @@ class AdminContentList extends StatelessWidget {
           ),
           child: ListTile(
             title: Text(
-              s.title.isEmpty ? '(শিরোনামহীন)' : s.title,
+              s.title.isEmpty ? l10n.untitled : s.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
