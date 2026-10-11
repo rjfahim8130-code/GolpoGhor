@@ -1,10 +1,9 @@
+// lib/features/video/presentation/widgets/video_ad_banner.dart
+// ব্যানার বিজ্ঞাপনের জন্য ফাঁকা জায়গা
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
-/// ভিডিওর উপরে ব্যানার বিজ্ঞাপনের জন্য ফাঁকা জায়গা
-/// এখন খালি রাখা হয়েছে — পরে কনটেন্ট ভরে দিবেন
 class VideoAdBanner extends StatelessWidget {
   final double height;
   final String? imageUrl;
@@ -21,7 +20,6 @@ class VideoAdBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // কনটেন্ট না থাকলে খালি জায়গা (transparent)
     if (imageUrl == null && text == null) {
       return SizedBox(height: height);
     }
@@ -56,7 +54,7 @@ class VideoAdBanner extends StatelessWidget {
   }
 }
 
-/// জায়গা রাখার জন্য একটা helper
+/// জায়গা রাখার helper
 class VideoAdSpace extends StatelessWidget {
   final double height;
   const VideoAdSpace({super.key, this.height = 60});
