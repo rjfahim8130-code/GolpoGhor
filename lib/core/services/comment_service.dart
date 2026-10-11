@@ -1,5 +1,6 @@
 // lib/core/services/comment_service.dart
 // সংশোধিত: mention support, nickname join, notification trigger
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -63,12 +64,12 @@ class CommentService {
     String? postOwnerId,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final text = body.trim();
-    if (text.isEmpty) throw Exception('মন্তব্য খালি');
+    if (text.isEmpty) throw Exception('commentEmpty');
     if (text.length > AppConstants.commentMaxLength) {
-      throw Exception('মন্তব্য অনেক বড়');
+      throw Exception('commentTooLong');
     }
 
     final data = await _client
@@ -229,7 +230,7 @@ class CommentService {
     String? videoId,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     await _client
         .from(SupabaseConstants.comments)
@@ -244,10 +245,11 @@ class CommentService {
       videoId: videoId,
     );
   }
+
   /// পোস্ট মালিক অন্যদের কমেন্ট ডিলিট করতে পারবে
   Future<void> deleteCommentAsOwner(String commentId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     await _client.from(SupabaseConstants.comments).delete().eq('id', commentId);
   }
 
@@ -267,7 +269,7 @@ class CommentService {
 
   Future<bool> toggleCommentLike(String commentId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final existing = await _client
         .from(SupabaseConstants.commentLikes)
