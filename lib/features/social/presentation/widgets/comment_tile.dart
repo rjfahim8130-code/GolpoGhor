@@ -1,5 +1,5 @@
 // lib/features/social/presentation/widgets/comment_tile.dart
-// সংশোধিত: nickname, replyToName + mention display
+// সংশোধিত: nickname, replyToName + mention display, localization
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +36,7 @@ class CommentTile extends StatelessWidget {
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final isMine = myId != null && myId == comment.userId;
+    final displayName = comment.displayAuthorOr(l10n.user);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(isReply ? 48 : 12, 6, 12, 6),
@@ -45,7 +46,7 @@ class CommentTile extends StatelessWidget {
           CachedAvatar(
             userId: comment.userId,
             imageUrl: comment.authorAvatar,
-            name: comment.displayAuthor,
+            name: displayName,
             radius: isReply ? 14 : 18,
           ),
           const SizedBox(width: 10),
@@ -64,7 +65,7 @@ class CommentTile extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          comment.displayAuthor,
+                          displayName,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -88,7 +89,7 @@ class CommentTile extends StatelessWidget {
                       ],
                       const SizedBox(width: 6),
                       Text(
-                        TimeAgo.bn(comment.createdAt),
+                        TimeAgo.of(context, comment.createdAt),
                         style: TextStyle(fontSize: 11, color: secondary),
                       ),
                     ],
@@ -205,8 +206,6 @@ class CommentTile extends StatelessWidget {
       );
     }
 
-    // mention highlight — @নাম কে highlight করতে চাইলে
-    // এখানে সরল রাখা হয়েছে — পুরো text দেখানো হচ্ছে
     return Text(comment.body, style: textStyle);
   }
 }
