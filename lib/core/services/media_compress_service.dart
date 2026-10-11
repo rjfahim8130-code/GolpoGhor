@@ -1,13 +1,13 @@
 // lib/core/services/media_compress_service.dart
 // ছবি + ভিডিও কমপ্রেস
-// ছবি: image package | ভিডিও: video_compressor_plus
+// ছবি: image package | ভিডিও: video_compress
 
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
-import 'package:video_compressor_plus/video_compressor_plus.dart';
+import 'package:video_compress/video_compress.dart';
 
 class MediaCompressService {
   // ═══════════════════════════════════════════════════════════
@@ -61,7 +61,7 @@ class MediaCompressService {
       compressImageFile(file, maxWidth: 800, quality: 78);
 
   // ═══════════════════════════════════════════════════════════
-  // ভিডিও কমপ্রেস (video_compressor_plus package দিয়ে)
+  // ভিডিও কমপ্রেস (video_compress package দিয়ে)
   // ═══════════════════════════════════════════════════════════
 
   /// ভিডিও ফাইল → কমপ্রেসড File
