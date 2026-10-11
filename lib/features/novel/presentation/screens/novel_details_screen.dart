@@ -1,5 +1,5 @@
 // lib/features/novel/presentation/screens/novel_details_screen.dart
-// সংশোধিত: localization, avatar cache
+// সংশোধিত: localization, avatar cache, fixed teal bottom bar
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -532,10 +532,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               ),
             ),
           ),
-
-          // নিচের বার
+                    // নিচের বার (সার্বক্ষণিক টিয়েল সবুজ ব্যাকগ্রাউন্ড এবং সাদা আইকন/টেক্সট)
           Material(
-            color: isDark ? AppColors.darkSurface : Colors.white,
+            color: AppColors.primary,
             elevation: 8,
             child: SafeArea(
               top: false,
@@ -546,32 +545,38 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   children: [
                     IconButton(
                       tooltip: l10n.downloadAllEpisodes,
+                      color: Colors.white,
                       icon: _downloadingAll
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : const Icon(Icons.download_outlined),
+                          : const Icon(Icons.download_outlined, color: Colors.white),
                       onPressed: _downloadingAll ? null : _downloadAll,
                     ),
                     IconButton(
+                      color: Colors.white,
                       icon: Icon(
                         _bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: _bookmarked ? AppColors.primary : null,
+                        color: Colors.white,
                       ),
                       onPressed: _toggleBookmark,
                     ),
                     IconButton(
-                      icon: const Icon(Icons.share_outlined),
+                      color: Colors.white,
+                      icon: const Icon(Icons.share_outlined, color: Colors.white),
                       onPressed: _share,
                     ),
                     const Spacer(),
                     if (_isAuthor)
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
                         ),
                         onPressed: () => context.push(
                           '${RouteNames.addEpisode}/${n.id}',
