@@ -1,8 +1,12 @@
+// lib/features/home/presentation/screens/discover_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
@@ -12,6 +16,7 @@ class DiscoverScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
@@ -19,7 +24,7 @@ class DiscoverScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('আবিষ্কার'),
+        title: Text(l10n.discover),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -32,14 +37,14 @@ class DiscoverScreen extends ConsumerWidget {
           _tile(
             context,
             icon: Icons.star_outline,
-            title: 'জনপ্রিয়',
+            title: l10n.popular,
             subtitle: 'বেশি প্রতিক্রিয়া',
             route: RouteNames.popular,
           ),
           _tile(
             context,
             icon: Icons.local_fire_department_outlined,
-            title: 'ট্রেন্ডিং',
+            title: l10n.trending,
             subtitle: 'সবচেয়ে বেশি পঠিত',
             route: RouteNames.trending,
           ),
@@ -47,12 +52,12 @@ class DiscoverScreen extends ConsumerWidget {
             _tile(
               context,
               icon: Icons.videocam_outlined,
-              title: 'ভিডিও',
+              title: l10n.videos,
               subtitle: 'শর্ট ভিডিও ফিড',
               route: RouteNames.videos,
             ),
           const Divider(height: 32),
-          _sectionTitle('ক্যাটাগরি', secondary),
+          _sectionTitle(l10n.category, secondary),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -70,7 +75,7 @@ class DiscoverScreen extends ConsumerWidget {
             }).toList(),
           ),
           const Divider(height: 32),
-          _sectionTitle('সার্চ', secondary),
+          _sectionTitle(l10n.search, secondary),
           _tile(
             context,
             icon: Icons.search,
