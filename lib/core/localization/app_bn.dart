@@ -143,6 +143,14 @@ class AppBn {
     'noOpenReports': 'কোনো খোলা রিপোর্ট নেই',
     'typeLabel': 'ধরন',
     'reasonLabel': 'কারণ',
+    'videoFeatureDescOn':
+        'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে',
+    'videoFeatureDescOff':
+        'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+    'accessDenied': 'অ্যাক্সেস নেই',
+    'adminOnlyScreen': 'এই স্ক্রিন শুধু অ্যাডমিনের জন্য।',
+    'moderationHint':
+        'গল্প/ভিডিও মডারেশন আরও ফিচার পরে আসবে। এখন রিপোর্ট প্রসেস করতে পারবেন।',
 
     // Errors
     'somethingWentWrong': 'কিছু একটা সমস্যা হয়েছে',
