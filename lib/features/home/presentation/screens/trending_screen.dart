@@ -1,6 +1,10 @@
+// lib/features/home/presentation/screens/trending_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/widgets/empty_view.dart';
@@ -51,9 +55,11 @@ class _TrendingScreenState extends State<TrendingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ট্রেন্ডিং'),
+        title: Text(l10n.trending),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
