@@ -143,6 +143,14 @@ class AppEn {
     'noOpenReports': 'No open reports',
     'typeLabel': 'Type',
     'reasonLabel': 'Reason',
+    'videoFeatureDescOn':
+        'On — everyone can view and upload videos',
+    'videoFeatureDescOff':
+        'Off — all video-related UI will be hidden',
+    'accessDenied': 'Access denied',
+    'adminOnlyScreen': 'This screen is for admins only.',
+    'moderationHint':
+        'More story/video moderation features are coming. You can process reports for now.',
 
     // Errors
     'somethingWentWrong': 'Something went wrong',
