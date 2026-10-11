@@ -1,5 +1,6 @@
 // lib/core/services/story_service.dart
 // সংশোধিত: select nickname, username বাদ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -169,7 +170,7 @@ class StoryService {
     bool isDraft = false,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final data = await _client
         .from(SupabaseConstants.stories)
@@ -202,7 +203,7 @@ class StoryService {
     bool? isPublished,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -234,7 +235,7 @@ class StoryService {
 
   Future<void> deleteStory(String storyId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     await _client
         .from(SupabaseConstants.stories)
         .delete()
