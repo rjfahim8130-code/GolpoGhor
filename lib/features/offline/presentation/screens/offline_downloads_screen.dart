@@ -50,7 +50,7 @@ class _OfflineDownloadsScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text('"${item.title}" ${l10n.offline} থেকে সরবে।'),
+        content: Text('"${item.title}" ${l10n.removeFromOffline}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -72,6 +72,7 @@ class _OfflineDownloadsScreenState
   }
 
   Future<void> _tryOnline() async {
+    final l10n = context.l10n;
     final online = await ref.read(networkStatusProvider.notifier).check();
     if (!mounted) return;
     if (online) {
@@ -79,7 +80,7 @@ class _OfflineDownloadsScreenState
       context.go(auth.isLoggedIn ? RouteNames.home : RouteNames.welcome);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('এখনো ইন্টারনেট নেই')),
+        SnackBar(content: Text(l10n.stillOffline)),
       );
     }
   }
@@ -102,7 +103,7 @@ class _OfflineDownloadsScreenState
         actions: [
           IconButton(
             icon: Icon(online ? Icons.wifi : Icons.wifi_off),
-            tooltip: online ? 'অনলাইনে যান' : 'ইন্টারনেট নেই',
+            tooltip: online ? l10n.goOnline : l10n.noInternet,
             color: online ? AppColors.success : null,
             onPressed: _tryOnline,
           ),
@@ -150,15 +151,15 @@ class _OfflineDownloadsScreenState
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.wifi_off,
+                        const Icon(Icons.wifi_off,
                             size: 16, color: AppColors.warning),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'আপনি অফলাইনে আছেন — শুধু ডাউনলোড করা কনটেন্ট পড়া যাবে।',
-                            style: TextStyle(fontSize: 12),
+                            l10n.offlineBanner,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       ],
@@ -166,11 +167,10 @@ class _OfflineDownloadsScreenState
                   ),
                 Expanded(
                   child: _items.isEmpty
-                      ? const EmptyView(
+                      ? EmptyView(
                           icon: Icons.download_done_outlined,
-                          title: 'কোনো ডাউনলোড নেই',
-                          subtitle:
-                              'গল্প বা উপন্যাসের পর্ব ডাউনলোড করলে এখানে দেখতে পাবেন।',
+                          title: l10n.noDownloads,
+                          subtitle: l10n.noDownloadsHint,
                         )
                       : RefreshIndicator(
                           onRefresh: _load,
