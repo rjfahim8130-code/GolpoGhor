@@ -1,5 +1,6 @@
 // lib/core/services/reaction_service.dart
 // সংশোধিত: notification trigger সব reaction-এ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -69,7 +70,7 @@ class ReactionService {
     String? ownerId,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     var find = _client
         .from(SupabaseConstants.reactions)
