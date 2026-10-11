@@ -1,5 +1,6 @@
 // lib/core/models/user_model.dart
 // সংশোধিত: username বাদ, nickname যোগ
+// displayName এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
 class UserModel {
   final String id;
@@ -103,11 +104,20 @@ class UserModel {
   }
 
   /// নাম দেখানোর জন্য
+  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
+  /// অথবা `displayNameOr(l10n.user)` ব্যবহার করুন
   String get displayName {
     if (fullName != null && fullName!.trim().isNotEmpty) {
       return fullName!.trim();
     }
-    return 'ইউজার';
+    return '';
+  }
+
+  /// UI-তে ব্যবহারের জন্য — fallback সহ
+  /// ব্যবহার: user.displayNameOr(l10n.user)
+  String displayNameOr(String fallback) {
+    final n = displayName;
+    return n.isNotEmpty ? n : fallback;
   }
 
   /// ডাক নাম (ঐচ্ছিক)
