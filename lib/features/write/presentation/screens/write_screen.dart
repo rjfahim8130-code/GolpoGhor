@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -106,6 +105,14 @@ class _WriteScreenState extends State<WriteScreen> {
     if (mounted) setState(() => _init = false);
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   ContentBlockModel _fromText(String text) {
     switch (_preset) {
       case _Preset.heading:
@@ -139,10 +146,10 @@ class _WriteScreenState extends State<WriteScreen> {
       final url = await _storage.uploadCover(File(x.path));
       setState(() => _coverUrl = url);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -163,10 +170,10 @@ class _WriteScreenState extends State<WriteScreen> {
       );
       setState(() => _blocks.add(ContentBlockModel.imageBlock(url)));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -185,10 +192,11 @@ class _WriteScreenState extends State<WriteScreen> {
   }
 
   Future<void> _save({required bool asDraft}) async {
+    final l10n = context.l10n;
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('শিরোনাম লিখুন')),
+        SnackBar(content: Text(l10n.enterTitle)),
       );
       return;
     }
@@ -201,10 +209,10 @@ class _WriteScreenState extends State<WriteScreen> {
         await _saveNovel(title: title, asDraft: asDraft);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -214,12 +222,13 @@ class _WriteScreenState extends State<WriteScreen> {
     required String title,
     required bool asDraft,
   }) async {
+    final l10n = context.l10n;
     final blocks = List<ContentBlockModel>.from(_blocks);
     final leftover = _bodyCtrl.text.trim();
     if (leftover.isNotEmpty) blocks.add(_fromText(leftover));
 
     if (blocks.isEmpty && !asDraft) {
-      throw Exception('কিছু লেখা যোগ করুন');
+      throw Exception(l10n.addSomeText);
     }
 
     if (_isEdit) {
@@ -289,6 +298,7 @@ class _WriteScreenState extends State<WriteScreen> {
       context.go('${RouteNames.novel}/${n.id}');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -304,7 +314,7 @@ class _WriteScreenState extends State<WriteScreen> {
       appBar: AppBar(
         title: Text(
           _isEdit
-              ? (_isStory ? 'গল্প সম্পাদনা' : 'উপন্যাস সম্পাদনা')
+              ? (_isStory ? l10n.editStory : l10n.editNovel)
               : (_isStory ? l10n.newStory : l10n.newNovel),
         ),
         leading: IconButton(
@@ -319,7 +329,7 @@ class _WriteScreenState extends State<WriteScreen> {
           TextButton(
             onPressed: _loading ? null : () => _save(asDraft: false),
             child: Text(
-              _isStory ? l10n.publish : 'তৈরি',
+              _isStory ? l10n.publish : l10n.create,
               style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -350,17 +360,17 @@ class _WriteScreenState extends State<WriteScreen> {
                           : null,
                     ),
                     child: (_coverUrl == null || _coverUrl!.isEmpty)
-                        ? const Center(
+                        ? Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.add_photo_alternate_outlined,
                                   size: 40,
                                   color: AppColors.primary,
                                 ),
-                                SizedBox(height: 8),
-                                Text('কভার ছবি (ঐচ্ছিক)'),
+                                const SizedBox(height: 8),
+                                Text(l10n.coverImageOptional),
                               ],
                             ),
                           )
@@ -398,7 +408,7 @@ class _WriteScreenState extends State<WriteScreen> {
                 // ক্যাটাগরি
                 DropdownButtonFormField<String>(
                   value: _category != null &&
-                          AppConstants.categories.contains(_category)
+                          l10n.categoryList.contains(_category)
                       ? _category
                       : null,
                   decoration: InputDecoration(
@@ -406,7 +416,7 @@ class _WriteScreenState extends State<WriteScreen> {
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
-                  items: AppConstants.categories
+                  items: l10n.categoryList
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
                   onChanged: (v) => setState(() => _category = v),
@@ -417,7 +427,7 @@ class _WriteScreenState extends State<WriteScreen> {
                 TextField(
                   controller: _tagsCtrl,
                   decoration: InputDecoration(
-                    labelText: 'ট্যাগ (স্পেস বা কমা দিয়ে)',
+                    labelText: l10n.tagsHint,
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -427,9 +437,9 @@ class _WriteScreenState extends State<WriteScreen> {
                 // গল্প হলে: content blocks
                 if (_isStory) ...[
                   if (_blocks.isNotEmpty) ...[
-                    const Text(
-                      'যোগ করা অংশ',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      l10n.addedParts,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     ...List.generate(_blocks.length, (i) {
@@ -450,7 +460,7 @@ class _WriteScreenState extends State<WriteScreen> {
                                     : const Icon(Icons.image),
                               ),
                             ),
-                            title: const Text('ছবি'),
+                            title: Text(l10n.image),
                             trailing: IconButton(
                               icon: const Icon(Icons.close),
                               onPressed: () => _removeBlock(i),
@@ -490,7 +500,7 @@ class _WriteScreenState extends State<WriteScreen> {
                     maxLines: 8,
                     minLines: 4,
                     decoration: InputDecoration(
-                      hintText: _hintForPreset(),
+                      hintText: _hintForPreset(l10n),
                       filled: true,
                       fillColor: isDark
                           ? AppColors.darkSurface
@@ -505,11 +515,11 @@ class _WriteScreenState extends State<WriteScreen> {
                     child: TextButton.icon(
                       onPressed: _commitBody,
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('অংশ যোগ'),
+                      label: Text(l10n.addPart),
                     ),
                   ),
                   Text(
-                    'টিপস: স্বাভাবিক লিখুন; মাঝে শিরোনাম বা গুরুত্বপূর্ণ অংশ আলাদা করুন।',
+                    l10n.writeTips,
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
@@ -537,7 +547,7 @@ class _WriteScreenState extends State<WriteScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'উপন্যাস তৈরি হলে পরের স্ক্রিনে পর্ব যোগ করা যাবে।',
+                            l10n.novelNextEpisodeHint,
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark
@@ -566,10 +576,10 @@ class _WriteScreenState extends State<WriteScreen> {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   child: Row(
                     children: [
-                      _chip('শিরোনাম', _Preset.heading),
-                      _chip('স্বাভাবিক', _Preset.body),
-                      _chip('গুরুত্বপূর্ণ', _Preset.emphasis),
-                      _chip('উদ্ধৃতি', _Preset.quote),
+                      _chip(l10n.blockHeading, _Preset.heading),
+                      _chip(l10n.blockBody, _Preset.body),
+                      _chip(l10n.blockEmphasis, _Preset.emphasis),
+                      _chip(l10n.blockQuote, _Preset.quote),
                       const SizedBox(width: 4),
                       ActionChip(
                         avatar: _loading
@@ -580,7 +590,7 @@ class _WriteScreenState extends State<WriteScreen> {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.image_outlined, size: 18),
-                        label: const Text('ছবি'),
+                        label: Text(l10n.image),
                         onPressed: _loading ? null : _pickImage,
                       ),
                     ],
@@ -610,16 +620,16 @@ class _WriteScreenState extends State<WriteScreen> {
     );
   }
 
-  String _hintForPreset() {
+  String _hintForPreset(AppLocalizations l10n) {
     switch (_preset) {
       case _Preset.heading:
-        return 'বড় শিরোনাম লিখুন…';
+        return l10n.hintHeading;
       case _Preset.emphasis:
-        return 'গুরুত্বপূর্ণ বাক্য…';
+        return l10n.hintEmphasis;
       case _Preset.quote:
-        return 'উদ্ধৃতি বা মনের কথা…';
+        return l10n.hintQuote;
       case _Preset.body:
-        return 'গল্প লিখুন… (পরে "অংশ যোগ করুন")';
+        return l10n.hintBody;
     }
   }
 }
