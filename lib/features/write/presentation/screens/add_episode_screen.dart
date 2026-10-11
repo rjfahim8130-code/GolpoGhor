@@ -1,3 +1,6 @@
+// lib/features/write/presentation/screens/add_episode_screen.dart
+// সংশোধিত: localization
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -5,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/episode_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
@@ -79,7 +83,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('ছবি: $e')));
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -130,11 +134,12 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('নতুন পর্ব'),
+        title: Text(l10n.addEpisode),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -142,9 +147,9 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
         actions: [
           TextButton(
             onPressed: _loading ? null : _save,
-            child: const Text(
-              'প্রকাশ',
-              style: TextStyle(
+            child: Text(
+              l10n.publish,
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
               ),
