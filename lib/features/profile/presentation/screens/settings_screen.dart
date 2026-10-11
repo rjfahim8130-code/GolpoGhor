@@ -75,7 +75,7 @@ class SettingsScreen extends ConsumerWidget {
           RadioListTile<String>(
             title: Text(l10n.system),
             subtitle: Text(
-              'Phone language-এর অনুযায়ী',
+              l10n.systemLanguageHint,
               style: const TextStyle(fontSize: 12),
             ),
             value: 'system',
@@ -218,9 +218,9 @@ class SettingsScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'ডিলিট করুন',
-              style: TextStyle(color: AppColors.danger),
+            child: Text(
+              l10n.deleteAction,
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],
