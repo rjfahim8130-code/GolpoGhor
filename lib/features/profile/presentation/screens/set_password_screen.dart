@@ -77,8 +77,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
               children: [
                 Text(
                   email.isNotEmpty
-                      ? 'আপনার ইমেইল: $email\nএই ইমেইল ও নতুন পাসওয়ার্ড দিয়ে অন্য ডিভাইসে লগইন করা যাবে।'
-                      : 'একটি পাসওয়ার্ড সেট করুন যাতে ইমেইল দিয়েও লগইন করা যায়।',
+                      ? l10n.setPasswordHelpWithEmail
+                      : l10n.setPasswordHelp,
                   style: TextStyle(height: 1.5, color: secondary),
                 ),
                 const SizedBox(height: 24),
@@ -102,11 +102,11 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   controller: _confirm,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: '${l10n.password} (আবার)',
+                    labelText: l10n.passwordAgainLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                   ),
                   validator: (v) {
-                    if (v != _pass.text) return 'মিলছে না';
+                    if (v != _pass.text) return l10n.doesNotMatch;
                     return null;
                   },
                 ),
