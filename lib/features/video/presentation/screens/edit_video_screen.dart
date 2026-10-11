@@ -1,6 +1,10 @@
+// lib/features/video/presentation/screens/edit_video_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -50,6 +54,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
     try {
       final v = await _service.getById(widget.videoId);
       if (v == null) {
+        if (!mounted) return;
         setState(() {
           _error = 'ভিডিও পাওয়া যায়নি';
           _loading = false;
@@ -59,11 +64,14 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       _titleCtrl.text = v.title;
       _descCtrl.text = v.description;
       _tagsCtrl.text = v.tags.join(' ');
-      setState(() {
-        _video = v;
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _video = v;
+          _loading = false;
+        });
+      }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = '$e';
         _loading = false;
@@ -89,8 +97,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
         tags: _parseTags(_tagsCtrl.text),
       );
       if (!mounted) return;
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('সেভ হয়েছে')),
+        SnackBar(content: Text('${l10n.save} ✓')),
       );
       context.pop();
     } catch (e) {
@@ -103,19 +112,23 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
   }
 
   Future<void> _delete() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('ভিডিও মুছবেন?'),
+        title: Text('${l10n.delete} (${l10n.video})'),
         content: const Text('একেবারে মুছে যাবে। ফেরানো যাবে না।'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -134,13 +147,14 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ভিডিও সম্পাদনা'),
+        title: Text('${l10n.edit} (${l10n.video})'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -154,9 +168,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'সেভ',
-                    style: TextStyle(
+                : Text(
+                    l10n.save,
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -189,7 +203,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'সময়: ${_video!.durationSeconds} সে.'
+                                '${_video!.durationSeconds}s'
                                 ' · ${TimeAgo.bn(_video!.createdAt)}'
                                 '${_video!.isSeries ? " · পর্ব ${_video!.partNumber}" : ""}',
                                 style: TextStyle(
@@ -205,9 +219,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
 
                     TextField(
                       controller: _titleCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'শিরোনাম',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.title,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -215,18 +229,18 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                     TextField(
                       controller: _descCtrl,
                       maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'বিবরণ / ক্যাপশন',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.description,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 12),
 
                     TextField(
                       controller: _tagsCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'ট্যাগ (স্পেস বা কমা)',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.tags,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -239,7 +253,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         side: const BorderSide(color: AppColors.danger),
                       ),
                       icon: const Icon(Icons.delete_outline),
-                      label: const Text('ভিডিও মুছুন'),
+                      label: Text('${l10n.video} ${l10n.delete}'),
                     ),
                   ],
                 ),
