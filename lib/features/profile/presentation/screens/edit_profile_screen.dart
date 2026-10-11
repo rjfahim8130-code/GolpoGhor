@@ -134,7 +134,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${l10n.profile} ${l10n.edit}'),
+        title: Text(l10n.editProfile),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -166,7 +166,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     CachedAvatar(
                       userId: _userId,
                       imageUrl: _avatarUrl,
-                      name: _name.text.isNotEmpty ? _name.text : 'আমি',
+                      name: _name.text.isNotEmpty ? _name.text : l10n.me,
                       radius: 52,
                       tappable: false,
                     ),
@@ -200,7 +200,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'ছবি পরিবর্তন করলে পুরনো ছবি ডিলিট হবে',
+                l10n.avatarChangeHint,
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(context).hintColor,
@@ -225,7 +225,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: l10n.nickname,
                   prefixIcon: const Icon(Icons.badge_outlined),
-                  helperText: 'যেমন: গল্প লেখক, কবি, ঔপন্যাসিক',
+                  helperText: l10n.nicknameHelper,
                 ),
               ),
               const SizedBox(height: 16),
