@@ -1,3 +1,6 @@
+// lib/core/services/video_service.dart
+// username বাদ, nickname যোগ
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -8,11 +11,12 @@ class VideoService {
 
   String? get _uid => _client.auth.currentUser?.id;
 
+  // username বাদ, nickname যোগ
   static const String _selectWithAuthor = '''
     *,
     profiles:author_id (
       full_name,
-      username,
+      nickname,
       avatar_url
     )
   ''';
@@ -22,7 +26,7 @@ class VideoService {
     final p = map['profiles'];
     if (p is Map) {
       map['author_name'] = p['full_name'];
-      map['author_username'] = p['username'];
+      map['author_nickname'] = p['nickname'];
       map['author_avatar'] = p['avatar_url'];
     }
     return map;
