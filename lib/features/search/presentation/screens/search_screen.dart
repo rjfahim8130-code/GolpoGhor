@@ -1,5 +1,5 @@
 // lib/features/search/presentation/screens/search_screen.dart
-// সংশোধিত: username বাদ, nickname, localization, categoryList
+// সংশোধিত: username বাদ, nickname, localization, categoryList, popular & trending buttons added
 
 import 'dart:async';
 
@@ -181,6 +181,37 @@ class _SearchScreenState extends State<SearchScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ============ Popular & Trending বাটন ============
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => context.push(RouteNames.popular),
+                  icon: const Icon(Icons.star_outline),
+                  label: Text(l10n.popular),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => context.push(RouteNames.trending),
+                  icon: const Icon(Icons.local_fire_department_outlined),
+                  label: Text(l10n.trending),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         if (_recent.isNotEmpty) ...[
           Row(
             children: [
