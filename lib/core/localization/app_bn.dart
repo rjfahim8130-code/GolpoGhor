@@ -1,11 +1,16 @@
 // lib/core/localization/app_bn.dart
-// বাংলা strings — সব key বাংলায়
+// সম্পূর্ণ — বাংলা strings
 
 class AppBn {
   AppBn._();
 
   static const Map<String, String> strings = {
-    // Navigation
+    // ---- Brand / meta ----
+    'appName': 'গল্পঘর',
+    'appTagline': 'বাংলা গল্প, উপন্যাস ও ভিডিওর ঘর',
+    'welcomeFooter': 'গল্পঘর — বাংলা সাহিত্যের ডিজিটাল ঘর',
+
+    // ---- Navigation ----
     'home': 'হোম',
     'discover': 'আবিষ্কার',
     'popular': 'জনপ্রিয়',
@@ -16,7 +21,7 @@ class AppBn {
     'profile': 'প্রোফাইল',
     'settings': 'সেটিংস',
 
-    // Auth
+    // ---- Auth ----
     'login': 'লগইন',
     'register': 'রেজিস্টার',
     'email': 'ইমেইল',
@@ -29,8 +34,46 @@ class AppBn {
     'fullName': 'পূর্ণ নাম',
     'nickname': 'ডাক নাম (ঐচ্ছিক)',
     'bio': 'বায়ো',
+    'createNewAccount': 'নতুন অ্যাকাউন্ট তৈরি করুন',
+    'registerConsent':
+        'রেজিস্টার করে আপনি আমাদের শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত হচ্ছেন',
+    'accountCreatedLogin': 'অ্যাকাউন্ট তৈরি হয়েছে — লগইন করুন',
+    'passwordAgain': 'পাসওয়ার্ড আবার',
+    'enterPasswordAgain': 'পাসওয়ার্ড আবার লিখুন',
+    'passwordsDoNotMatch': 'দুটি পাসওয়ার্ড মিলছে না',
+    'minSixChars': 'কমপক্ষে ৬ অক্ষর',
+    'readOfflineStories': 'অফলাইন গল্প পড়ুন',
+    'setupProfileHint': 'চাইলে এখনই প্রোফাইল ঠিক করুন — পরেও বদলানো যাবে।',
+    'nicknameHelper': 'যেমন: গল্প লেখক, কবি, ঔপন্যাসিক',
+    'saveAndContinue': 'সংরক্ষণ করে এগোও',
+    'passwordReset': 'পাসওয়ার্ড রিসেট',
+    'otpEmailHint': 'আপনার ইমেইলে একটি OTP পাঠানো হবে।',
+    'sendOtp': 'OTP পাঠান',
+    'resendOtp': 'OTP আবার পাঠান',
+    'otpSent': 'ইমেইলে OTP পাঠানো হয়েছে। Spam ফোল্ডারও চেক করুন।',
+    'otpSentTo': 'OTP পাঠানো হয়েছে।',
+    'enterValidOtp': 'সঠিক OTP লিখুন',
+    'enterValidEmail': 'সঠিক ইমেইল লিখুন',
+    'newPassword': 'নতুন পাসওয়ার্ড',
+    'setPasswordAction': 'সেট করুন',
+    'passwordChanged': 'পাসওয়ার্ড পরিবর্তন হয়েছে',
+    'passwordMinSix': 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষর',
+    'passwordMismatch': 'পাসওয়ার্ড মিলছে না',
 
-    // Common
+    // ---- Onboarding ----
+    'onboardTitle1': 'গল্প পড়ুন',
+    'onboardBody1': 'বাংলা গল্প ও ধারাবাহিক উপন্যাস এক জায়গায়।',
+    'onboardTitle2': 'গল্প লিখুন',
+    'onboardBody2': 'এক অ্যাকাউন্টেই পাঠক ও লেখক হোন।',
+    'onboardTitle3': 'ভিডিও দেখুন',
+    'onboardBody3': 'শর্ট ভিডিও ফিডে বিনোদন।',
+    'onboardTitle4': 'শেয়ার করুন',
+    'onboardBody4': 'ইউনিক কোড দিয়ে বন্ধুদের আনুন।',
+    'skip': 'স্কিপ',
+    'next': 'পরবর্তী',
+    'getStarted': 'শুরু করুন',
+
+    // ---- Common ----
     'cancel': 'বাতিল',
     'ok': 'ঠিক আছে',
     'yes': 'হ্যাঁ',
@@ -51,8 +94,23 @@ class AppBn {
     'clearAll': 'সব মুছুন',
     'confirm': 'নিশ্চিত',
     'close': 'বন্ধ',
+    'me': 'আমি',
+    'user': 'ইউজার',
+    'author': 'লেখক',
+    'untitled': '(শিরোনামহীন)',
+    'problem': 'সমস্যা',
+    'create': 'তৈরি',
+    'watch': 'দেখুন',
+    'image': 'ছবি',
+    'views': 'ভিউ',
+    'viewsCount': 'দেখা',
+    'content': 'কনটেন্ট',
+    'recent': 'সাম্প্রতিক',
+    'optional': 'ঐচ্ছিক',
+    'again': 'আবার',
+    'zero': '০',
 
-    // Content
+    // ---- Content ----
     'story': 'গল্প',
     'novel': 'উপন্যাস',
     'video': 'ভিডিও',
@@ -73,8 +131,60 @@ class AppBn {
     'newVideo': 'নতুন ভিডিও',
     'addEpisode': 'পর্ব যোগ করুন',
     'readNow': 'এখনই পড়ুন',
+    'published': 'প্রকাশিত',
+    'episodeN': 'পর্ব',
+    'episodesDot': 'পর্ব',
 
-    // Social
+    // ---- Categories ----
+    'catRomance': 'প্রেম',
+    'catMystery': 'রহস্য',
+    'catHorror': 'হরর',
+    'catSocial': 'সামাজিক',
+    'catHistory': 'ইতিহাস',
+    'catComedy': 'কমেডি',
+    'catTeen': 'কিশোর',
+    'catOther': 'অন্যান্য',
+
+    // ---- Empty / status ----
+    'loadFailed': 'লোড করা যায়নি',
+    'notFound': 'পাওয়া যায়নি',
+    'noStoriesYet': 'এখনো কোনো গল্প নেই',
+    'noNovelsYet': 'এখনো কোনো উপন্যাস নেই',
+    'noVideosYet': 'এখনো কোনো ভিডিও নেই',
+    'noEpisodesYet': 'এখনো কোনো পর্ব নেই',
+    'noEpisodes': 'কোনো পর্ব নেই',
+    'noDrafts': 'কোনো খসড়া নেই',
+    'noPopularYet': 'এখনো জনপ্রিয় গল্প নেই',
+    'noTrendingYet': 'এখনো ট্রেন্ডিং নেই',
+    'noStoriesInCategory': 'এই ক্যাটাগরিতে এখনো গল্প নেই',
+    'noSearchResults': 'কোনো ফলাফল নেই — অন্য শব্দ বা কোড চেষ্টা করুন',
+    'noContent': 'কোনো কনটেন্ট নেই',
+    'noDownloads': 'কোনো ডাউনলোড নেই',
+    'noSavedStories': 'কোনো সংরক্ষিত গল্প নেই',
+    'noSavedNovels': 'কোনো সংরক্ষিত উপন্যাস নেই',
+    'noFollowers': 'কোনো ফলোয়ার নেই',
+    'notFollowingAnyone': 'কাউকে ফলো করছেন না',
+    'noNotifications': 'কোনো নোটিফিকেশন নেই',
+    'noNotificationsHint': 'লাইক, কমেন্ট বা ফলো পেলে এখানে দেখতে পাবেন।',
+    'noDownloadsHint': 'গল্প বা উপন্যাসের পর্ব ডাউনলোড করলে এখানে দেখতে পাবেন।',
+    'uploadFirstVideo': 'নিচের বাটনে ট্যাপ করে প্রথম ভিডিও আপলোড করুন',
+    'profileNotFound': 'প্রোফাইল পাওয়া যায়নি',
+    'novelNotFound': 'উপন্যাস পাওয়া যায়নি',
+    'videoNotFound': 'ভিডিও পাওয়া যায়নি',
+    'offlineFileNotFound': 'অফলাইন ফাইল পাওয়া যায়নি',
+
+    // ---- Search ----
+    'searchHint': 'গল্প, লেখক বা কোড…',
+    'searchCodeHint': 'লেখকের কোড বা গল্পের কোড লিখলে সরাসরি পাওয়া যাবে।',
+    'codeMatched': 'কোড মিলেছে',
+    'authors': 'লেখক',
+    'searchAnythingTitle': 'গল্প, উপন্যাস, লেখক বা কোড',
+    'searchAnythingSubtitle': 'যেকোনো কিছু খুঁজুন',
+    'mostReactions': 'বেশি প্রতিক্রিয়া',
+    'mostRead': 'সবচেয়ে বেশি পঠিত',
+    'shortVideoFeed': 'শর্ট ভিডিও ফিড',
+
+    // ---- Social ----
     'follow': 'ফলো',
     'unfollow': 'আনফলো',
     'followers': 'ফলোয়ার',
@@ -88,8 +198,39 @@ class AppBn {
     'writeComment': 'মন্তব্য লিখুন…',
     'noComments': 'এখনো কোনো মন্তব্য নেই',
     'reaction': 'প্রতিক্রিয়া',
+    'mentionHint': 'টাইপ করুন @ mention করতে',
+    'reactionLike': 'লাইক',
+    'reactionLove': 'ভালোবাসা',
+    'reactionWow': 'অবাক',
+    'reactionSad': 'দুঃখ',
+    'reactionFire': 'দুর্দান্ত',
+    'followUpdated': 'ফলো আপডেট',
 
-    // Library
+    // ---- Report ----
+    'reportReasonCopyright': 'কপিরাইট চুরি',
+    'reportReasonObscene': 'অশ্লীল বা আপত্তিকর',
+    'reportReasonSpam': 'স্প্যাম বা বিভ্রান্তিকর',
+    'reportReasonHarassment': 'হয়রানি বা আক্রমণাত্মক',
+    'reportReasonOther': 'অন্যান্য',
+    'reportEnterReason': 'রিপোর্ট — কারণ লিখুন',
+    'reportSent': 'রিপোর্ট পাঠানো হয়েছে',
+    'pickReasonHint': 'কারণ বেছে নিন এবং চাইলে বিস্তারিত লিখুন',
+    'detailedReasonHint': 'বিস্তারিত কারণ লিখুন…',
+    'sendReport': 'রিপোর্ট পাঠান',
+    'reportStory': 'গল্প রিপোর্ট',
+    'reportEpisode': 'পর্ব রিপোর্ট',
+    'reportNovel': 'উপন্যাস রিপোর্ট',
+    'reportVideo': 'ভিডিও রিপোর্ট',
+
+    // ---- Confirm delete ----
+    'deleteStoryConfirm': 'গল্প মুছবেন?',
+    'deleteNovelConfirm': 'উপন্যাস মুছবেন?',
+    'deleteNovelConfirmBody': 'এবং সব পর্ব মুছে যাবে',
+    'deleteVideoConfirm': 'ভিডিও মুছবেন?',
+    'cannotUndo': 'একেবারে মুছে যাবে',
+    'cannotUndoLong': 'একেবারে মুছে যাবে। ফেরানো যাবে না।',
+
+    // ---- Library / offline ----
     'download': 'ডাউনলোড',
     'downloaded': 'ডাউনলোড হয়েছে',
     'bookmark': 'বুকমার্ক',
@@ -100,8 +241,103 @@ class AppBn {
     'insights': 'ইনসাইট',
     'nextEpisode': 'পরের পর্ব',
     'prevEpisode': 'আগের পর্ব',
+    'bookmarkAdded': 'বুকমার্ক করা হয়েছে',
+    'bookmarkRemoved': 'বুকমার্ক সরানো হয়েছে',
+    'downloadRemoved': 'ডাউনলোড সরানো হয়েছে',
+    'downloadedOffline': 'অফলাইনে ডাউনলোড হয়েছে',
+    'downloadAllEpisodes': 'সব পর্ব ডাউনলোড',
+    'episodesSavedOffline': 'পর্ব অফলাইনে সেভ',
+    'goOnline': 'অনলাইনে যান',
+    'stillOffline': 'এখনো ইন্টারনেট নেই',
+    'noInternet': 'ইন্টারনেট নেই',
+    'offlineBanner': 'আপনি অফলাইনে আছেন — শুধু ডাউনলোড করা কনটেন্ট পড়া যাবে।',
+    'removeFromOffline': 'অফলাইন থেকে সরবে।',
 
-    // Settings
+    // ---- Write ----
+    'enterTitle': 'শিরোনাম লিখুন',
+    'addSomeText': 'কিছু লেখা যোগ করুন',
+    'editStory': 'গল্প সম্পাদনা',
+    'editNovel': 'উপন্যাস সম্পাদনা',
+    'coverImageOptional': 'কভার ছবি (ঐচ্ছিক)',
+    'tagsHint': 'ট্যাগ (স্পেস বা কমা দিয়ে)',
+    'titleOptional': 'শিরোনাম (ঐচ্ছিক)',
+    'addedParts': 'যোগ করা অংশ',
+    'addPart': 'অংশ যোগ',
+    'writeTips': 'টিপস: স্বাভাবিক লিখুন; মাঝে শিরোনাম বা গুরুত্বপূর্ণ অংশ আলাদা করুন।',
+    'novelNextEpisodeHint': 'উপন্যাস তৈরি হলে পরের স্ক্রিনে পর্ব যোগ করা যাবে।',
+    'blockHeading': 'শিরোনাম',
+    'blockBody': 'স্বাভাবিক',
+    'blockEmphasis': 'গুরুত্বপূর্ণ',
+    'blockQuote': 'উদ্ধৃতি',
+    'hintHeading': 'বড় শিরোনাম লিখুন…',
+    'hintEmphasis': 'গুরুত্বপূর্ণ বাক্য…',
+    'hintQuote': 'উদ্ধৃতি বা মনের কথা…',
+    'hintBody': 'গল্প লিখুন… (পরে "অংশ যোগ করুন")',
+    'hintEpisodeBody': 'পর্বের লেখা…',
+    'hintHeadingShort': 'শিরোনাম…',
+    'hintEmphasisShort': 'গুরুত্বপূর্ণ…',
+    'hintQuoteShort': 'উদ্ধৃতি…',
+    'enterEpisodeTitle': 'পর্বের শিরোনাম লিখুন',
+    'episodeTitle': 'পর্বের শিরোনাম',
+    'episodeAdded': 'পর্ব যোগ হয়েছে',
+    'updatedOn': 'আপডেট',
+    'episodeLabel': 'পর্ব',
+    'series': 'সিরিজ',
+    'seriesName': 'সিরিজের নাম',
+    'partNumber': 'পর্ব নম্বর',
+    'seriesMode': 'পর্বভিত্তিক সিরিজ',
+    'seriesModeDesc': 'একাধিক পর্ব একই সিরিজে সংযুক্ত হবে',
+
+    // ---- Video ----
+    'videoFeatureDisabled': 'ভিডিও ফিচার এখন বন্ধ আছে।',
+    'videoTooLong': 'ভিডিও সর্বোচ্চ ১৫ মিনিট হতে পারবে। আরও ছোট করে আবার চেষ্টা করুন।',
+    'pickVideoFirst': 'আগে একটি ভিডিও বেছে নিন',
+    'pickFromGallery': 'গ্যালারি থেকে ভিডিও বেছে নিন',
+    'compressingVideo': 'ভিডিও কমপ্রেস হচ্ছে…',
+    'uploadingPleaseWait': 'R2-তে আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
+    'durationOfMax': 'সে. / ১৫ মিনিট',
+    'autoLoop': 'অটো লুপ',
+    'soundOn': 'সাউন্ড চালু',
+    'soundOff': 'সাউন্ড বন্ধ',
+    'watchNextPart': 'পরের অংশ দেখুন',
+    'advertisement': 'বিজ্ঞাপন',
+
+    // ---- Profile ----
+    'editProfile': 'প্রোফাইল এডিট',
+    'myCode': 'আমার কোড',
+    'youAreAdmin': 'আপনি সিস্টেম অ্যাডমিন',
+    'avatarChangeHint': 'ছবি পরিবর্তন করলে পুরনো ছবি ডিলিট হবে',
+    'systemLanguageHint': 'ফোনের ভাষা অনুযায়ী',
+    'deleteAction': 'ডিলিট করুন',
+    'passwordAgainLabel': 'পাসওয়ার্ড (আবার)',
+    'doesNotMatch': 'মিলছে না',
+    'setPasswordHelp':
+        'একটি পাসওয়ার্ড সেট করুন যাতে ইমেইল দিয়েও লগইন করা যায়।',
+    'setPasswordHelpWithEmail':
+        'এই ইমেইল ও নতুন পাসওয়ার্ড দিয়ে অন্য ডিভাইসে লগইন করা যাবে।',
+    'thisWeek': 'এই সপ্তাহ',
+    'thisMonth': 'এই মাস',
+    'insightsWritingHeader': 'লেখা (গল্প · উপন্যাস · পর্ব)',
+    'insightsCompareHint': 'তুলনা: আগের সপ্তাহ/মাসের তুলনায় ভিউ পরিবর্তন।',
+    'seen': 'দেখা',
+    'saves': 'সেভ',
+    'viewDelta': 'ভিউ',
+
+    // ---- Notifications ----
+    'notifReacted': 'আপনার কনটেন্টে রিঅ্যাক্ট করেছেন',
+    'notifCommented': 'মন্তব্য করেছেন',
+    'notifReplied': 'আপনার মন্তব্যের উত্তর দিয়েছেন',
+    'notifMentioned': 'আপনাকে মেনশন করেছেন',
+    'notifFollowed': 'আপনাকে ফলো করেছেন',
+    'notification': 'নোটিফিকেশন',
+    'mentionNotificationBody': 'আপনাকে একটি মন্তব্যে মেনশন করেছেন',
+
+    // ---- Share templates (brand hashtag intentional) ----
+    'shareReadOnApp': 'গল্পঘরে পড়ুন',
+    'shareFollowOnApp': 'গল্পঘরে ফলো করুন',
+    'shareCodeLabel': 'কোড',
+
+    // ---- Settings ----
     'theme': 'থিম',
     'language': 'ভাষা',
     'bangla': 'বাংলা',
@@ -121,8 +357,9 @@ class AppBn {
     'accountDeletionScheduled':
         'আপনার অ্যাকাউন্ট ৭ দিন পর সম্পূর্ণ মুছে ফেলা হবে।',
     'logoutConfirm': 'আপনি কি লগআউট করতে চান?',
+    'setPassword': 'পাসওয়ার্ড সেট / পরিবর্তন',
 
-    // Admin
+    // ---- Admin ----
     'admin': 'অ্যাডমিন',
     'adminDashboard': 'অ্যাডমিন ড্যাশবোর্ড',
     'videoFeature': 'ভিডিও ফিচার',
@@ -132,33 +369,69 @@ class AppBn {
     'thisMonthNew': 'এই মাসে নতুন',
     'lastMonthNew': 'গত মাসে নতুন',
     'totalUsers': 'মোট ইউজার',
-    'setPassword': 'পাসওয়ার্ড সেট / পরিবর্তন',
     'open': 'খুলুন',
     'reviewed': 'রিভিউড',
     'unpublish': 'আনপাবলিশ',
     'moderation': 'মডারেশন',
     'videoFeatureOn': 'ভিডিও ফিচার চালু',
     'videoFeatureOff': 'ভিডিও ফিচার বন্ধ',
-    'published': 'প্রকাশিত',
     'noOpenReports': 'কোনো খোলা রিপোর্ট নেই',
     'typeLabel': 'ধরন',
     'reasonLabel': 'কারণ',
-    'videoFeatureDescOn':
-        'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে',
-    'videoFeatureDescOff':
-        'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+    'videoFeatureDescOn': 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে',
+    'videoFeatureDescOff': 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
     'accessDenied': 'অ্যাক্সেস নেই',
     'adminOnlyScreen': 'এই স্ক্রিন শুধু অ্যাডমিনের জন্য।',
     'moderationHint':
         'গল্প/ভিডিও মডারেশন আরও ফিচার পরে আসবে। এখন রিপোর্ট প্রসেস করতে পারবেন।',
+    'monthlyUsers': 'মাসিক ইউজার',
+    'featureControl': 'ফিচার কন্ট্রোল',
+    'mauLimitNote': 'Supabase Free Plan MAU লিমিট: ৫০,০০০ / মাস',
 
-    // Errors
+    // ---- Validators ----
+    'valEnterEmail': 'ইমেইল লিখুন',
+    'valValidEmail': 'সঠিক ইমেইল লিখুন',
+    'valEnterPassword': 'পাসওয়ার্ড লিখুন',
+    'valMinSix': 'কমপক্ষে ৬ অক্ষর',
+    'valEnterName': 'নাম লিখুন',
+    'valMinTwo': 'কমপক্ষে ২ অক্ষর',
+    'valMaxThirty': 'সর্বোচ্চ ৩০ অক্ষর',
+    'valEnterTitle': 'শিরোনাম লিখুন',
+
+    // ---- Time ago ----
+    'timeJustNow': 'এইমাত্র',
+    'timeSecondsAgo': 'সেকেন্ড আগে',
+    'timeMinutesAgo': 'মিনিট আগে',
+    'timeHoursAgo': 'ঘণ্টা আগে',
+    'timeDaysAgo': 'দিন আগে',
+    'timeWeeksAgo': 'সপ্তাহ আগে',
+    'timeMonthsAgo': 'মাস আগে',
+    'timeYearsAgo': 'বছর আগে',
+    'compactThousand': 'হাজার',
+    'compactLakh': 'লক্ষ',
+    'compactCrore': 'কোটি',
+
+    // ---- Errors ----
     'somethingWentWrong': 'কিছু একটা সমস্যা হয়েছে',
-    'noInternet': 'ইন্টারনেট নেই',
     'tryAgain': 'আবার চেষ্টা করুন',
     'loginFailed': 'লগইন ব্যর্থ',
     'registerFailed': 'রেজিস্টার ব্যর্থ',
     'saveFailed': 'সেভ ব্যর্থ',
     'uploadFailed': 'আপলোড ব্যর্থ',
+    'notLoggedIn': 'লগইন নেই',
+    'invalidOtp': 'OTP সঠিক নয় বা মেয়াদ শেষ',
+    'commentEmpty': 'মন্তব্য খালি',
+    'commentTooLong': 'মন্তব্য অনেক বড়',
+    'cannotFollowSelf': 'নিজেকে ফলো করা যায় না',
+    'noEpisodePermission': 'এই উপন্যাসে পর্ব যোগ করার অনুমতি নেই',
+    'reasonMinFive': 'কারণ কমপক্ষে ৫ অক্ষর লিখুন',
+    'reasonTooLong': 'কারণ অনেক বড়',
+    'r2ConfigMissing':
+        'Cloudflare R2 কনফিগ নেই। R2_ACCESS_KEY ও R2_SECRET_KEY (dart-define) দিন।',
+    'r2UploadFailed': 'R2 আপলোড ব্যর্থ',
+    'appFailedToStart': 'গল্পঘর চালু হয়নি',
+    'bootErrorHelp':
+        'ইন্টারনেট চালু আছে কি না দেখুন। এরপরও সমস্যা হলে নিচের মেসেজটি কপি করে সাপোর্টে পাঠান:',
+    'needAtLeastOneId': 'অন্তত একটি id দিতে হবে',
   };
 }
