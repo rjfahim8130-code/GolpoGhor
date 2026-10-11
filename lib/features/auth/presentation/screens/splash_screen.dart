@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
-// সংশোধিত: safe startup, try-catch সব step-এ, slow হলেও crash না
+// লোগো PNG + safe startup (slow হলেও crash করবে না)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,11 +27,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _go() async {
     try {
-      // বেশি delay নেই — 300ms
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      // ছোট delay — UI দেখানোর জন্য
+      await Future<void>.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
 
-      // Network check — fail হলেও চলবে (অনলাইন ধরে নাও)
+      // ───── ১. Network check (fail হলেও অনলাইন ধরে নাও) ─────
       bool online = true;
       try {
         online = await ref
@@ -44,7 +44,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
       if (!mounted) return;
 
-      // Prefs — fail হলেও চলবে
+      // ───── ২. Prefs পড়া (fail হলেও চলবে) ─────
       bool onboardingDone = false;
       bool cachedSetup = false;
       try {
@@ -56,7 +56,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
       if (!mounted) return;
 
-      // Auth check — fail হলেও চলবে
+      // ───── ৩. Auth check (fail হলেও চলবে) ─────
       bool loggedIn = false;
       try {
         loggedIn = AuthService().isLoggedIn;
@@ -66,7 +66,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
       if (!mounted) return;
 
-      // Route decision
+      // ───── ৪. Route decision ─────
       if (!online) {
         context.go(RouteNames.offline);
         return;
@@ -79,7 +79,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      // লগইন আছে — cache setup থাকলে home, না থাকলে home-ই (setup পরে)
+      // লগইন আছে — cached setup থাকলে home, না থাকলেও home
+      // (setup পরেও করতে পারবে)
       if (cachedSetup) {
         context.go(RouteNames.home);
         return;
@@ -102,31 +103,70 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     return Scaffold(
       backgroundColor: bg,
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.auto_stories_rounded,
-              size: 72,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 16),
-            // অ্যাপের নাম সবসময় বাংলায়
-            Text(
-              'গল্পঘর',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // ============ লোগো PNG ============
+              Image.asset(
+                'assets/images/logo.png',
+                height: 120,
+                width: 120,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) {
+                  return const Icon(
+                    Icons.auto_stories_rounded,
+                    size: 100,
+                    color: AppColors.primary,
+                  );
+                },
               ),
-            ),
-            SizedBox(height: 28),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // ============ অ্যাপের নাম (সবসময় বাংলা) ============
+              const Text(
+                'গল্পঘর',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ============ Tagline ============
+              Text(
+                'বাংলা গল্প, উপন্যাস ও ভিডিওর ঘর',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // ============ Loading ============
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(height: 16),
+
+              Text(
+                'লোড হচ্ছে…',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
