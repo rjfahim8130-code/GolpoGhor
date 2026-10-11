@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/time_ago.dart';
 import '../../../../routing/route_names.dart';
 
 class ProfileStatsCard extends StatelessWidget {
@@ -41,6 +42,7 @@ class ProfileStatsCard extends StatelessWidget {
         children: [
           Expanded(
             child: _statItem(
+              context: context,
               value: followerCount,
               label: l10n.followers,
               secondary: secondary,
@@ -52,6 +54,7 @@ class ProfileStatsCard extends StatelessWidget {
           _divider(isDark),
           Expanded(
             child: _statItem(
+              context: context,
               value: followingCount,
               label: l10n.following,
               secondary: secondary,
@@ -63,8 +66,9 @@ class ProfileStatsCard extends StatelessWidget {
           _divider(isDark),
           Expanded(
             child: _statItem(
+              context: context,
               value: totalViews,
-              label: 'ভিউ',
+              label: l10n.views,
               secondary: secondary,
               onTap: null,
             ),
@@ -72,8 +76,9 @@ class ProfileStatsCard extends StatelessWidget {
           _divider(isDark),
           Expanded(
             child: _statItem(
+              context: context,
               value: totalReactions,
-              label: 'রিঅ্যাকশন',
+              label: l10n.reactions,
               secondary: secondary,
               onTap: null,
             ),
@@ -84,6 +89,7 @@ class ProfileStatsCard extends StatelessWidget {
   }
 
   Widget _statItem({
+    required BuildContext context,
     required int value,
     required String label,
     required Color secondary,
@@ -97,7 +103,7 @@ class ProfileStatsCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              _compact(value),
+              TimeAgo.compactOf(context, value),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -122,12 +128,5 @@ class ProfileStatsCard extends StatelessWidget {
       height: 30,
       color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
     );
-  }
-
-  String _compact(int n) {
-    if (n < 1000) return '$n';
-    if (n < 100000) return '${(n / 1000).toStringAsFixed(1)}K';
-    if (n < 10000000) return '${(n / 100000).toStringAsFixed(1)}L';
-    return '${(n / 10000000).toStringAsFixed(1)}Cr';
   }
 }
