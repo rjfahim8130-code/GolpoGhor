@@ -1,46 +1,56 @@
 // lib/core/utils/validators.dart
 // username validator বাদ (username feature নেই)
+// সব message এখন l10n key string — UI-তে translate হবে
+
+import 'package:flutter/material.dart';
+
+import '../localization/app_localizations.dart';
 
 class Validators {
   Validators._();
 
-  static String? email(String? v) {
-    if (v == null || v.trim().isEmpty) return 'ইমেইল লিখুন';
+  static String? email(BuildContext context, String? v) {
+    final l10n = context.l10n;
+    if (v == null || v.trim().isEmpty) return l10n.valEnterEmail;
     final t = v.trim();
     if (!RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\.\-]+$').hasMatch(t)) {
-      return 'সঠিক ইমেইল লিখুন';
+      return l10n.valValidEmail;
     }
     return null;
   }
 
-  static String? password(String? v) {
-    if (v == null || v.isEmpty) return 'পাসওয়ার্ড লিখুন';
-    if (v.length < 6) return 'কমপক্ষে ৬ অক্ষর';
+  static String? password(BuildContext context, String? v) {
+    final l10n = context.l10n;
+    if (v == null || v.isEmpty) return l10n.valEnterPassword;
+    if (v.length < 6) return l10n.valMinSix;
     return null;
   }
 
-  static String? name(String? v) {
-    if (v == null || v.trim().isEmpty) return 'নাম লিখুন';
-    if (v.trim().length < 2) return 'কমপক্ষে ২ অক্ষর';
+  static String? name(BuildContext context, String? v) {
+    final l10n = context.l10n;
+    if (v == null || v.trim().isEmpty) return l10n.valEnterName;
+    if (v.trim().length < 2) return l10n.valMinTwo;
     return null;
   }
 
   /// ডাক নাম — ঐচ্ছিক (খালি থাকলে valid)
-  static String? nickname(String? v) {
+  static String? nickname(BuildContext context, String? v) {
+    final l10n = context.l10n;
     if (v == null || v.trim().isEmpty) return null;
     final t = v.trim();
-    if (t.length < 2) return 'কমপক্ষে ২ অক্ষর';
-    if (t.length > 30) return 'সর্বোচ্চ ৩০ অক্ষর';
+    if (t.length < 2) return l10n.valMinTwo;
+    if (t.length > 30) return l10n.valMaxThirty;
     return null;
   }
 
-  static String? title(String? v) {
-    if (v == null || v.trim().isEmpty) return 'শিরোনাম লিখুন';
-    if (v.trim().length < 2) return 'কমপক্ষে ২ অক্ষর';
+  static String? title(BuildContext context, String? v) {
+    final l10n = context.l10n;
+    if (v == null || v.trim().isEmpty) return l10n.valEnterTitle;
+    if (v.trim().length < 2) return l10n.valMinTwo;
     return null;
   }
 
-  static String? required(String? v, String msg) {
+  static String? required(BuildContext context, String? v, String msg) {
     if (v == null || v.trim().isEmpty) return msg;
     return null;
   }
