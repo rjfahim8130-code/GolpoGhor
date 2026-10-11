@@ -1,5 +1,6 @@
 // lib/core/services/video_service.dart
 // username বাদ, nickname যোগ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -128,7 +129,7 @@ class VideoService {
     bool isDraft = false,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final data = await _client
         .from(SupabaseConstants.videoPosts)
@@ -162,7 +163,7 @@ class VideoService {
     bool? isPublished,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -190,7 +191,7 @@ class VideoService {
 
   Future<void> deleteVideo(String videoId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     await _client
         .from(SupabaseConstants.videoPosts)
         .delete()
@@ -214,7 +215,7 @@ class VideoService {
 
   Future<bool> toggleSave(String videoId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     final existing = await isSaved(videoId);
     if (existing) {
       await _client
