@@ -132,6 +132,17 @@ class AppEn {
     'thisMonthNew': 'This month (new)',
     'lastMonthNew': 'Last month (new)',
     'totalUsers': 'Total Users',
+    'setPassword': 'Set / Change password',
+    'open': 'Open',
+    'reviewed': 'Reviewed',
+    'unpublish': 'Unpublish',
+    'moderation': 'Moderation',
+    'videoFeatureOn': 'Video feature enabled',
+    'videoFeatureOff': 'Video feature disabled',
+    'published': 'Published',
+    'noOpenReports': 'No open reports',
+    'typeLabel': 'Type',
+    'reasonLabel': 'Reason',
 
     // Errors
     'somethingWentWrong': 'Something went wrong',
