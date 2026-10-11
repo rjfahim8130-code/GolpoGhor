@@ -5,19 +5,21 @@ class AppConstants {
   static const String appNameEn = 'GolpoGhor';
   static const String appVersion = '1.0.0';
 
-  // ক্যাটাগরি
-  static const List<String> categories = [
-    'প্রেম',
-    'রহস্য',
-    'হরর',
-    'সামাজিক',
-    'ইতিহাস',
-    'কমেডি',
-    'কিশোর',
-    'অন্যান্য',
+  // ক্যাটাগরি — locale-ভিত্তিক দেখাতে হবে
+  // UI-তে l10n.categoryList ব্যবহার করুন
+  // এই list শুধু DB-তে save করার জন্য (backend value)
+  static const List<String> categoryKeys = [
+    'catRomance',
+    'catMystery',
+    'catHorror',
+    'catSocial',
+    'catHistory',
+    'catComedy',
+    'catTeen',
+    'catOther',
   ];
 
-  // রিঅ্যাকশন টাইপ
+  // রিঅ্যাকশন টাইপ (locale-নিরপেক্ষ — emoji mapping)
   static const List<String> reactionTypes = [
     'like',
     'love',
