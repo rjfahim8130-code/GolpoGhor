@@ -45,7 +45,7 @@ class AdminFeatureToggles extends ConsumerWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  v ? 'ভিডিও ফিচার চালু' : 'ভিডিও ফিচার বন্ধ',
+                  v ? l10n.videoFeatureOn : l10n.videoFeatureOff,
                 ),
               ),
             );
