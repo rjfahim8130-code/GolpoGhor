@@ -1,10 +1,13 @@
+// lib/features/social/presentation/widgets/reaction_summary.dart
+// localized ready
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import 'reaction_picker.dart';
 
 /// একাধিক রিঅ্যাকশনের সারসংক্ষেপ
-/// যেমন: [👍❤️🔥]  ১৭ জন
+/// যেমন: [👍❤️🔥] ১৭ জন
 class ReactionSummary extends StatelessWidget {
   final Map<String, int> counts;
   final double emojiSize;
@@ -21,7 +24,6 @@ class ReactionSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     if (counts.isEmpty) return const SizedBox.shrink();
 
-    // সবচেয়ে বেশি ৩টি টাইপ দেখাব
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final top = sorted.take(3).toList();
@@ -34,7 +36,6 @@ class ReactionSummary extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // overlapping emoji circle
         SizedBox(
           height: emojiSize + 10,
           width: (emojiSize + 6) * top.length + 4,
