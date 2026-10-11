@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// AppBar-এ লোগো PNG + session cache avatar + localization
+// AppBar-এ লোগো PNG + session cache avatar + localization (Popular/Trending সরানো হয়েছে)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -157,16 +157,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.star_outline),
-            tooltip: l10n.popular,
-            onPressed: () => context.push(RouteNames.popular),
-          ),
-          IconButton(
-            icon: const Icon(Icons.local_fire_department_outlined),
-            tooltip: l10n.trending,
-            onPressed: () => context.push(RouteNames.trending),
-          ),
           if (videoOn)
             IconButton(
               icon: const Icon(Icons.videocam_outlined),
