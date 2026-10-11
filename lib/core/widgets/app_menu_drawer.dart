@@ -56,7 +56,7 @@ class AppMenuDrawer extends ConsumerWidget {
                         CachedAvatar(
                           userId: userId,
                           imageUrl: userAvatar,
-                          name: userName ?? 'ইউজার',
+                          name: userName ?? l10n.user,
                           radius: 26,
                           tappable: false,
                         ),
@@ -85,7 +85,7 @@ class AppMenuDrawer extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            userName ?? 'ইউজার',
+                            userName ?? l10n.user,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -177,8 +177,8 @@ class AppMenuDrawer extends ConsumerWidget {
                           color: AppColors.danger.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Icon(
                             Icons.admin_panel_settings,
                             size: 16,
