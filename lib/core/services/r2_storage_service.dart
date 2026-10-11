@@ -1,3 +1,7 @@
+// lib/core/services/r2_storage_service.dart
+// শুধু Cloudflare R2 — Supabase Storage নেই
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -109,7 +113,10 @@ class R2StorageService {
       return Hmac(sha256, key).convert(utf8.encode(data)).bytes;
     }
 
-    final kDate = hmacSha256(utf8.encode('AWS4${R2Constants.secretAccessKey}'), dateStamp);
+    final kDate = hmacSha256(
+      utf8.encode('AWS4${R2Constants.secretAccessKey}'),
+      dateStamp,
+    );
     final kRegion = hmacSha256(kDate, region);
     final kService = hmacSha256(kRegion, service);
     final kSigning = hmacSha256(kService, 'aws4_request');
@@ -213,15 +220,15 @@ class R2StorageService {
     );
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('R2 আপলোড ব্যর্থ: ${res.statusCode} ${res.body}');
+      // UI-তে l10n.t(key) দিয়ে translate হবে
+      throw Exception('r2UploadFailed');
     }
   }
 
   void _assertConfigured() {
     if (!R2Constants.isConfigured) {
-      throw Exception(
-        'Cloudflare R2 কনফিগ নেই। R2_ACCESS_KEY ও R2_SECRET_KEY (dart-define) দিন।',
-      );
+      // UI-তে l10n.t(key) দিয়ে translate হবে
+      throw Exception('r2ConfigMissing');
     }
   }
 }
