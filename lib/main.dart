@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/constants/supabase_constants.dart';
+import 'core/localization/app_localizations.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 
@@ -86,47 +87,54 @@ class _BootErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                const Icon(Icons.error_outline,
-                    color: Colors.red, size: 56),
-                const SizedBox(height: 16),
-                const Text(
-                  'গল্পঘর চালু হয়নি',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'ইন্টারনেট চালু আছে কি না দেখুন। এরপরও সমস্যা হলে '
-                  'নিচের মেসেজটি কপি করে সাপোর্টে পাঠান:',
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    color: Colors.grey.shade100,
-                    child: SingleChildScrollView(
-                      child: SelectableText(
-                        message,
-                        style: const TextStyle(fontSize: 12),
+      locale: const Locale('bn'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+      ],
+      home: Builder(
+        builder: (context) {
+          final l10n = context.l10n;
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 56),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.appName,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(l10n.bootErrorHelp),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        color: Colors.grey.shade100,
+                        child: SingleChildScrollView(
+                          child: SelectableText(
+                            message,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
