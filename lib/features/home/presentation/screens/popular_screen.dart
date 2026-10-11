@@ -1,6 +1,10 @@
+// lib/features/home/presentation/screens/popular_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/widgets/empty_view.dart';
@@ -51,9 +55,11 @@ class _PopularScreenState extends State<PopularScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('জনপ্রিয়'),
+        title: Text(l10n.popular),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
