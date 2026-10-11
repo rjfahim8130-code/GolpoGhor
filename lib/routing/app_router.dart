@@ -136,8 +136,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.category,
-        builder: (_, state) {
-          final l10n = state.context.l10n;
+        builder: (context, state) {
+          final l10n = context.l10n;
           final name =
               state.uri.queryParameters['name'] ?? l10n.catOther;
           return CategoryScreen(category: name);
