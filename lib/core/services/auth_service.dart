@@ -1,5 +1,6 @@
 // lib/core/services/auth_service.dart
 // সংশোধিত: username বাদ, nickname যোগ, avatar_url দিয়ে পুরনো ছবি সংরক্ষণ
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে (UI-তে translate)
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -62,7 +63,8 @@ class AuthService {
       type: OtpType.recovery,
     );
     if (res.user == null && res.session == null) {
-      throw Exception('OTP সঠিক নয় বা মেয়াদ শেষ');
+      // UI-তে l10n.t(key) দিয়ে translate হবে
+      throw Exception('invalidOtp');
     }
     await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
@@ -101,7 +103,7 @@ class AuthService {
     bool? profileSetupDone,
   }) async {
     final uid = currentUser?.id;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -151,7 +153,7 @@ class AuthService {
   /// (প্রকৃত ডিলিট Supabase-এ scheduled function/RPC দিয়ে হবে)
   Future<void> scheduleAccountDeletion() async {
     final uid = currentUser?.id;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     final deleteAt = DateTime.now().add(const Duration(days: 7)).toUtc();
     await _client.from(SupabaseConstants.profiles).update({
       'deletion_scheduled_at': deleteAt.toIso8601String(),
