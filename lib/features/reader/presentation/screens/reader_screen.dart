@@ -143,7 +143,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -161,7 +161,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         });
         return;
       }
-      throw Exception('পাওয়া যায়নি');
+      throw Exception('notFound');
     }
 
     final bm = await _bookmarkService.isStoryBookmarked(widget.id);
@@ -196,7 +196,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         });
         return;
       }
-      throw Exception('পাওয়া যায়নি');
+      throw Exception('notFound');
     }
 
     final siblings = await _episodeService.getByNovel(ep.novelId);
@@ -219,7 +219,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     _episodeService.recordView(ep.id);
   }
-  
+
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _toggleBookmark() async {
     try {
       if (_isStory) {
@@ -229,26 +237,27 @@ class _ReaderScreenState extends State<ReaderScreen> {
         final l10n = context.l10n;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(on ? l10n.bookmark : l10n.bookmark),
+            content: Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
             duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
   Future<void> _download() async {
+    final l10n = context.l10n;
     if (_downloaded) {
       await _offlineService.remove(_isStory ? widget.id : 'ep_${widget.id}');
       if (!mounted) return;
       setState(() => _downloaded = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ডাউনলোড সরানো হয়েছে')),
+        SnackBar(content: Text(l10n.downloadRemoved)),
       );
       return;
     }
@@ -265,7 +274,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
         await _offlineService.saveEpisode(
           episodeId: ep.id,
           novelTitle: _novelTitle ?? '',
-          episodeTitle: ep.title,
+          episodeTitle: ep.title.isNotEmpty
+              ? ep.title
+              : '${l10n.episodeLabel} ${ep.chapterNumber}',
           chapterNumber: ep.chapterNumber,
           contentBlocks: ep.contentBlocks,
           authorName: _story?.authorName,
@@ -278,13 +289,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
         _downloading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('অফলাইনে ডাউনলোড হয়েছে')),
+        SnackBar(content: Text(l10n.downloadedOffline)),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _downloading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -319,10 +331,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
         _reactionTotal = total;
       });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -447,6 +459,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  /// Reading progress bar (উপরে ও নিচে বেগুনি বার শেষ হলে)
+  
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -478,9 +492,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_error!, style: TextStyle(color: textPrimary)),
+              Text(l10n.t(_error!), style: TextStyle(color: textPrimary)),
               const SizedBox(height: 12),
-              TextButton(onPressed: _load, child: const Text('আবার')),
+              TextButton(
+                onPressed: _load,
+                child: Text(l10n.again),
+              ),
             ],
           ),
         ),
@@ -491,7 +508,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         ? (_story?.title ?? '')
         : (_episode?.title.isNotEmpty == true
             ? _episode!.title
-            : 'পর্ব ${_episode?.chapterNumber ?? 1}');
+            : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
     final authorName = _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _story?.authorAvatar;
@@ -544,7 +561,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               context,
                               targetType: _isStory ? 'story' : 'episode',
                               targetId: widget.id,
-                              title: _isStory ? 'গল্প রিপোর্ট' : 'পর্ব রিপোর্ট',
+                              title: _isStory
+                                  ? l10n.reportStory
+                                  : l10n.reportEpisode,
                             );
                           },
                         ),
@@ -577,12 +596,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             CachedAvatar(
                               userId: authorId,
                               imageUrl: authorAvatar,
-                              name: authorName ?? 'লেখক',
+                              name: authorName ?? l10n.author,
                               radius: 32,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              authorName ?? 'লেখক',
+                              authorName ?? l10n.author,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -677,7 +696,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       children: [
                         _stat(
                           Icons.remove_red_eye_outlined,
-                          TimeAgo.compact(_viewCount),
+                          TimeAgo.compactOf(context, _viewCount),
                           textSecondary,
                         ),
                         GestureDetector(
@@ -686,7 +705,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             _myReaction != null
                                 ? Icons.favorite
                                 : Icons.favorite_border,
-                            TimeAgo.compact(_reactionTotal),
+                            TimeAgo.compactOf(context, _reactionTotal),
                             _myReaction != null
                                 ? Colors.redAccent
                                 : textSecondary,
@@ -696,7 +715,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           onTap: _openComments,
                           child: _stat(
                             Icons.chat_bubble_outline,
-                            TimeAgo.compact(_commentCount),
+                            TimeAgo.compactOf(context, _commentCount),
                             textSecondary,
                           ),
                         ),
