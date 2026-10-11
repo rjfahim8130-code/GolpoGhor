@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -98,6 +99,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
 
@@ -125,10 +127,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               const SizedBox(height: 20),
 
               // ============ অ্যাপের নাম (সবসময় বাংলা) ============
-              const Text(
-                'গল্পঘর',
+              Text(
+                l10n.appName,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
@@ -137,7 +139,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
               // ============ Tagline ============
               Text(
-                'বাংলা গল্প, উপন্যাস ও ভিডিওর ঘর',
+                l10n.appTagline,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -157,7 +159,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               const SizedBox(height: 16),
 
               Text(
-                'লোড হচ্ছে…',
+                l10n.loading,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark
