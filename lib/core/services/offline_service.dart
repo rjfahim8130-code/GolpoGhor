@@ -1,3 +1,6 @@
+// lib/core/services/offline_service.dart
+// Service-এ context নেই — message শুধু key string (এখানে নেই)
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -55,7 +58,9 @@ class OfflineItem {
     if (raw is List) {
       for (final item in raw) {
         if (item is Map) {
-          blocks.add(ContentBlockModel.fromJson(Map<String, dynamic>.from(item)));
+          blocks.add(
+            ContentBlockModel.fromJson(Map<String, dynamic>.from(item)),
+          );
         }
       }
     }
@@ -141,6 +146,9 @@ class OfflineService {
     await _write(item);
   }
 
+  /// Episode save
+  /// ⚠️ episodeTitle খালি হলে UI-তে fallback (l10n.episodeLabel + number)
+  /// এখানে fallback বাংলায় নয় — শুধু chapterNumber রাখা হচ্ছে
   Future<void> saveEpisode({
     required String episodeId,
     required String novelTitle,
@@ -152,7 +160,7 @@ class OfflineService {
   }) async {
     final item = OfflineItem(
       id: 'ep_$episodeId',
-      title: episodeTitle.isNotEmpty ? episodeTitle : 'পর্ব $chapterNumber',
+      title: episodeTitle.isNotEmpty ? episodeTitle : '',
       subtitle: novelTitle,
       authorName: authorName,
       publicCode: publicCode,
