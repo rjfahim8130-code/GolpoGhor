@@ -1,6 +1,7 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
-// সংশোধিত: localization, RouteNames ব্যবহার
+// localization + video compress + progress
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/constants/video_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
+import '../../../../core/services/media_compress_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -35,18 +37,25 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   final _picker = ImagePicker();
   final _videoService = VideoService();
   final _storage = R2StorageService();
+  final _compress = MediaCompressService();
 
   File? _file;
   int _durationSec = 0;
   bool _checking = false;
   bool _uploading = false;
+  bool _compressing = false;
   bool _asSeries = false;
   String? _seriesId;
+
+  // কমপ্রেস প্রগ্রেস (0..1)
+  double _compressProgress = 0;
+  StreamSubscription<double>? _progressSub;
 
   VideoPlayerController? _preview;
 
   @override
   void dispose() {
+    _progressSub?.cancel();
     _titleCtrl.dispose();
     _descCtrl.dispose();
     _tagsCtrl.dispose();
@@ -129,15 +138,41 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       return;
     }
 
-    setState(() => _uploading = true);
+    setState(() {
+      _uploading = true;
+      _compressing = false;
+      _compressProgress = 0;
+    });
+
     try {
-      final bytes = await _file!.readAsBytes();
+      // ---------- Step 1: Video Compress ----------
+      setState(() => _compressing = true);
+
+      // progress stream শুরু
+      _progressSub?.cancel();
+      _progressSub = _compress
+          .videoProgressStream(_file!.path)
+          .listen((p) {
+        if (mounted) setState(() => _compressProgress = p);
+      });
+
+      final compressed = await _compress.compressVideoFile(_file!);
+      final finalFile = compressed ?? _file!;
+
+      await _progressSub?.cancel();
+      _progressSub = null;
+
+      if (mounted) setState(() => _compressing = false);
+
+      // ---------- Step 2: Upload ----------
+      final bytes = await finalFile.readAsBytes();
       final url = await _storage.uploadVideoBytes(
         bytes: bytes,
         contentType: 'video/mp4',
         folder: 'videos',
       );
 
+      // ---------- Step 3: Save to DB ----------
       String? seriesId = _seriesId;
       String? seriesTitle;
       int part = 1;
@@ -160,6 +195,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         isDraft: asDraft,
       );
 
+      // Temp files clear
+      await _compress.deleteAllCache();
+
       if (!mounted) return;
       final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,9 +216,17 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         SnackBar(content: Text('$e')),
       );
     } finally {
-      if (mounted) setState(() => _uploading = false);
+      _progressSub?.cancel();
+      _progressSub = null;
+      if (mounted) {
+        setState(() {
+          _uploading = false;
+          _compressing = false;
+        });
+      }
     }
   }
+  
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -225,7 +271,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // প্রিভিউ / পিকার
+          // ---------- প্রিভিউ / পিকার ----------
           GestureDetector(
             onTap: _checking || _uploading ? null : _pick,
             child: Container(
@@ -294,6 +340,52 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           ),
           const SizedBox(height: 16),
 
+          // ---------- Compress Progress ----------
+          if (_compressing || (_uploading && _compressProgress > 0)) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _compressing
+                              ? 'ভিডিও কমপ্রেস হচ্ছে… ${(_compressProgress * 100).toStringAsFixed(0)}%'
+                              : 'আপলোড হচ্ছে…',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: _compressing
+                        ? _compressProgress.clamp(0.0, 1.0)
+                        : null,
+                    minHeight: 6,
+                    backgroundColor:
+                        AppColors.primary.withValues(alpha: 0.15),
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ---------- Title ----------
           TextField(
             controller: _titleCtrl,
             decoration: InputDecoration(
@@ -304,6 +396,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           ),
           const SizedBox(height: 12),
 
+          // ---------- Description ----------
           TextField(
             controller: _descCtrl,
             maxLines: 3,
@@ -314,6 +407,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           ),
           const SizedBox(height: 12),
 
+          // ---------- Tags ----------
           TextField(
             controller: _tagsCtrl,
             decoration: InputDecoration(
@@ -324,6 +418,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           ),
           const SizedBox(height: 8),
 
+          // ---------- Series ----------
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             activeColor: AppColors.primary,
@@ -365,7 +460,8 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             ),
           ],
 
-          if (_uploading) ...[
+          // ---------- Upload Progress (fallback) ----------
+          if (_uploading && _compressProgress == 0) ...[
             const SizedBox(height: 24),
             const LinearProgressIndicator(),
             const SizedBox(height: 8),
