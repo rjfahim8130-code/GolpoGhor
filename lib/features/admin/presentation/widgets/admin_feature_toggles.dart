@@ -28,9 +28,7 @@ class AdminFeatureToggles extends ConsumerWidget {
         activeColor: AppColors.primary,
         title: Text(l10n.videoFeature),
         subtitle: Text(
-          videoOn
-              ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
-              : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+          videoOn ? l10n.videoFeatureDescOn : l10n.videoFeatureDescOff,
           style: const TextStyle(fontSize: 12),
         ),
         secondary: Icon(
