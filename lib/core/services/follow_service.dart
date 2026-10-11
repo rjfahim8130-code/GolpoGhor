@@ -1,5 +1,6 @@
 // lib/core/services/follow_service.dart
 // সংশোধিত: notification trigger + nickname select
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,8 +28,8 @@ class FollowService {
 
   Future<bool> toggleFollow(String targetUserId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-    if (uid == targetUserId) throw Exception('নিজেকে ফলো করা যায় না');
+    if (uid == null) throw Exception('notLoggedIn');
+    if (uid == targetUserId) throw Exception('cannotFollowSelf');
 
     final existing = await _client
         .from(SupabaseConstants.follows)
@@ -113,7 +114,9 @@ class FollowService {
     for (final row in data as List) {
       final p = (row as Map)['profiles'];
       if (p is Map) {
-        list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
+        try {
+          list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
+        } catch (_) {}
       }
     }
     return list;
@@ -133,7 +136,9 @@ class FollowService {
     for (final row in data as List) {
       final p = (row as Map)['profiles'];
       if (p is Map) {
-        list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
+        try {
+          list.add(UserModel.fromJson(Map<String, dynamic>.from(p)));
+        } catch (_) {}
       }
     }
     return list;
