@@ -178,6 +178,11 @@ class AppLocalizations {
   String get noOpenReports => t('noOpenReports');
   String get typeLabel => t('typeLabel');
   String get reasonLabel => t('reasonLabel');
+  String get videoFeatureDescOn => t('videoFeatureDescOn');
+  String get videoFeatureDescOff => t('videoFeatureDescOff');
+  String get accessDenied => t('accessDenied');
+  String get adminOnlyScreen => t('adminOnlyScreen');
+  String get moderationHint => t('moderationHint');
 
   // ---- Errors ----
   String get somethingWentWrong => t('somethingWentWrong');
