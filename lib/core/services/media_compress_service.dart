@@ -1,5 +1,5 @@
 // lib/core/services/media_compress_service.dart
-// ছবি + ভিডিও কমপ্রেস — video_compress ^3.1.3
+// video_compress ^3.1.3 এর সঠিক API দিয়ে
 
 import 'dart:io';
 import 'dart:typed_data';
@@ -50,10 +50,6 @@ class MediaCompressService {
   // ভিডিও কমপ্রেস
   // ============================================================
 
-  /// ভিডিও কমপ্রেস করে নতুন File ফেরত দেয়
-  /// - `quality`: VideoQuality.LowQuality / MediumQuality / HighQuality / VeryHighQuality
-  /// - `deleteOriginal`: true হলে original ফাইল ডিলিট হবে
-  /// Error হলে original file ফেরত দেয় (safe)
   Future<File?> compressVideoFile(
     File file, {
     VideoQuality quality = VideoQuality.MediumQuality,
@@ -62,15 +58,11 @@ class MediaCompressService {
     try {
       final sizeInMB = await file.length() / (1024 * 1024);
       if (sizeInMB < 10) {
-        debugPrint(
-          'VIDEO_COMPRESS: skipped (${sizeInMB.toStringAsFixed(1)} MB)',
-        );
+        debugPrint('VIDEO_COMPRESS: skipped (${sizeInMB.toStringAsFixed(1)} MB)');
         return file;
       }
 
-      debugPrint(
-        'VIDEO_COMPRESS: starting (${sizeInMB.toStringAsFixed(1)} MB)',
-      );
+      debugPrint('VIDEO_COMPRESS: starting (${sizeInMB.toStringAsFixed(1)} MB)');
 
       final info = await VideoCompress.compressVideo(
         file.path,
@@ -98,17 +90,19 @@ class MediaCompressService {
     }
   }
 
-  /// Progress stream — 0.0 থেকে 1.0
-  /// video_compress প্যাকেজ থেকে progress 0..100 আসে
-  /// এই মেথড সেটাকে 0.0..1.0-এ রূপান্তর করে
-  Stream<double> videoProgressStream() {
-    // compressProgress$ একটা Stream<double> — value আসে 0..100
-    // আমরা map করে 0.0..1.0 করছি
-    return VideoCompress.compressProgress$
-        .map<double>((dynamic value) {
-      final v = (value as num).toDouble();
-      return (v / 100).clamp(0.0, 1.0);
-    });
+  /// Progress subscription
+  /// video_compress `compressProgress$` একটা `ObservableBuilder<double>` 
+  /// — এটা `Stream` নয়, তাই `.subscribe()` দিয়ে listen করতে হয়
+  Subscription? subscribeProgress(void Function(double) onProgress) {
+    try {
+      return VideoCompress.compressProgress$.subscribe((double progress) {
+        // progress 0..100 আসে
+        onProgress((progress / 100).clamp(0.0, 1.0));
+      });
+    } catch (e) {
+      debugPrint('PROGRESS_SUBSCRIBE_ERROR: $e');
+      return null;
+    }
   }
 
   /// কমপ্রেসের আগে ভিডিওর তথ্য
