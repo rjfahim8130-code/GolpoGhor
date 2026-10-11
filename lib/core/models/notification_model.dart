@@ -1,5 +1,6 @@
 // lib/core/models/notification_model.dart
 // সংশোধিত: nickname যোগ, mention type সাপোর্ট
+// actorDisplayName এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
 /// In-app notification মডেল
 /// type: like | comment | reply | follow | mention
@@ -106,10 +107,19 @@ class NotificationModel {
     );
   }
 
+  /// নাম দেখানোর জন্য
+  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
   String get actorDisplayName =>
       (actorName != null && actorName!.trim().isNotEmpty)
           ? actorName!.trim()
-          : 'ইউজার';
+          : '';
+
+  /// UI-তে ব্যবহারের জন্য — fallback সহ
+  /// ব্যবহার: notif.actorDisplayNameOr(l10n.user)
+  String actorDisplayNameOr(String fallback) {
+    final n = actorDisplayName;
+    return n.isNotEmpty ? n : fallback;
+  }
 
   String get initial {
     final n = actorDisplayName.trim();
