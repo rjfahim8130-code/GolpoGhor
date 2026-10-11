@@ -32,6 +32,15 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    // যদি raw string-এ ":" থাকে (যেমন "loginFailed: ...") — সেটা use না করে শুধু key translate
+    return l10n.t(key);
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -48,7 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.loginFailed}: $e')),
+        SnackBar(
+          content: Text('${l10n.loginFailed}: ${_translateError(context, e)}'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -97,10 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
 
                   // ============ অ্যাপের নাম (সবসময় বাংলা) ============
-                  const Text(
-                    'গল্পঘর',
+                  Text(
+                    l10n.appName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
@@ -117,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: const OutlineInputBorder(),
                     ),
-                    validator: Validators.email,
+                    validator: (v) => Validators.email(context, v),
                   ),
                   const SizedBox(height: 16),
 
@@ -141,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       border: const OutlineInputBorder(),
                     ),
-                    validator: Validators.password,
+                    validator: (v) => Validators.password(context, v),
                   ),
 
                   // ============ Forgot Password ============
@@ -201,13 +212,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       Icons.download_done_outlined,
                       size: 18,
                     ),
-                    label: const Text('অফলাইন গল্প পড়ুন'),
+                    label: Text(l10n.readOfflineStories),
                   ),
 
                   // ============ Version Text ============
                   const SizedBox(height: 16),
                   Text(
-                    'গল্পঘর',
+                    l10n.appName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
