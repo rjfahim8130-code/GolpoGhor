@@ -1,5 +1,6 @@
 // lib/core/models/video_model.dart
 // authorUsername বাদ, authorNickname যোগ
+// displayTitle fallback এখন UI-তে l10n.video ব্যবহার করবে
 
 class VideoModel {
   final String id;
@@ -61,13 +62,22 @@ class VideoModel {
 
   bool get hasNickname => displayNickname.isNotEmpty;
 
+  /// টাইটেল — fallback ছাড়া
+  /// ⚠️ UI-তে `displayTitleOr(l10n.video)` ব্যবহার করুন
   String get displayTitle {
     if (title.trim().isNotEmpty) return title.trim();
     if (description.trim().isNotEmpty) {
       final d = description.trim();
       return d.length > 60 ? '${d.substring(0, 60)}…' : d;
     }
-    return 'ভিডিও';
+    return '';
+  }
+
+  /// UI-তে ব্যবহারের জন্য — fallback সহ
+  /// ব্যবহার: video.displayTitleOr(l10n.video)
+  String displayTitleOr(String fallback) {
+    final t = displayTitle;
+    return t.isNotEmpty ? t : fallback;
   }
 
   factory VideoModel.fromJson(Map<String, dynamic> json) {
