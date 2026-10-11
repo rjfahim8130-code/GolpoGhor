@@ -24,9 +24,11 @@ class ProfilePostsTab {
     void Function(StoryModel)? onDeleteStory,
   }) {
     if (stories.isEmpty) {
-      return const EmptyView(
-        icon: Icons.article_outlined,
-        title: 'এখনো কোনো গল্প নেই',
+      return Builder(
+        builder: (context) => EmptyView(
+          icon: Icons.article_outlined,
+          title: context.l10n.noStoriesYet,
+        ),
       );
     }
     return ListView.builder(
@@ -38,9 +40,9 @@ class ProfilePostsTab {
         return _postTile(
           context: context,
           cover: s.coverUrl,
-          title: s.title.isEmpty ? '(শিরোনামহীন)' : s.title,
+          title: s.title.isEmpty ? l10n.untitled : s.title,
           subtitle:
-              '${TimeAgo.compact(s.viewCount)} · ${TimeAgo.compact(s.reactionCount)} · ${TimeAgo.bn(s.createdAt)}',
+              '${TimeAgo.compactOf(context, s.viewCount)} · ${TimeAgo.compactOf(context, s.reactionCount)} · ${TimeAgo.of(context, s.createdAt)}',
           onTap: () => onOpenStory(s),
           menuItems: [
             if (onEditStory != null)
@@ -70,9 +72,11 @@ class ProfilePostsTab {
     void Function(NovelModel)? onDeleteNovel,
   }) {
     if (novels.isEmpty) {
-      return const EmptyView(
-        icon: Icons.menu_book_outlined,
-        title: 'এখনো কোনো উপন্যাস নেই',
+      return Builder(
+        builder: (context) => EmptyView(
+          icon: Icons.menu_book_outlined,
+          title: context.l10n.noNovelsYet,
+        ),
       );
     }
     return ListView.builder(
@@ -84,9 +88,9 @@ class ProfilePostsTab {
         return _postTile(
           context: context,
           cover: n.coverUrl,
-          title: n.title.isEmpty ? '(শিরোনামহীন)' : n.title,
+          title: n.title.isEmpty ? l10n.untitled : n.title,
           subtitle:
-              '${n.episodeCount} পর্ব · ${TimeAgo.compact(n.viewCount)}',
+              '${n.episodeCount} ${l10n.episode} · ${TimeAgo.compactOf(context, n.viewCount)}',
           onTap: () => onOpenNovel(n),
           menuItems: [
             if (onEditNovel != null)
@@ -116,9 +120,11 @@ class ProfilePostsTab {
     void Function(VideoModel)? onDeleteVideo,
   }) {
     if (videos.isEmpty) {
-      return const EmptyView(
-        icon: Icons.videocam_outlined,
-        title: 'এখনো কোনো ভিডিও নেই',
+      return Builder(
+        builder: (context) => EmptyView(
+          icon: Icons.videocam_outlined,
+          title: context.l10n.noVideosYet,
+        ),
       );
     }
     return ListView.builder(
@@ -133,7 +139,7 @@ class ProfilePostsTab {
           isVideo: true,
           title: v.displayTitle,
           subtitle:
-              '${TimeAgo.compact(v.viewCount)} · ${TimeAgo.compact(v.reactionCount)}',
+              '${TimeAgo.compactOf(context, v.viewCount)} · ${TimeAgo.compactOf(context, v.reactionCount)}',
           onTap: () => onOpenVideo(v),
           menuItems: [
             if (onEditVideo != null)
