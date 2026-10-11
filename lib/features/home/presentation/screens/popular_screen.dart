@@ -47,7 +47,7 @@ class _PopularScreenState extends State<PopularScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -68,11 +68,15 @@ class _PopularScreenState extends State<PopularScreen> {
       body: _loading
           ? const LoadingView()
           : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
+              ? ErrorView(
+                  message: l10n.t(_error!),
+                  onRetry: _load,
+                  retryLabel: l10n.retry,
+                )
               : _stories.isEmpty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.star_outline,
-                      title: 'এখনো জনপ্রিয় গল্প নেই',
+                      title: l10n.noPopularYet,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
