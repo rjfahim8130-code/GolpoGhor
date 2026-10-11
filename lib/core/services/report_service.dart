@@ -1,3 +1,6 @@
+// lib/core/services/report_service.dart
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
@@ -14,12 +17,12 @@ class ReportService {
     required String reason,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final text = reason.trim();
-    if (text.length < 5) throw Exception('কারণ কমপক্ষে ৫ অক্ষর লিখুন');
+    if (text.length < 5) throw Exception('reasonMinFive');
     if (text.length > AppConstants.reportReasonMaxLength) {
-      throw Exception('কারণ অনেক বড়');
+      throw Exception('reasonTooLong');
     }
 
     await _client.from(SupabaseConstants.reports).insert({
