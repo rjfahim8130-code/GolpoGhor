@@ -1,5 +1,6 @@
 // lib/core/services/notification_service.dart
 // সংশোধিত: সব event trigger সাপোর্ট, mention সহ
+// Service-এ context নেই — message শুধু key string
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -165,7 +166,8 @@ class NotificationService {
         type: 'mention',
         targetType: targetType,
         targetId: targetId,
-        message: 'আপনাকে একটি মন্তব্যে মেনশন করেছেন',
+        // message না পাঠিয়ে UI-তে key থেকে translate হবে
+        // key: 'mentionNotificationBody'
       );
     }
   }
