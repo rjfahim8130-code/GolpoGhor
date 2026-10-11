@@ -1,5 +1,6 @@
 // lib/core/models/comment_model.dart
 // সংশোধিত: mentionedUserIds যোগ
+// displayAuthor এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
 /// কমেন্ট মডেল — গল্প, পর্ব, উপন্যাস, ভিডিও সবখানে একই মডেল
 class CommentModel {
@@ -135,10 +136,19 @@ class CommentModel {
     );
   }
 
+  /// নাম দেখানোর জন্য
+  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
   String get displayAuthor =>
       (authorName != null && authorName!.trim().isNotEmpty)
           ? authorName!.trim()
-          : 'ইউজার';
+          : '';
+
+  /// UI-তে ব্যবহারের জন্য — fallback সহ
+  /// ব্যবহার: comment.displayAuthorOr(l10n.user)
+  String displayAuthorOr(String fallback) {
+    final n = displayAuthor;
+    return n.isNotEmpty ? n : fallback;
+  }
 
   bool get hasNickname =>
       authorNickname != null && authorNickname!.trim().isNotEmpty;
