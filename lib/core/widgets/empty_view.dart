@@ -1,3 +1,6 @@
+// lib/core/widgets/empty_view.dart
+// title/subtitle বাইরে থেকে আসে — localization ready
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
