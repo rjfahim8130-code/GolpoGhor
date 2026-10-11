@@ -109,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
           _sectionTitle(context, l10n.profile),
           ListTile(
             leading: const Icon(Icons.lock_outline),
-            title: Text('পাসওয়ার্ড সেট / পরিবর্তন'),
+            title: Text(l10n.setPassword),
             onTap: () => context.push(RouteNames.setPassword),
           ),
           ListTile(
