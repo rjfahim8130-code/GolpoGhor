@@ -90,28 +90,34 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
   }
 
   Future<void> _deleteStory(StoryModel s) async {
-    final ok = await _confirm('গল্প মুছবেন?', s.title);
+    final l10n = context.l10n;
+    final ok = await _confirm(l10n.deleteStoryConfirm, s.title);
     if (ok != true) return;
     await _storyService.deleteStory(s.id);
     await _load();
   }
 
   Future<void> _deleteNovel(NovelModel n) async {
-    final ok = await _confirm('উপন্যাস মুছবেন?', '${n.title} এবং সব পর্ব');
+    final l10n = context.l10n;
+    final ok = await _confirm(
+      l10n.deleteNovelConfirm,
+      '${n.title} ${l10n.deleteNovelConfirmBody}',
+    );
     if (ok != true) return;
     await _novelService.deleteNovel(n.id);
     await _load();
   }
 
   Future<void> _deleteVideo(VideoModel v) async {
-    final ok = await _confirm('ভিডিও মুছবেন?', 'একেবারে মুছে যাবে');
+    final l10n = context.l10n;
+    final ok = await _confirm(l10n.deleteVideoConfirm, l10n.cannotUndo);
     if (ok != true) return;
     await _videoService.deleteVideo(v.id);
     await _load();
