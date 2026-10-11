@@ -1,5 +1,5 @@
 // lib/features/reader/presentation/screens/reader_screen.dart
-// সংশোধিত: notification trigger, localization, ownerId reaction-এ
+// সংশোধিত: notification trigger, localization, author name/avatar support for episodes
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +56,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   StoryModel? _story;
   EpisodeModel? _episode;
   String? _novelTitle;
+  String? _authorName;   // যোগ করা হয়েছে
+  String? _authorAvatar; // যোগ করা হয়েছে
   List<EpisodeModel> _siblings = [];
 
   bool _loading = true;
@@ -172,6 +174,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (!mounted) return;
     setState(() {
       _story = story;
+      _authorName = story.authorName ?? story.authorNickname;
+      _authorAvatar = story.authorAvatar;
       _bookmarked = bm;
       _myReaction = myR;
       _reactionTotal = counts.values.fold(0, (a, b) => a + b);
@@ -210,6 +214,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _episode = ep;
       _siblings = siblings;
       _novelTitle = novel?.title;
+      _authorName = novel?.authorName ?? novel?.authorNickname;
+      _authorAvatar = novel?.authorAvatar;
       _myReaction = myR;
       _reactionTotal = counts.values.fold(0, (a, b) => a + b);
       _commentCount = ep.commentCount;
@@ -219,8 +225,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     _episodeService.recordView(ep.id);
   }
-
-  /// Exception থেকে key বের করে l10n দিয়ে translate
+    /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -279,7 +284,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               : '${l10n.episodeLabel} ${ep.chapterNumber}',
           chapterNumber: ep.chapterNumber,
           contentBlocks: ep.contentBlocks,
-          authorName: _story?.authorName,
+          authorName: _authorName ?? _story?.authorName,
           publicCode: ep.publicCode,
         );
       }
@@ -458,10 +463,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       SnackBar(content: Text(l10n.copied)),
     );
   }
-
-  /// Reading progress bar (উপরে ও নিচে বেগুনি বার শেষ হলে)
-  
-  @override
+    @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -477,7 +479,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       );
     }
 
-    if (_error != null && _story == null) {
+    if (_error != null && _story == null && _episode == null) {
       return Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
@@ -509,9 +511,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
         : (_episode?.title.isNotEmpty == true
             ? _episode!.title
             : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
-    final authorName = _story?.authorName;
+    
+    // আপডেট করা নাম ও অ্যাভাটার লজিক
+    final authorName = _authorName ?? _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
-    final authorAvatar = _story?.authorAvatar;
+    final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
+    
     final description = _isStory ? (_story?.description ?? '') : '';
     final publicCode =
         _isStory ? _story?.publicCode : _episode?.publicCode;
