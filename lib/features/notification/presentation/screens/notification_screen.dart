@@ -53,7 +53,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = context.l10n.loadFailed;
         _loading = false;
       });
     }
@@ -122,21 +122,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  String _textFor(NotificationModel n) {
+  String _textFor(BuildContext context, NotificationModel n) {
+    final l10n = context.l10n;
     final name = n.actorDisplayName;
     switch (n.type) {
       case 'like':
-        return '$name আপনার কনটেন্টে রিঅ্যাক্ট করেছেন';
+        return '$name ${l10n.notifReacted}';
       case 'comment':
-        return '$name মন্তব্য করেছেন';
+        return '$name ${l10n.notifCommented}';
       case 'reply':
-        return '$name আপনার মন্তব্যের উত্তর দিয়েছেন';
+        return '$name ${l10n.notifReplied}';
       case 'mention':
-        return '$name আপনাকে মেনশন করেছেন';
+        return '$name ${l10n.notifMentioned}';
       case 'follow':
-        return '$name আপনাকে ফলো করেছেন';
+        return '$name ${l10n.notifFollowed}';
       default:
-        return n.message ?? 'নোটিফিকেশন';
+        return n.message ?? l10n.notification;
     }
   }
 
@@ -202,11 +203,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _items.isEmpty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.notifications_none,
-                      title: 'কোনো নোটিফিকেশন নেই',
-                      subtitle:
-                          'লাইক, কমেন্ট বা ফলো পেলে এখানে দেখতে পাবেন।',
+                      title: l10n.noNotifications,
+                      subtitle: l10n.noNotificationsHint,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
@@ -253,7 +253,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ],
                             ),
                             title: Text(
-                              _textFor(n),
+                              _textFor(context, n),
                               style: TextStyle(
                                 fontWeight: n.isRead
                                     ? FontWeight.normal
@@ -262,7 +262,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              TimeAgo.bn(n.createdAt),
+                              TimeAgo.of(context, n.createdAt),
                               style: TextStyle(fontSize: 12, color: secondary),
                             ),
                             onTap: () => _onTap(n),
