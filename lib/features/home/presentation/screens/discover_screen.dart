@@ -1,11 +1,10 @@
 // lib/features/home/presentation/screens/discover_screen.dart
-// সংশোধিত: localization
+// সংশোধিত: localization + categoryList (locale-aware)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,19 +32,19 @@ class DiscoverScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionTitle('কনটেন্ট', secondary),
+          _sectionTitle(l10n.content, secondary),
           _tile(
             context,
             icon: Icons.star_outline,
             title: l10n.popular,
-            subtitle: 'বেশি প্রতিক্রিয়া',
+            subtitle: l10n.mostReactions,
             route: RouteNames.popular,
           ),
           _tile(
             context,
             icon: Icons.local_fire_department_outlined,
             title: l10n.trending,
-            subtitle: 'সবচেয়ে বেশি পঠিত',
+            subtitle: l10n.mostRead,
             route: RouteNames.trending,
           ),
           if (videoOn)
@@ -53,7 +52,7 @@ class DiscoverScreen extends ConsumerWidget {
               context,
               icon: Icons.videocam_outlined,
               title: l10n.videos,
-              subtitle: 'শর্ট ভিডিও ফিড',
+              subtitle: l10n.shortVideoFeed,
               route: RouteNames.videos,
             ),
           const Divider(height: 32),
@@ -62,7 +61,7 @@ class DiscoverScreen extends ConsumerWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: AppConstants.categories.map((c) {
+            children: l10n.categoryList.map((c) {
               return ActionChip(
                 label: Text(c),
                 onPressed: () => context.push(
@@ -79,8 +78,8 @@ class DiscoverScreen extends ConsumerWidget {
           _tile(
             context,
             icon: Icons.search,
-            title: 'গল্প, উপন্যাস, লেখক বা কোড',
-            subtitle: 'যেকোনো কিছু খুঁজুন',
+            title: l10n.searchAnythingTitle,
+            subtitle: l10n.searchAnythingSubtitle,
             route: RouteNames.search,
           ),
         ],
