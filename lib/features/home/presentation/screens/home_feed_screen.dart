@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// সংশোধিত: localization, sessionCache avatar, সব ঠিক
+// AppBar-এ লোগো PNG + session cache avatar + localization
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,7 +94,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'ফিড লোড করা যায়নি';
+        _error = 'লোড করা যায়নি';
         _loading = false;
       });
     }
@@ -104,7 +104,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     if (_loadingMore || !_hasMore) return;
     setState(() => _loadingMore = true);
     try {
-      final more = await _storyService.getFeed(limit: _limit, offset: _offset);
+      final more = await _storyService.getFeed(
+        limit: _limit,
+        offset: _offset,
+      );
       if (!mounted) return;
       setState(() {
         _items.addAll(more);
@@ -133,7 +136,16 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         titleSpacing: 12,
         title: Row(
           children: [
-            // অ্যাপের নাম সবসময় বাংলা
+            // ============ লোগো PNG ============
+            Image.asset(
+              'assets/images/logo.png',
+              height: 30,
+              width: 30,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 8),
+            // ============ অ্যাপের নাম (সবসময় বাংলা) ============
             const Text(
               'গল্পঘর',
               style: TextStyle(
@@ -185,7 +197,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       body: _buildBody(l10n),
     );
   }
-
+  
   Widget _buildBody(AppLocalizations l10n) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -216,7 +228,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
               color: AppColors.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
-            const Text('এখনো কোনো গল্প নেই'),
+            const Text(
+              'এখনো কোনো গল্প নেই',
+              style: TextStyle(fontSize: 15),
+            ),
           ],
         ),
       );
