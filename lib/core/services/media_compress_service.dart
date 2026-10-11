@@ -1,12 +1,12 @@
 // lib/core/services/media_compress_service.dart
-// ছবি + ভিডিও কমপ্রেস — video_compressor_plus দিয়ে
+// ছবি + ভিডিও কমপ্রেস — video_compress ^3.1.3
 
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
-import 'package:video_compressor_plus/video_compressor_plus.dart';
+import 'package:video_compress/video_compress.dart';
 
 class MediaCompressService {
   // ============================================================
@@ -47,14 +47,12 @@ class MediaCompressService {
       compressImageFile(file, maxWidth: 800, quality: 78);
 
   // ============================================================
-  // ভিডিও কমপ্রেস (video_compressor_plus)
+  // ভিডিও কমপ্রেস
   // ============================================================
 
-  /// ভিডিও ফাইল কমপ্রেস করে নতুন File ফেরত দেয়
-  /// 
-  /// - [quality]: VideoQuality.LowQuality / MediumQuality / HighQuality / VeryHighQuality
-  /// - [deleteOriginal]: true হলে original ফাইল ডিলিট হবে
-  /// 
+  /// ভিডিও কমপ্রেস করে নতুন File ফেরত দেয়
+  /// - `quality`: VideoQuality.LowQuality / MediumQuality / HighQuality / VeryHighQuality
+  /// - `deleteOriginal`: true হলে original ফাইল ডিলিট হবে
   /// Error হলে original file ফেরত দেয় (safe)
   Future<File?> compressVideoFile(
     File file, {
@@ -62,7 +60,6 @@ class MediaCompressService {
     bool deleteOriginal = false,
   }) async {
     try {
-      // ১০ MB-র নিচে হলে কমপ্রেস skip
       final sizeInMB = await file.length() / (1024 * 1024);
       if (sizeInMB < 10) {
         debugPrint(
@@ -75,7 +72,7 @@ class MediaCompressService {
         'VIDEO_COMPRESS: starting (${sizeInMB.toStringAsFixed(1)} MB)',
       );
 
-      final info = await VideoCompressor.compressVideo(
+      final info = await VideoCompress.compressVideo(
         file.path,
         quality: quality,
         deleteOrigin: deleteOriginal,
@@ -101,20 +98,23 @@ class MediaCompressService {
     }
   }
 
-  /// Progress stream (0.0 .. 1.0)
-  /// 
-  /// video_compressor_plus থেকে progress 0..100 আসে
+  /// Progress stream — 0.0 থেকে 1.0
+  /// video_compress প্যাকেজ থেকে progress 0..100 আসে
   /// এই মেথড সেটাকে 0.0..1.0-এ রূপান্তর করে
   Stream<double> videoProgressStream() {
-    return VideoCompressor.compressProgress$.map(
-      (progress) => (progress / 100).clamp(0.0, 1.0),
-    );
+    // compressProgress$ একটা Stream<double> — value আসে 0..100
+    // আমরা map করে 0.0..1.0 করছি
+    return VideoCompress.compressProgress$
+        .map<double>((dynamic value) {
+      final v = (value as num).toDouble();
+      return (v / 100).clamp(0.0, 1.0);
+    });
   }
 
   /// কমপ্রেসের আগে ভিডিওর তথ্য
   Future<MediaInfo?> getVideoInfo(String path) async {
     try {
-      return await VideoCompressor.getMediaInfo(path);
+      return await VideoCompress.getMediaInfo(path);
     } catch (_) {
       return null;
     }
@@ -123,14 +123,14 @@ class MediaCompressService {
   /// কমপ্রেস বাতিল
   Future<void> cancelCompress() async {
     try {
-      await VideoCompressor.cancelCompression();
+      await VideoCompress.cancelCompression();
     } catch (_) {}
   }
 
   /// Temp files clear
   Future<void> deleteAllCache() async {
     try {
-      await VideoCompressor.deleteAllCache();
+      await VideoCompress.deleteAllCache();
     } catch (_) {}
   }
 }
