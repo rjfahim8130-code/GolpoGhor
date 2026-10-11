@@ -1,3 +1,6 @@
+// lib/features/video/presentation/screens/create_video_screen.dart
+// সংশোধিত: localization, RouteNames ব্যবহার
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,10 +11,12 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/video_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/r2_storage_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../routing/route_names.dart';
 
 class CreateVideoScreen extends ConsumerStatefulWidget {
   const CreateVideoScreen({super.key});
@@ -103,7 +108,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       if (!mounted) return;
       setState(() => _checking = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ভিডিও বেছে নিতে সমস্যা: $e')),
+        SnackBar(content: Text('$e')),
       );
     }
   }
@@ -156,228 +161,23 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       );
 
       if (!mounted) return;
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(asDraft ? 'খসড়া সেভ হয়েছে' : 'ভিডিও প্রকাশিত হয়েছে'),
+          content: Text(asDraft ? l10n.draft : l10n.publish),
         ),
       );
       if (asDraft) {
         context.pop();
       } else {
-        context.go('/videos');
+        context.go(RouteNames.videos);
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('আপলোড ব্যর্থ: $e')),
+        SnackBar(content: Text('$e')),
       );
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
   }
-  
-  // ---------- Build ----------
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('নতুন ভিডিও'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _uploading ? null : () => context.pop(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _uploading || _checking
-                ? null
-                : () => _publish(asDraft: true),
-            child: const Text('খসড়া'),
-          ),
-          TextButton(
-            onPressed: _uploading || _checking
-                ? null
-                : () => _publish(asDraft: false),
-            child: _uploading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'প্রকাশ',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // প্রিভিউ / পিকার
-          GestureDetector(
-            onTap: _checking || _uploading ? null : _pick,
-            child: Container(
-              height: 220,
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: _preview != null && _preview!.value.isInitialized
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Center(
-                          child: AspectRatio(
-                            aspectRatio: _preview!.value.aspectRatio == 0
-                                ? 9 / 16
-                                : _preview!.value.aspectRatio,
-                            child: VideoPlayer(_preview!),
-                          ),
-                        ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '$_durationSec সে. / ১৫ মিনিট',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Center(
-                      child: _checking
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
-                          : const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.video_library_outlined,
-                                  size: 48,
-                                  color: Colors.white70,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'গ্যালারি থেকে ভিডিও বেছে নিন',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                              ],
-                            ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // শিরোনাম
-          TextField(
-            controller: _titleCtrl,
-            decoration: const InputDecoration(
-              labelText: 'শিরোনাম (ঐচ্ছিক)',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // বিবরণ
-          TextField(
-            controller: _descCtrl,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'বিবরণ / ক্যাপশন',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ট্যাগ
-          TextField(
-            controller: _tagsCtrl,
-            decoration: const InputDecoration(
-              labelText: 'ট্যাগ (স্পেস বা কমা দিয়ে)',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // সিরিজ switch
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.primary,
-            title: const Text('পর্বভিত্তিক সিরিজ'),
-            subtitle: Text(
-              'একাধিক পর্ব একই সিরিজে সংযুক্ত হবে',
-              style: TextStyle(fontSize: 12, color: secondary),
-            ),
-            value: _asSeries,
-            onChanged: _uploading
-                ? null
-                : (v) => setState(() {
-                      _asSeries = v;
-                      if (v && _seriesId == null) {
-                        _seriesId = const Uuid().v4();
-                      }
-                    }),
-          ),
-
-          if (_asSeries) ...[
-            const SizedBox(height: 8),
-            TextField(
-              controller: _seriesTitleCtrl,
-              decoration: const InputDecoration(
-                labelText: 'সিরিজের নাম',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _partCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'পর্ব নম্বর',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-            ),
-          ],
-
-          // আপলোড প্রোগ্রেস
-          if (_uploading) ...[
-            const SizedBox(height: 24),
-            const LinearProgressIndicator(),
-            const SizedBox(height: 8),
-            Text(
-              'R2-তে আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: secondary),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
