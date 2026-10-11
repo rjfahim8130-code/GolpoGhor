@@ -130,10 +130,11 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   Future<void> _share() async {
     final item = _item;
     if (item == null) return;
+    final l10n = context.l10n;
     final code = item.publicCode ?? '';
     await Share.share(
-      '${item.title}\n\nগল্পঘরে পড়ুন'
-      '${code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+      '${item.title}\n\n${l10n.shareReadOnApp}'
+      '${code.isNotEmpty ? '\n${l10n.shareCodeLabel}: $code' : ''}\n#গল্পঘর',
     );
   }
 
@@ -195,7 +196,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
         ),
-        body: const ErrorView(message: 'অফলাইন ফাইল পাওয়া যায়নি'),
+        body: ErrorView(message: l10n.offlineFileNotFound),
       );
     }
 
