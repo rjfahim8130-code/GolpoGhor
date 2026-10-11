@@ -1,8 +1,11 @@
+// lib/features/reader/presentation/widgets/reader_bottom_bar.dart
+// label গুলো caller থেকে locale-aware আসে — এখানে হাত দেওয়ার দরকার নেই
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-/// রিডারের নিচের বেগুনি বার — সব স্ক্রিনে একই
+/// রিডারের নিচের সবুজ বার — সব স্ক্রিনে একই
 class ReaderBottomBar extends StatelessWidget {
   final List<ReaderBottomBarItem> items;
 
