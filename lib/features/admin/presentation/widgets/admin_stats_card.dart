@@ -1,8 +1,10 @@
+// lib/features/admin/presentation/widgets/admin_stats_card.dart
+// localized ready — label বাইরে থেকে আসে
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-/// অ্যাডমিন ড্যাশবোর্ডে প্রতিটি stat কার্ড
 class AdminStatsCard extends StatelessWidget {
   final String label;
   final String value;
