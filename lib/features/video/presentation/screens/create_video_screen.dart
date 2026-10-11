@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
-// video_compressor_plus দিয়ে কমপ্রেস + localization
+// video_compress ^3.1.3 দিয়ে
 
 import 'dart:async';
 import 'dart:io';
@@ -47,7 +47,6 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   bool _asSeries = false;
   String? _seriesId;
 
-  // কমপ্রেস প্রগ্রেস (0.0 .. 1.0)
   double _compressProgress = 0;
   StreamSubscription<double>? _progressSub;
 
@@ -148,11 +147,13 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       // ---------- Step 1: Video Compress ----------
       setState(() => _compressing = true);
 
-      // progress stream শুরু
       _progressSub?.cancel();
-      _progressSub = _compress.videoProgressStream().listen((p) {
-        if (mounted) setState(() => _compressProgress = p);
-      });
+      _progressSub = _compress.videoProgressStream().listen(
+        (p) {
+          if (mounted) setState(() => _compressProgress = p);
+        },
+        onError: (e) => debugPrint('PROGRESS_ERROR: $e'),
+      );
 
       final compressed = await _compress.compressVideoFile(_file!);
       final finalFile = compressed ?? _file!;
@@ -193,7 +194,6 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         isDraft: asDraft,
       );
 
-      // Temp files clear
       await _compress.deleteAllCache();
 
       if (!mounted) return;
