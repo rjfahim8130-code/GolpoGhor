@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
-// video_compress ^3.1.3 দিয়ে
+// video_compress ^3.1.3 — subscribe API
 
 import 'dart:async';
 import 'dart:io';
@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/video_constants.dart';
@@ -48,13 +49,13 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   String? _seriesId;
 
   double _compressProgress = 0;
-  StreamSubscription<double>? _progressSub;
+  Subscription? _progressSub;
 
   VideoPlayerController? _preview;
 
   @override
   void dispose() {
-    _progressSub?.cancel();
+    _progressSub?.unsubscribe();
     _titleCtrl.dispose();
     _descCtrl.dispose();
     _tagsCtrl.dispose();
@@ -147,18 +148,16 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       // ---------- Step 1: Video Compress ----------
       setState(() => _compressing = true);
 
-      _progressSub?.cancel();
-      _progressSub = _compress.videoProgressStream().listen(
-        (p) {
-          if (mounted) setState(() => _compressProgress = p);
-        },
-        onError: (e) => debugPrint('PROGRESS_ERROR: $e'),
-      );
+      // progress subscribe — video_compress API
+      _progressSub?.unsubscribe();
+      _progressSub = _compress.subscribeProgress((p) {
+        if (mounted) setState(() => _compressProgress = p);
+      });
 
       final compressed = await _compress.compressVideoFile(_file!);
       final finalFile = compressed ?? _file!;
 
-      await _progressSub?.cancel();
+      _progressSub?.unsubscribe();
       _progressSub = null;
 
       if (mounted) setState(() => _compressing = false);
@@ -214,7 +213,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         SnackBar(content: Text('$e')),
       );
     } finally {
-      _progressSub?.cancel();
+      _progressSub?.unsubscribe();
       _progressSub = null;
       if (mounted) {
         setState(() {
