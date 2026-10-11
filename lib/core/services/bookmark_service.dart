@@ -1,245 +1,181 @@
-// lib/core/services/video_service.dart
+// lib/core/services/bookmark_service.dart
 // username বাদ, nickname যোগ
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
-import '../models/video_model.dart';
+import '../models/novel_model.dart';
+import '../models/story_model.dart';
 
-class VideoService {
+class BookmarkService {
   final SupabaseClient _client = Supabase.instance.client;
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  // username বাদ, nickname যোগ
-  static const String _selectWithAuthor = '''
-    *,
-    profiles:author_id (
-      full_name,
-      nickname,
-      avatar_url
-    )
-  ''';
+  // ---------- Story ----------
 
-  Map<String, dynamic> _mapAuthor(Map<String, dynamic> json) {
-    final map = Map<String, dynamic>.from(json);
-    final p = map['profiles'];
-    if (p is Map) {
-      map['author_name'] = p['full_name'];
-      map['author_nickname'] = p['nickname'];
-      map['author_avatar'] = p['avatar_url'];
-    }
-    return map;
-  }
-
-  // ---------- Feed ----------
-
-  Future<List<VideoModel>> getFeed({int limit = 20, int offset = 0}) async {
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
-
-    return (data as List)
-        .map((e) => VideoModel.fromJson(
-              _mapAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<VideoModel?> getById(String id) async {
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .select(_selectWithAuthor)
-        .eq('id', id)
-        .maybeSingle();
-    if (data == null) return null;
-    return VideoModel.fromJson(
-      _mapAuthor(Map<String, dynamic>.from(data)),
-    );
-  }
-
-  Future<List<VideoModel>> getByAuthor(
-    String authorId, {
-    int limit = 50,
-  }) async {
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .select(_selectWithAuthor)
-        .eq('author_id', authorId)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('created_at', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => VideoModel.fromJson(
-              _mapAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<VideoModel?> getNextPart(VideoModel current) async {
-    if (current.seriesId == null || current.seriesId!.isEmpty) return null;
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .select(_selectWithAuthor)
-        .eq('series_id', current.seriesId!)
-        .eq('is_published', true)
-        .eq('part_number', current.partNumber + 1)
-        .maybeSingle();
-    if (data == null) return null;
-    return VideoModel.fromJson(
-      _mapAuthor(Map<String, dynamic>.from(data)),
-    );
-  }
-
-  Future<List<VideoModel>> getMyVideos() async {
-    final uid = _uid;
-    if (uid == null) return [];
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .select()
-        .eq('author_id', uid)
-        .order('created_at', ascending: false);
-    return (data as List)
-        .map((e) => VideoModel.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
-  }
-
-  // ---------- Writes ----------
-
-  Future<VideoModel> createVideo({
-    required String videoUrl,
-    required int durationSeconds,
-    String title = '',
-    String description = '',
-    List<String> tags = const [],
-    String? thumbnailUrl,
-    String? seriesId,
-    String? seriesTitle,
-    int partNumber = 1,
-    bool isDraft = false,
-  }) async {
-    final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .insert({
-          'author_id': uid,
-          'title': title.trim(),
-          'description': description.trim(),
-          'tags': tags,
-          'video_url': videoUrl,
-          'thumbnail_url': thumbnailUrl,
-          'duration_seconds': durationSeconds,
-          'series_id': seriesId,
-          'series_title': seriesTitle,
-          'part_number': partNumber,
-          'is_published': !isDraft,
-          'is_draft': isDraft,
-        })
-        .select()
-        .single();
-
-    return VideoModel.fromJson(Map<String, dynamic>.from(data));
-  }
-
-  Future<VideoModel> updateVideo({
-    required String videoId,
-    String? title,
-    String? description,
-    List<String>? tags,
-    String? thumbnailUrl,
-    bool? isDraft,
-    bool? isPublished,
-  }) async {
-    final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-
-    final map = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    if (title != null) map['title'] = title.trim();
-    if (description != null) map['description'] = description.trim();
-    if (tags != null) map['tags'] = tags;
-    if (thumbnailUrl != null) map['thumbnail_url'] = thumbnailUrl;
-    if (isDraft != null) {
-      map['is_draft'] = isDraft;
-      map['is_published'] = !isDraft;
-    }
-    if (isPublished != null) map['is_published'] = isPublished;
-
-    final data = await _client
-        .from(SupabaseConstants.videoPosts)
-        .update(map)
-        .eq('id', videoId)
-        .eq('author_id', uid)
-        .select()
-        .single();
-
-    return VideoModel.fromJson(Map<String, dynamic>.from(data));
-  }
-
-  Future<void> deleteVideo(String videoId) async {
-    final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
-    await _client
-        .from(SupabaseConstants.videoPosts)
-        .delete()
-        .eq('id', videoId)
-        .eq('author_id', uid);
-  }
-
-  // ---------- Save ----------
-
-  Future<bool> isSaved(String videoId) async {
+  Future<bool> isStoryBookmarked(String storyId) async {
     final uid = _uid;
     if (uid == null) return false;
-    final row = await _client
-        .from(SupabaseConstants.videoSaves)
+    final data = await _client
+        .from(SupabaseConstants.bookmarks)
         .select('id')
         .eq('user_id', uid)
-        .eq('video_id', videoId)
+        .eq('story_id', storyId)
         .maybeSingle();
-    return row != null;
+    return data != null;
   }
 
-  Future<bool> toggleSave(String videoId) async {
+  Future<bool> toggleStoryBookmark(String storyId) async {
     final uid = _uid;
     if (uid == null) throw Exception('লগইন নেই');
-    final existing = await isSaved(videoId);
-    if (existing) {
+
+    final existing = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('id')
+        .eq('user_id', uid)
+        .eq('story_id', storyId)
+        .maybeSingle();
+
+    if (existing != null) {
       await _client
-          .from(SupabaseConstants.videoSaves)
+          .from(SupabaseConstants.bookmarks)
           .delete()
           .eq('user_id', uid)
-          .eq('video_id', videoId);
+          .eq('story_id', storyId);
       return false;
     }
-    await _client.from(SupabaseConstants.videoSaves).insert({
+
+    await _client.from(SupabaseConstants.bookmarks).insert({
       'user_id': uid,
-      'video_id': videoId,
+      'story_id': storyId,
     });
     return true;
   }
 
-  // ---------- View ----------
+  // ---------- Novel ----------
 
-  Future<void> recordView(String videoId) async {
-    try {
-      await _client.rpc(
-        SupabaseConstants.rpcRecordView,
-        params: {'p_type': 'video', 'p_id': videoId},
-      );
-    } catch (_) {}
+  Future<bool> isNovelBookmarked(String novelId) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    final data = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('id')
+        .eq('user_id', uid)
+        .eq('novel_id', novelId)
+        .maybeSingle();
+    return data != null;
   }
-}
-  /// সব bookmark-এর count
+
+  Future<bool> toggleNovelBookmark(String novelId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('লগইন নেই');
+
+    final existing = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('id')
+        .eq('user_id', uid)
+        .eq('novel_id', novelId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from(SupabaseConstants.bookmarks)
+          .delete()
+          .eq('user_id', uid)
+          .eq('novel_id', novelId);
+      return false;
+    }
+
+    await _client.from(SupabaseConstants.bookmarks).insert({
+      'user_id': uid,
+      'novel_id': novelId,
+    });
+    return true;
+  }
+
+  // ---------- Saved list ----------
+
+  Future<List<StoryModel>> getSavedStories() async {
+    final uid = _uid;
+    if (uid == null) return [];
+
+    final data = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('''
+          story_id,
+          stories:story_id (
+            *,
+            profiles:author_id (
+              full_name,
+              nickname,
+              avatar_url
+            )
+          )
+        ''')
+        .eq('user_id', uid)
+        .not('story_id', 'is', null)
+        .order('created_at', ascending: false);
+
+    final list = <StoryModel>[];
+    for (final row in data as List) {
+      final s = (row as Map)['stories'];
+      if (s is Map) {
+        final map = Map<String, dynamic>.from(s);
+        final profiles = map['profiles'];
+        if (profiles is Map) {
+          map['author_name'] = profiles['full_name'];
+          map['author_nickname'] = profiles['nickname'];
+          map['author_avatar'] = profiles['avatar_url'];
+        }
+        try {
+          list.add(StoryModel.fromJson(map));
+        } catch (_) {}
+      }
+    }
+    return list;
+  }
+
+  Future<List<NovelModel>> getSavedNovels() async {
+    final uid = _uid;
+    if (uid == null) return [];
+
+    final data = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('''
+          novel_id,
+          novels:novel_id (
+            *,
+            profiles:author_id (
+              full_name,
+              nickname,
+              avatar_url
+            )
+          )
+        ''')
+        .eq('user_id', uid)
+        .not('novel_id', 'is', null)
+        .order('created_at', ascending: false);
+
+    final list = <NovelModel>[];
+    for (final row in data as List) {
+      final n = (row as Map)['novels'];
+      if (n is Map) {
+        final map = Map<String, dynamic>.from(n);
+        final profiles = map['profiles'];
+        if (profiles is Map) {
+          map['author_name'] = profiles['full_name'];
+          map['author_nickname'] = profiles['nickname'];
+          map['author_avatar'] = profiles['avatar_url'];
+        }
+        try {
+          list.add(NovelModel.fromJson(map));
+        } catch (_) {}
+      }
+    }
+    return list;
+  }
+
   Future<int> getTotalBookmarkCount() async {
     final uid = _uid;
     if (uid == null) return 0;
