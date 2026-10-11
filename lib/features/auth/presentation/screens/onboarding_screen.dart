@@ -1,7 +1,11 @@
+// lib/features/auth/presentation/screens/onboarding_screen.dart
+// Localization সহ
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
@@ -15,29 +19,6 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _index = 0;
-
-  final _pages = const [
-    (
-      'গল্প পড়ুন',
-      'বাংলা গল্প ও ধারাবাহিক উপন্যাস এক জায়গায়।',
-      Icons.menu_book_rounded,
-    ),
-    (
-      'গল্প লিখুন',
-      'এক অ্যাকাউন্টেই পাঠক ও লেখক হোন।',
-      Icons.edit_note_rounded,
-    ),
-    (
-      'ভিডিও দেখুন',
-      'শর্ট ভিডিও ফিডে বিনোদন।',
-      Icons.videocam_rounded,
-    ),
-    (
-      'শেয়ার করুন',
-      'ইউনিক কোড দিয়ে বন্ধুদের আনুন।',
-      Icons.share_rounded,
-    ),
-  ];
 
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,9 +34,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    // locale-aware pages
+    final pages = <({String title, String body, IconData icon})>[
+      (
+        title: l10n.onboardTitle1,
+        body: l10n.onboardBody1,
+        icon: Icons.menu_book_rounded,
+      ),
+      (
+        title: l10n.onboardTitle2,
+        body: l10n.onboardBody2,
+        icon: Icons.edit_note_rounded,
+      ),
+      (
+        title: l10n.onboardTitle3,
+        body: l10n.onboardBody3,
+        icon: Icons.videocam_rounded,
+      ),
+      (
+        title: l10n.onboardTitle4,
+        body: l10n.onboardBody4,
+        icon: Icons.share_rounded,
+      ),
+    ];
 
     return Scaffold(
       body: SafeArea(
@@ -65,25 +71,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _finish,
-                child: const Text('স্কিপ'),
+                child: Text(l10n.skip),
               ),
             ),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 onPageChanged: (i) => setState(() => _index = i),
                 itemBuilder: (_, i) {
-                  final p = _pages[i];
+                  final p = pages[i];
                   return Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(p.$3, size: 96, color: AppColors.primary),
+                        Icon(p.icon, size: 96, color: AppColors.primary),
                         const SizedBox(height: 32),
                         Text(
-                          p.$1,
+                          p.title,
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
@@ -92,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          p.$2,
+                          p.body,
                           style: TextStyle(fontSize: 16, color: secondary),
                           textAlign: TextAlign.center,
                         ),
@@ -105,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
+                pages.length,
                 (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -135,7 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   onPressed: () {
-                    if (_index < _pages.length - 1) {
+                    if (_index < pages.length - 1) {
                       _controller.nextPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeOut,
@@ -145,7 +151,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     }
                   },
                   child: Text(
-                    _index < _pages.length - 1 ? 'পরবর্তী' : 'শুরু করুন',
+                    _index < pages.length - 1
+                        ? l10n.next
+                        : l10n.getStarted,
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
