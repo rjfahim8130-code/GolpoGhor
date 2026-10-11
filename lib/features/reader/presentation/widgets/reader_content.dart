@@ -1,7 +1,11 @@
+// lib/features/reader/presentation/widgets/reader_content.dart
+// Localization সহ — শুধু "কোনো কনটেন্ট নেই" replace
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -65,6 +69,7 @@ class ReaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -73,7 +78,7 @@ class ReaderContent extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(24),
         child: Text(
-          'কোনো কনটেন্ট নেই',
+          l10n.noContent,
           style: TextStyle(color: secondary),
         ),
       );
