@@ -50,24 +50,8 @@ class _ReportBody extends StatefulWidget {
 class _ReportBodyState extends State<_ReportBody> {
   final _service = ReportService();
   final _controller = TextEditingController();
-  String? _preset;
+  String? _presetKey;
   bool _sending = false;
-
-  static const _presetsBn = [
-    'কপিরাইট চুরি',
-    'অশ্লীল বা আপত্তিকর',
-    'স্প্যাম বা বিভ্রান্তিকর',
-    'হয়রানি বা আক্রমণাত্মক',
-    'অন্যান্য',
-  ];
-
-  static const _presetsEn = [
-    'Copyright infringement',
-    'Obscene or offensive',
-    'Spam or misleading',
-    'Harassment or abusive',
-    'Other',
-  ];
 
   @override
   void dispose() {
@@ -75,19 +59,28 @@ class _ReportBodyState extends State<_ReportBody> {
     super.dispose();
   }
 
+  List<String> _presetKeys(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      l10n.reportReasonCopyright,
+      l10n.reportReasonObscene,
+      l10n.reportReasonSpam,
+      l10n.reportReasonHarassment,
+      l10n.reportReasonOther,
+    ];
+  }
+
   Future<void> _submit() async {
     final l10n = context.l10n;
+    final presets = _presetKeys(context);
     final reason = [
-      if (_preset != null &&
-          _preset != _presetsBn.last &&
-          _preset != _presetsEn.last)
-        _preset!,
+      if (_presetKey != null && _presetKey != presets.last) _presetKey!,
       _controller.text.trim(),
     ].where((e) => e.isNotEmpty).join(' — ');
 
     if (reason.trim().length < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.report} — কারণ লিখুন')),
+        SnackBar(content: Text(l10n.reportEnterReason)),
       );
       return;
     }
@@ -102,7 +95,7 @@ class _ReportBodyState extends State<_ReportBody> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('রিপোর্ট পাঠানো হয়েছে')),
+        SnackBar(content: Text(l10n.reportSent)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -116,8 +109,7 @@ class _ReportBodyState extends State<_ReportBody> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final isBn = Localizations.localeOf(context).languageCode == 'bn';
-    final presets = isBn ? _presetsBn : _presetsEn;
+    final presets = _presetKeys(context);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -134,16 +126,16 @@ class _ReportBodyState extends State<_ReportBody> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'কারণ বেছে নিন এবং চাইলে বিস্তারিত লিখুন',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+          Text(
+            l10n.pickReasonHint,
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: presets.map((p) {
-              final selected = _preset == p;
+              final selected = _presetKey == p;
               return ChoiceChip(
                 label: Text(p, style: const TextStyle(fontSize: 12)),
                 selected: selected,
@@ -151,7 +143,7 @@ class _ReportBodyState extends State<_ReportBody> {
                 labelStyle: TextStyle(
                   color: selected ? AppColors.primary : null,
                 ),
-                onSelected: (_) => setState(() => _preset = p),
+                onSelected: (_) => setState(() => _presetKey = p),
               );
             }).toList(),
           ),
@@ -160,9 +152,9 @@ class _ReportBodyState extends State<_ReportBody> {
             controller: _controller,
             maxLines: 4,
             maxLength: 500,
-            decoration: const InputDecoration(
-              hintText: 'বিস্তারিত কারণ লিখুন…',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.detailedReasonHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 8),
@@ -181,7 +173,7 @@ class _ReportBodyState extends State<_ReportBody> {
                       color: Colors.white,
                     ),
                   )
-                : Text('${l10n.report} পাঠান'),
+                : Text(l10n.sendReport),
           ),
         ],
       ),
