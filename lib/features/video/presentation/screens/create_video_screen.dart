@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
-// localization + video compress + progress
+// video_compressor_plus দিয়ে কমপ্রেস + localization
 
 import 'dart:async';
 import 'dart:io';
@@ -47,7 +47,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   bool _asSeries = false;
   String? _seriesId;
 
-  // কমপ্রেস প্রগ্রেস (0..1)
+  // কমপ্রেস প্রগ্রেস (0.0 .. 1.0)
   double _compressProgress = 0;
   StreamSubscription<double>? _progressSub;
 
@@ -150,9 +150,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
 
       // progress stream শুরু
       _progressSub?.cancel();
-      _progressSub = _compress
-          .videoProgressStream(_file!.path)
-          .listen((p) {
+      _progressSub = _compress.videoProgressStream().listen((p) {
         if (mounted) setState(() => _compressProgress = p);
       });
 
@@ -341,7 +339,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           const SizedBox(height: 16),
 
           // ---------- Compress Progress ----------
-          if (_compressing || (_uploading && _compressProgress > 0)) ...[
+          if (_compressing) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -361,9 +359,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _compressing
-                              ? 'ভিডিও কমপ্রেস হচ্ছে… ${(_compressProgress * 100).toStringAsFixed(0)}%'
-                              : 'আপলোড হচ্ছে…',
+                          'ভিডিও কমপ্রেস হচ্ছে… ${(_compressProgress * 100).toStringAsFixed(0)}%',
                           style: const TextStyle(fontSize: 13),
                         ),
                       ),
@@ -371,9 +367,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                   ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
-                    value: _compressing
-                        ? _compressProgress.clamp(0.0, 1.0)
-                        : null,
+                    value: _compressProgress.clamp(0.0, 1.0),
                     minHeight: 6,
                     backgroundColor:
                         AppColors.primary.withValues(alpha: 0.15),
@@ -460,13 +454,13 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             ),
           ],
 
-          // ---------- Upload Progress (fallback) ----------
-          if (_uploading && _compressProgress == 0) ...[
+          // ---------- Upload Progress ----------
+          if (_uploading && !_compressing) ...[
             const SizedBox(height: 24),
             const LinearProgressIndicator(),
             const SizedBox(height: 8),
             Text(
-              'আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
+              'R2-তে আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
