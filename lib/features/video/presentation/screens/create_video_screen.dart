@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/create_video_screen.dart
-// video_compressor_plus — subscribe API
+// video_compress ^3.1.3 — subscribe API
 
 import 'dart:async';
 import 'dart:io';
@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
-import 'package:video_compressor_plus/video_compressor_plus.dart';
+import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/video_constants.dart';
@@ -148,7 +148,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       // ---------- Step 1: Video Compress ----------
       setState(() => _compressing = true);
 
-      // progress subscribe — video_compressor_plus API
+      // progress subscribe — video_compress API
       _progressSub?.unsubscribe();
       _progressSub = _compress.subscribeProgress((p) {
         if (mounted) setState(() => _compressProgress = p);
@@ -414,4 +414,58 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           // ---------- Series ----------
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            
+            activeColor: AppColors.primary,
+            title: const Text('পর্বভিত্তিক সিরিজ'),
+            subtitle: Text(
+              'একাধিক পর্ব একই সিরিজে সংযুক্ত হবে',
+              style: TextStyle(fontSize: 12, color: secondary),
+            ),
+            value: _asSeries,
+            onChanged: _uploading
+                ? null
+                : (v) => setState(() {
+                      _asSeries = v;
+                      if (v && _seriesId == null) {
+                        _seriesId = const Uuid().v4();
+                      }
+                    }),
+          ),
+
+          if (_asSeries) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _seriesTitleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'সিরিজের নাম',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _partCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'পর্ব নম্বর',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ],
+
+          // ---------- Upload Progress ----------
+          if (_uploading && !_compressing) ...[
+            const SizedBox(height: 24),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            Text(
+              'R2-তে আপলোড হচ্ছে… অনুগ্রহ করে অপেক্ষা করুন',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: secondary),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
