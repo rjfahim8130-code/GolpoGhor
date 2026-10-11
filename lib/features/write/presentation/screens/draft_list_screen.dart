@@ -56,7 +56,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -135,11 +135,15 @@ class _DraftListScreenState extends State<DraftListScreen> {
       body: _loading
           ? const LoadingView()
           : _error != null
-              ? ErrorView(message: _error!, onRetry: _load)
+              ? ErrorView(
+                  message: l10n.t(_error!),
+                  onRetry: _load,
+                  retryLabel: l10n.retry,
+                )
               : empty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.drafts_outlined,
-                      title: 'কোনো খসড়া নেই',
+                      title: l10n.noDrafts,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
@@ -151,13 +155,13 @@ class _DraftListScreenState extends State<DraftListScreen> {
                             ..._storyDrafts.map((s) {
                               return ListTile(
                                 title: Text(
-                                  s.title.isEmpty ? '(শিরোনামহীন)' : s.title,
+                                  s.title.isEmpty ? l10n.untitled : s.title,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
                                   s.updatedAt != null
-                                      ? 'আপডেট: ${s.updatedAt!.day}/${s.updatedAt!.month}/${s.updatedAt!.year}'
+                                      ? '${l10n.updatedOn}: ${s.updatedAt!.day}/${s.updatedAt!.month}/${s.updatedAt!.year}'
                                       : '',
                                   style: TextStyle(color: secondary),
                                 ),
@@ -197,13 +201,13 @@ class _DraftListScreenState extends State<DraftListScreen> {
                             ..._novelDrafts.map((n) {
                               return ListTile(
                                 title: Text(
-                                  n.title.isEmpty ? '(শিরোনামহীন)' : n.title,
+                                  n.title.isEmpty ? l10n.untitled : n.title,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
                                   n.updatedAt != null
-                                      ? 'আপডেট: ${n.updatedAt!.day}/${n.updatedAt!.month}/${n.updatedAt!.year}'
+                                      ? '${l10n.updatedOn}: ${n.updatedAt!.day}/${n.updatedAt!.month}/${n.updatedAt!.year}'
                                       : '',
                                   style: TextStyle(color: secondary),
                                 ),
