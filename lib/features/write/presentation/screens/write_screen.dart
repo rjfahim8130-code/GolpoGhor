@@ -1,3 +1,6 @@
+// lib/features/write/presentation/screens/write_screen.dart
+// সংশোধিত: localization
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
@@ -17,10 +21,6 @@ enum WriteKind { story, novel }
 
 enum _Preset { heading, body, emphasis, quote }
 
-/// গল্প ও উপন্যাস — একই স্ক্রিন
-/// পার্থক্য:
-/// - গল্প: content_blocks সহ সেভ হয়
-/// - উপন্যাস: শুধু মেটাডেটা সেভ → পর্ব যোগ আলাদা স্ক্রিনে
 class WriteScreen extends StatefulWidget {
   final WriteKind kind;
   final String? editId;
@@ -106,8 +106,6 @@ class _WriteScreenState extends State<WriteScreen> {
     if (mounted) setState(() => _init = false);
   }
 
-  // ---------- Blocks ----------
-
   ContentBlockModel _fromText(String text) {
     switch (_preset) {
       case _Preset.heading:
@@ -143,7 +141,7 @@ class _WriteScreenState extends State<WriteScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('কভার: $e')));
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -167,7 +165,7 @@ class _WriteScreenState extends State<WriteScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('ছবি: $e')));
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -185,8 +183,6 @@ class _WriteScreenState extends State<WriteScreen> {
         .where((e) => e.isNotEmpty)
         .toList();
   }
-
-  // ---------- Save ----------
 
   Future<void> _save({required bool asDraft}) async {
     final title = _titleCtrl.text.trim();
@@ -207,7 +203,7 @@ class _WriteScreenState extends State<WriteScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('সেভ ব্যর্থ: $e')));
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -218,7 +214,6 @@ class _WriteScreenState extends State<WriteScreen> {
     required String title,
     required bool asDraft,
   }) async {
-    // শেষ লাইন যোগ
     final blocks = List<ContentBlockModel>.from(_blocks);
     final leftover = _bodyCtrl.text.trim();
     if (leftover.isNotEmpty) blocks.add(_fromText(leftover));
@@ -291,343 +286,6 @@ class _WriteScreenState extends State<WriteScreen> {
         isDraft: asDraft,
       );
       if (!mounted) return;
-      // নতুন উপন্যাস তৈরি হলে সোজা details-এ যাবে (সেখানে পর্ব যোগ করা যাবে)
       context.go('${RouteNames.novel}/${n.id}');
     }
   }
-  
-  // ---------- Build ----------
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (_init) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isEdit
-              ? (_isStory ? 'গল্প সম্পাদনা' : 'উপন্যাস সম্পাদনা')
-              : (_isStory ? 'নতুন গল্প' : 'নতুন উপন্যাস'),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : () => _save(asDraft: true),
-            child: const Text('খসড়া'),
-          ),
-          TextButton(
-            onPressed: _loading ? null : () => _save(asDraft: false),
-            child: Text(
-              _isStory ? 'প্রকাশ' : 'তৈরি',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              children: [
-                // কভার
-                GestureDetector(
-                  onTap: _loading ? null : _pickCover,
-                  child: Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      image: (_coverUrl != null && _coverUrl!.isNotEmpty)
-                          ? DecorationImage(
-                              image: CachedNetworkImageProvider(_coverUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: (_coverUrl == null || _coverUrl!.isEmpty)
-                        ? const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  size: 40,
-                                  color: AppColors.primary,
-                                ),
-                                SizedBox(height: 8),
-                                Text('কভার ছবি (ঐচ্ছিক)'),
-                              ],
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // শিরোনাম
-                TextField(
-                  controller: _titleCtrl,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'শিরোনাম',
-                    border: InputBorder.none,
-                  ),
-                ),
-
-                // বিবরণ
-                TextField(
-                  controller: _descCtrl,
-                  maxLines: 3,
-                  minLines: 2,
-                  decoration: const InputDecoration(
-                    hintText: 'সংক্ষিপ্ত বিবরণ',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // ক্যাটাগরি
-                DropdownButtonFormField<String>(
-                  value: _category != null &&
-                          AppConstants.categories.contains(_category)
-                      ? _category
-                      : null,
-                  decoration: const InputDecoration(
-                    labelText: 'ক্যাটাগরি',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: AppConstants.categories
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _category = v),
-                ),
-                const SizedBox(height: 12),
-
-                // ট্যাগ
-                TextField(
-                  controller: _tagsCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'ট্যাগ (স্পেস বা কমা দিয়ে)',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // গল্প হলে: content blocks
-                if (_isStory) ...[
-                  if (_blocks.isNotEmpty) ...[
-                    const Text(
-                      'যোগ করা অংশ',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    ...List.generate(_blocks.length, (i) {
-                      final b = _blocks[i];
-                      if (b.isImage) {
-                        return Card(
-                          child: ListTile(
-                            leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: b.imageUrl != null
-                                    ? CachedNetworkImage(
-                                        imageUrl: b.imageUrl!,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : const Icon(Icons.image),
-                              ),
-                            ),
-                            title: const Text('ছবি'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => _removeBlock(i),
-                            ),
-                          ),
-                        );
-                      }
-                      return Card(
-                        child: ListTile(
-                          title: Text(
-                            b.text ?? '',
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: b.style == 'heading1'
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontStyle: b.style == 'quote'
-                                  ? FontStyle.italic
-                                  : FontStyle.normal,
-                            ),
-                          ),
-                          subtitle: Text(b.style),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => _removeBlock(i),
-                          ),
-                        ),
-                      );
-                    }),
-                    const Divider(),
-                  ],
-
-                  // লেখার বক্স
-                  TextField(
-                    controller: _bodyCtrl,
-                    maxLines: 8,
-                    minLines: 4,
-                    decoration: InputDecoration(
-                      hintText: _hintForPreset(),
-                      filled: true,
-                      fillColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: _commitBody,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('অংশ যোগ'),
-                    ),
-                  ),
-                  Text(
-                    'টিপস: স্বাভাবিক লিখুন; মাঝে শিরোনাম বা গুরুত্বপূর্ণ অংশ আলাদা করুন।',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                ],
-
-                // উপন্যাস হলে: hint
-                if (!_isStory)
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'উপন্যাস তৈরি হলে পরের স্ক্রিনে পর্ব যোগ করা যাবে।',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // গল্প হলে নিচে টুলবার
-          if (_isStory)
-            Material(
-              elevation: 8,
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              child: SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    children: [
-                      _chip('শিরোনাম', _Preset.heading),
-                      _chip('স্বাভাবিক', _Preset.body),
-                      _chip('গুরুত্বপূর্ণ', _Preset.emphasis),
-                      _chip('উদ্ধৃতি', _Preset.quote),
-                      const SizedBox(width: 4),
-                      ActionChip(
-                        avatar: _loading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.image_outlined, size: 18),
-                        label: const Text('ছবি'),
-                        onPressed: _loading ? null : _pickImage,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _chip(String label, _Preset p) {
-    final selected = _preset == p;
-    return Padding(
-      padding: const EdgeInsets.only(right: 6),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => setState(() => _preset = p),
-        selectedColor: AppColors.primary.withValues(alpha: 0.2),
-        labelStyle: TextStyle(
-          color: selected ? AppColors.primary : null,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  String _hintForPreset() {
-    switch (_preset) {
-      case _Preset.heading:
-        return 'বড় শিরোনাম লিখুন…';
-      case _Preset.emphasis:
-        return 'গুরুত্বপূর্ণ বাক্য…';
-      case _Preset.quote:
-        return 'উদ্ধৃতি বা মনের কথা…';
-      case _Preset.body:
-        return 'গল্প লিখুন… (পরে "অংশ যোগ করুন")';
-    }
-  }
-}
