@@ -1,12 +1,15 @@
+// lib/features/admin/presentation/widgets/admin_reports_list.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../routing/route_names.dart';
 
-/// অ্যাডমিন প্যানেলে খোলা রিপোর্ট লিস্ট
 class AdminReportsList extends StatelessWidget {
   final List<Map<String, dynamic>> reports;
   final ReportService service;
@@ -21,6 +24,8 @@ class AdminReportsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (reports.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
@@ -78,8 +83,10 @@ class AdminReportsList extends StatelessWidget {
                 Text(
                   'ID: $id'
                   '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
-                  style:
-                      const TextStyle(fontSize: 10, color: Colors.grey),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
                 ),
               ],
             ),
@@ -98,13 +105,16 @@ class AdminReportsList extends StatelessWidget {
                 }
                 await onChanged();
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'open', child: Text('খুলুন')),
+              itemBuilder: (_) => [
                 PopupMenuItem(
+                  value: 'open',
+                  child: Text(l10n.story),
+                ),
+                const PopupMenuItem(
                   value: 'reviewed',
                   child: Text('রিভিউড'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'dismiss',
                   child: Text('বাতিল'),
                 ),
