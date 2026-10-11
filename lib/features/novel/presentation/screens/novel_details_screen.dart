@@ -57,6 +57,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     _load();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -67,7 +75,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       if (novel == null) {
         if (!mounted) return;
         setState(() {
-          _error = 'উপন্যাস পাওয়া যায়নি';
+          _error = 'novelNotFound';
           _loading = false;
         });
         return;
@@ -87,7 +95,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'লোড করা যায়নি';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -98,16 +106,19 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       final on = await _bookmarkService.toggleNovelBookmark(widget.novelId);
       if (!mounted) return;
       setState(() => _bookmarked = on);
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(on ? 'বুকমার্ক করা হয়েছে' : 'বুকমার্ক সরানো হয়েছে'),
+          content:
+              Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
           duration: const Duration(seconds: 1),
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     }
   }
 
@@ -131,11 +142,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   }
 
   Future<void> _downloadAll() async {
+    final l10n = context.l10n;
     final n = _novel;
     if (n == null) return;
     if (_episodes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('কোনো পর্ব নেই')),
+        SnackBar(content: Text(l10n.noEpisodes)),
       );
       return;
     }
@@ -145,7 +157,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         await _offlineService.saveEpisode(
           episodeId: e.id,
           novelTitle: n.title,
-          episodeTitle: e.title,
+          episodeTitle: e.title.isNotEmpty
+              ? e.title
+              : '${l10n.episodeLabel} ${e.chapterNumber}',
           chapterNumber: e.chapterNumber,
           contentBlocks: e.contentBlocks,
           authorName: n.authorName,
@@ -154,12 +168,17 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_episodes.length} পর্ব অফলাইনে সেভ')),
+        SnackBar(
+          content: Text(
+            '${_episodes.length} ${l10n.episodesSavedOffline}',
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _downloadingAll = false);
     }
@@ -173,6 +192,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
+  
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -197,7 +217,11 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
             onPressed: () => context.pop(),
           ),
         ),
-        body: ErrorView(message: _error ?? 'সমস্যা', onRetry: _load),
+        body: ErrorView(
+          message: l10n.t(_error ?? 'problem'),
+          onRetry: _load,
+          retryLabel: l10n.retry,
+        ),
       );
     }
 
@@ -239,7 +263,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                         context,
                         targetType: 'novel',
                         targetId: widget.novelId,
-                        title: 'উপন্যাস রিপোর্ট',
+                        title: l10n.reportNovel,
                       ),
                     ),
                   ],
@@ -268,12 +292,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           CachedAvatar(
                             userId: n.authorId,
                             imageUrl: n.authorAvatar,
-                            name: n.authorName ?? 'লেখক',
+                            name: n.authorName ?? l10n.author,
                             radius: 34,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            n.authorName ?? 'লেখক',
+                            n.authorName ?? l10n.author,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -368,11 +392,11 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                     children: [
                       _meta('${n.episodeCount} ${l10n.episode}', Icons.list_alt),
                       _meta(
-                        TimeAgo.compact(n.viewCount),
+                        TimeAgo.compactOf(context, n.viewCount),
                         Icons.remove_red_eye_outlined,
                       ),
                       _meta(
-                        TimeAgo.compact(n.reactionCount),
+                        TimeAgo.compactOf(context, n.reactionCount),
                         Icons.favorite_border,
                       ),
                     ],
@@ -382,7 +406,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   const Divider(),
                   const SizedBox(height: 8),
                   Text(
-                    'সব ${l10n.episode}',
+                    '${l10n.viewAll} ${l10n.episode}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -396,7 +420,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 32),
                       child: Center(
                         child: Text(
-                          'এখনো কোনো পর্ব নেই',
+                          l10n.noEpisodesYet,
                           style: TextStyle(color: secondary),
                         ),
                       ),
@@ -444,7 +468,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                   child: Text(
                                     e.title.isNotEmpty
                                         ? e.title
-                                        : '${l10n.episode} ${e.chapterNumber}',
+                                        : '${l10n.episodeLabel} ${e.chapterNumber}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
@@ -465,7 +489,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                       ),
                                       const SizedBox(width: 2),
                                       Text(
-                                        TimeAgo.compact(e.viewCount),
+                                        TimeAgo.compactOf(context, e.viewCount),
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: secondary,
@@ -479,7 +503,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                       ),
                                       const SizedBox(width: 2),
                                       Text(
-                                        TimeAgo.compact(e.reactionCount),
+                                        TimeAgo.compactOf(
+                                            context, e.reactionCount),
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: secondary,
@@ -520,7 +545,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: 'সব পর্ব ডাউনলোড',
+                      tooltip: l10n.downloadAllEpisodes,
                       icon: _downloadingAll
                           ? const SizedBox(
                               width: 22,
@@ -595,11 +620,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   }
 
   Widget _epPlaceholder(int num) {
+    final l10n = Localizations.localeOf(context).languageCode == 'bn';
     return Container(
       color: AppColors.primary.withValues(alpha: 0.08),
       alignment: Alignment.center,
       child: Text(
-        'পর্ব $num',
+        l10n ? 'পর্ব $num' : 'Episode $num',
         style: const TextStyle(
           color: AppColors.primary,
           fontWeight: FontWeight.bold,
