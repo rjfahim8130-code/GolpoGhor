@@ -1,3 +1,6 @@
+// lib/core/services/episode_service.dart
+// Service-এ context নেই — Exception-এ key string পাঠানো হবে
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -43,7 +46,7 @@ class EpisodeService {
     int? chapterNumber,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     // novel owner check
     final novel = await _client
@@ -52,7 +55,7 @@ class EpisodeService {
         .eq('id', novelId)
         .maybeSingle();
     if (novel == null || novel['author_id'] != uid) {
-      throw Exception('এই উপন্যাসে পর্ব যোগ করার অনুমতি নেই');
+      throw Exception('noEpisodePermission');
     }
 
     // পর্ব নম্বর অটো
@@ -92,7 +95,7 @@ class EpisodeService {
     List<ContentBlockModel>? contentBlocks,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -115,7 +118,7 @@ class EpisodeService {
 
   Future<void> deleteEpisode(String episodeId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('লগইন নেই');
+    if (uid == null) throw Exception('notLoggedIn');
     await _client
         .from(SupabaseConstants.episodes)
         .delete()
