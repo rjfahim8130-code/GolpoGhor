@@ -1,6 +1,7 @@
 // lib/features/reader/presentation/widgets/reader_watermark.dart
 // logo_watermark.png সরাসরি ব্যবহার করে
 // fallback: logo.png → icon + text
+// ⚠️ 'গল্পঘর' brand name — সবসময় বাংলায় (frozen)
 
 import 'package:flutter/material.dart';
 
