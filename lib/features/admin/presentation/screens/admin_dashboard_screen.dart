@@ -278,3 +278,252 @@ class _AdminDashboardScreenState
                 ),
               ),
             ),
+const SizedBox(height: 24),
+
+// ---------------- Feature toggle ----------------
+_sectionHeader('ফিচার কন্ট্রোল'),
+Card(
+  elevation: 0,
+  color: cardColor,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: SwitchListTile(
+    activeColor: AppColors.primary,
+    title: Text(l10n.videoFeature),
+    subtitle: Text(
+      videoOn
+          ? 'চালু — সবাই ভিডিও দেখতে ও আপলোড করতে পারবে'
+          : 'বন্ধ — ভিডিও সংক্রান্ত সব লুকানো থাকবে',
+      style: const TextStyle(fontSize: 12),
+    ),
+    secondary: Icon(
+      videoOn ? Icons.videocam : Icons.videocam_off,
+      color: videoOn ? AppColors.primary : Colors.grey,
+    ),
+    value: videoOn,
+    onChanged: (v) async {
+      try {
+        await ref
+            .read(videoFeatureProvider.notifier)
+            .setEnabled(v);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              v ? 'ভিডিও ফিচার চালু' : 'ভিডিও ফিচার বন্ধ',
+            ),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    },
+  ),
+),
+
+const SizedBox(height: 24),
+
+// ---------------- Reports ----------------
+_sectionHeader(l10n.openReports),
+if (_reports.isEmpty)
+  const Padding(
+    padding: EdgeInsets.symmetric(vertical: 20),
+    child: Center(
+      child: Text(
+        'কোনো খোলা রিপোর্ট নেই',
+        style: TextStyle(color: Colors.grey),
+      ),
+    ),
+  )
+else
+  ..._reports.map((r) {
+    final type = '${r['target_type'] ?? ''}';
+    final id = '${r['target_id'] ?? ''}';
+    final reason = '${r['reason'] ?? ''}';
+    final createdAtRaw = r['created_at']?.toString();
+    final createdAt = createdAtRaw != null
+        ? DateTime.tryParse(createdAtRaw)
+        : null;
+
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: AppColors.danger,
+          child: Icon(Icons.flag, color: Colors.white, size: 18),
+        ),
+        title: Text(
+          'ধরন: $type',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 2),
+            Text(
+              'কারণ: $reason',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+            Text(
+              'ID: $id'
+              '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (v) async {
+            final rid = r['id']?.toString();
+            if (rid == null) return;
+            if (v == 'reviewed') {
+              await _reportService.markReviewed(rid);
+            }
+            if (v == 'dismiss') {
+              await _reportService.dismiss(rid);
+            }
+            if (v == 'open') {
+              _openTarget(type, id);
+            }
+            await _init();
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'open', child: Text('খুলুন')),
+            PopupMenuItem(
+                value: 'reviewed', child: Text('রিভিউড')),
+            PopupMenuItem(
+                value: 'dismiss', child: Text('বাতিল')),
+          ],
+        ),
+        onTap: () => _openTarget(type, id),
+      ),
+    );
+  }),
+            
+            const SizedBox(height: 24),
+
+            // ---------------- Moderation hint ----------------
+            _sectionHeader('মডারেশন'),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'গল্প/ভিডিও মডারেশন আরো ফিচার পরে আসবে। '
+                        'এখন রিপোর্ট প্রসেস করতে পারবেন।',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: secondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------- Helpers ----------------
+
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _monthRow(String label, String value, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openTarget(String type, String id) {
+    switch (type) {
+      case 'story':
+        context.push('${RouteNames.story}/$id');
+        break;
+      case 'novel':
+        context.push('${RouteNames.novel}/$id');
+        break;
+      case 'episode':
+        context.push('${RouteNames.episode}/$id');
+        break;
+      case 'video':
+        context.push(
+          Uri(
+            path: RouteNames.videos,
+            queryParameters: {'focus': id},
+          ).toString(),
+        );
+        break;
+      case 'profile':
+        context.push('${RouteNames.user}/$id');
+        break;
+    }
+  }
+}
