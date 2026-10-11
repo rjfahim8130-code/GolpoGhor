@@ -78,7 +78,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = 'loadFailed';
         _loading = false;
       });
     }
@@ -96,10 +96,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
         ),
-        body: const Center(
+        body: Center(
           child: Text(
-            'ভিডিও ফিচার এখন বন্ধ আছে।',
-            style: TextStyle(color: Colors.white),
+            l10n.videoFeatureDisabled,
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -119,7 +119,11 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
         ),
-        body: ErrorView(message: _error!, onRetry: _load),
+        body: ErrorView(
+          message: l10n.t(_error!),
+          onRetry: _load,
+          retryLabel: l10n.retry,
+        ),
       );
     }
 
@@ -135,10 +139,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
           onPressed: () => context.push(RouteNames.createVideo),
           child: const Icon(Icons.add, color: Colors.white),
         ),
-        body: const EmptyView(
+        body: EmptyView(
           icon: Icons.videocam_outlined,
-          title: 'এখনো কোনো ভিডিও নেই',
-          subtitle: 'নিচের বাটনে ট্যাপ করে প্রথম ভিডিও আপলোড করুন',
+          title: l10n.noVideosYet,
+          subtitle: l10n.uploadFirstVideo,
         ),
       );
     }
@@ -232,7 +236,6 @@ class _VideoFeedItem extends ConsumerStatefulWidget {
   @override
   ConsumerState<_VideoFeedItem> createState() => _VideoFeedItemState();
 }
-
 class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   final _service = VideoService();
   final _follow = FollowService();
@@ -375,7 +378,15 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
   }
-  
+
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   void _openMore() {
     final l10n = context.l10n;
     final v = widget.video;
@@ -398,7 +409,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               onTap: () {
                 Navigator.pop(ctx);
                 Share.share(
-                  '${v.authorName ?? ""} · গল্পঘর ভিডিও\n#গল্পঘর',
+                  '${v.authorName ?? ""} · ${l10n.appName} ${l10n.video}\n#গল্পঘর',
                 );
               },
             ),
@@ -414,15 +425,15 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   context,
                   targetType: 'video',
                   targetId: v.id,
-                  title: 'ভিডিও রিপোর্ট',
+                  title: l10n.reportVideo,
                 );
               },
             ),
             SwitchListTile(
               secondary: const Icon(Icons.loop, color: Colors.white),
-              title: const Text(
-                'অটো লুপ',
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                l10n.autoLoop,
+                style: const TextStyle(color: Colors.white),
               ),
               value: _autoLoop,
               activeColor: AppColors.primary,
@@ -438,7 +449,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 color: Colors.white,
               ),
               title: Text(
-                _muted ? 'সাউন্ড চালু' : 'সাউন্ড বন্ধ',
+                _muted ? l10n.soundOn : l10n.soundOff,
                 style: const TextStyle(color: Colors.white),
               ),
               onTap: () {
@@ -473,7 +484,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   final ok = await showDialog<bool>(
                     context: context,
                     builder: (d) => AlertDialog(
-                      title: const Text('ভিডিও মুছবেন?'),
+                      title: Text(l10n.deleteVideoConfirm),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(d, false),
@@ -501,7 +512,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       ),
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -586,16 +597,16 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               color: Colors.black87,
               borderRadius: BorderRadius.circular(12),
               child: ListTile(
-                title: const Text(
-                  'পরের অংশ দেখুন',
-                  style: TextStyle(
+                title: Text(
+                  l10n.watchNextPart,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
                   _nextPart!.title.isEmpty
-                      ? 'পর্ব ${_nextPart!.partNumber}'
+                      ? '${l10n.episodeLabel} ${_nextPart!.partNumber}'
                       : _nextPart!.title,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -609,7 +620,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     setState(() => _showNextPart = false);
                     widget.onJumpToSeriesPart?.call(n);
                   },
-                  child: const Text('দেখুন'),
+                  child: Text(l10n.watch),
                 ),
                 onTap: () {
                   final n = _nextPart;
@@ -634,7 +645,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   CachedAvatar(
                     userId: v.authorId,
                     imageUrl: v.authorAvatar,
-                    name: v.authorName ?? 'লেখক',
+                    name: v.authorName ?? l10n.author,
                     radius: 22,
                   ),
                   Positioned(
@@ -648,16 +659,18 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                             await _follow.toggleFollow(v.authorId);
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('ফলো আপডেট'),
-                                  duration: Duration(seconds: 1),
+                                SnackBar(
+                                  content: Text(l10n.followUpdated),
+                                  duration: const Duration(seconds: 1),
                                 ),
                               );
                             }
                           } catch (e) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('$e')),
+                                SnackBar(
+                                  content: Text(_translateError(context, e)),
+                                ),
                               );
                             }
                           }
@@ -707,7 +720,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('$e')),
+                        SnackBar(
+                          content: Text(_translateError(context, e)),
+                        ),
                       );
                     }
                   }
@@ -750,7 +765,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('$e')),
+                        SnackBar(
+                          content: Text(_translateError(context, e)),
+                        ),
                       );
                     }
                   }
@@ -796,7 +813,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   }
                 },
                 child: Text(
-                  v.authorName ?? 'লেখক',
+                  v.authorName ?? l10n.author,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -821,9 +838,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   ),
                 ),
               ],
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
-                TimeAgo.bn(v.createdAt),
+                TimeAgo.of(context, v.createdAt),
                 style: const TextStyle(
                   color: Colors.white54,
                   fontSize: 11,
