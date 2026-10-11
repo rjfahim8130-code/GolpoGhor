@@ -46,7 +46,7 @@ class ProfileQuickActions extends StatelessWidget {
         ),
       _QuickAction(
         icon: Icons.edit_outlined,
-        label: 'প্রোফাইল এডিট',
+        label: l10n.editProfile,
         onTap: onEditProfile,
       ),
     ];
