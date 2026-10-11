@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/story_card.dart
-// সংশোধিত: nickname, localization
+// সংশোধিত: nickname, localization, TimeAgo.of/compactOf
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +60,7 @@ class _StoryCardState extends State<StoryCard> {
                   CachedAvatar(
                     userId: story.authorId,
                     imageUrl: story.authorAvatar,
-                    name: story.authorName ?? 'লেখক',
+                    name: story.authorName ?? l10n.author,
                     radius: 18,
                   ),
                   const SizedBox(width: 10),
@@ -76,7 +76,7 @@ class _StoryCardState extends State<StoryCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            story.authorName ?? 'লেখক',
+                            story.authorName ?? l10n.author,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -85,7 +85,7 @@ class _StoryCardState extends State<StoryCard> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${story.authorFollowerCount} ${l10n.followers} · ${TimeAgo.bn(story.createdAt)}',
+                            '${story.authorFollowerCount} ${l10n.followers} · ${TimeAgo.of(context, story.createdAt)}',
                             style: TextStyle(fontSize: 11, color: secondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -178,21 +178,21 @@ class _StoryCardState extends State<StoryCard> {
                   Icon(Icons.visibility_outlined, size: 16, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(story.viewCount),
+                    TimeAgo.compactOf(context, story.viewCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.favorite_border, size: 16, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(story.reactionCount),
+                    TimeAgo.compactOf(context, story.reactionCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.chat_bubble_outline, size: 15, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(story.commentCount),
+                    TimeAgo.compactOf(context, story.commentCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const Spacer(),
