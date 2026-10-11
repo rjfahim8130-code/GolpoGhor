@@ -1,5 +1,5 @@
 // lib/features/social/presentation/widgets/reaction_picker.dart
-// সংশোধিত: localization-ready
+// সংশোধিত: localization-ready (l10n.reaction + reaction name)
 
 import 'package:flutter/material.dart';
 
@@ -18,27 +18,26 @@ class ReactionPicker {
     'fire': '🔥',
   };
 
-  static const Map<String, String> _namesBn = {
-    'like': 'লাইক',
-    'love': 'ভালোবাসা',
-    'wow': 'অবাক',
-    'sad': 'দুঃখ',
-    'fire': 'দুর্দান্ত',
-  };
-
-  static const Map<String, String> _namesEn = {
-    'like': 'Like',
-    'love': 'Love',
-    'wow': 'Wow',
-    'sad': 'Sad',
-    'fire': 'Fire',
-  };
-
   static String emoji(String? type) => _labels[type] ?? '👍';
 
-  static String name(String? type, {bool bn = true}) {
-    final map = bn ? _namesBn : _namesEn;
-    return map[type] ?? _labels[type] ?? '👍';
+  /// locale-aware reaction name (l10n থেকে)
+  /// যেমন: reactionLike, reactionLove, reactionWow, reactionSad, reactionFire
+  static String name(BuildContext context, String? type) {
+    final l10n = context.l10n;
+    switch (type) {
+      case 'like':
+        return l10n.reactionLike;
+      case 'love':
+        return l10n.reactionLove;
+      case 'wow':
+        return l10n.reactionWow;
+      case 'sad':
+        return l10n.reactionSad;
+      case 'fire':
+        return l10n.reactionFire;
+      default:
+        return l10n.reactionLike;
+    }
   }
 
   static Color color(String? type) {
@@ -60,7 +59,6 @@ class ReactionPicker {
 
   static Future<String?> show(BuildContext context) {
     final l10n = context.l10n;
-    final isBn = Localizations.localeOf(context).languageCode == 'bn';
 
     return showModalBottomSheet<String>(
       context: context,
@@ -109,7 +107,7 @@ class ReactionPicker {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              name(type, bn: isBn),
+                              name(context, type),
                               style: const TextStyle(fontSize: 11),
                             ),
                           ],
