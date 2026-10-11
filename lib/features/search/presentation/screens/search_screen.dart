@@ -1,5 +1,5 @@
 // lib/features/search/presentation/screens/search_screen.dart
-// সংশোধিত: username বাদ, nickname, localization
+// সংশোধিত: username বাদ, nickname, localization, categoryList
 
 import 'dart:async';
 
@@ -148,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onChanged: _onChanged,
           onSubmitted: _runSearch,
           decoration: InputDecoration(
-            hintText: 'গল্প, লেখক বা কোড…',
+            hintText: l10n.searchHint,
             border: InputBorder.none,
           ),
         ),
@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
               : _buildResults(l10n, isDark),
     );
   }
-  
+
   Widget _buildIdle(AppLocalizations l10n, bool isDark) {
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -185,7 +185,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Row(
             children: [
               Text(
-                'সাম্প্রতিক',
+                l10n.recent,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
@@ -217,7 +217,7 @@ class _SearchScreenState extends State<SearchScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: AppConstants.categories
+          children: l10n.categoryList
               .map(
                 (c) => ActionChip(
                   label: Text(c),
@@ -233,7 +233,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'লেখকের কোড বা গল্পের কোড লিখলে সরাসরি পাওয়া যাবে।',
+          l10n.searchCodeHint,
           style: TextStyle(fontSize: 13, color: secondary),
         ),
       ],
@@ -251,7 +251,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'কোনো ফলাফল নেই — অন্য শব্দ বা কোড চেষ্টা করুন',
+            l10n.noSearchResults,
             textAlign: TextAlign.center,
             style: TextStyle(color: secondary),
           ),
@@ -265,7 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
         if (r.exactStoryCode != null ||
             r.exactNovelCode != null ||
             r.exactUserCode != null) ...[
-          _sectionTitle('কোড মিলেছে', highlight: true),
+          _sectionTitle(l10n.codeMatched, highlight: true),
           if (r.exactStoryCode != null)
             StoryCard(
               story: r.exactStoryCode!,
@@ -283,7 +283,7 @@ class _SearchScreenState extends State<SearchScreen> {
           if (r.exactUserCode != null) _authorTile(r.exactUserCode!, l10n),
         ],
         if (r.authors.isNotEmpty) ...[
-          _sectionTitle('লেখক (${r.authors.length})'),
+          _sectionTitle('${l10n.authors} (${r.authors.length})'),
           ...r.authors.map((a) => _authorTile(a, l10n)),
         ],
         if (r.stories.isNotEmpty) ...[
@@ -306,28 +306,28 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
         if (r.videos.isNotEmpty) ...[
           _sectionTitle('${l10n.video} (${r.videos.length})'),
-          ...r.videos.map(_videoTile),
+          ...r.videos.map((v) => _videoTile(v, l10n)),
         ],
       ],
     );
   }
 
-  Widget _videoTile(VideoModel v) {
+  Widget _videoTile(VideoModel v, AppLocalizations l10n) {
     return ListTile(
       leading: const CircleAvatar(
         backgroundColor: AppColors.primary,
         child: Icon(Icons.play_arrow, color: Colors.white),
       ),
       title: Text(
-        v.displayTitle,
+        v.displayTitleOr(l10n.video),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         [
-          v.authorName ?? 'লেখক',
-          if (v.isSeries) 'পর্ব ${v.partNumber}',
-          '${v.viewCount} দেখা',
+          v.authorName ?? l10n.author,
+          if (v.isSeries) '${l10n.episode} ${v.partNumber}',
+          '${v.viewCount} ${l10n.viewsCount}',
         ].join(' · '),
       ),
       onTap: () => context.push(
@@ -363,14 +363,14 @@ class _SearchScreenState extends State<SearchScreen> {
       leading: CachedAvatar(
         userId: u.id,
         imageUrl: u.avatarUrl,
-        name: u.displayName,
+        name: u.displayNameOr(l10n.user),
         radius: 22,
       ),
       title: Row(
         children: [
           Flexible(
             child: Text(
-              u.displayName,
+              u.displayNameOr(l10n.user),
               style: const TextStyle(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
