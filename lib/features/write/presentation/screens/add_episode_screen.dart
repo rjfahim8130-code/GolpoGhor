@@ -44,6 +44,14 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   ContentBlockModel _fromText(String text) {
     switch (_preset) {
       case _Preset.heading:
@@ -81,20 +89,21 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
       );
       setState(() => _blocks.add(ContentBlockModel.imageBlock(url)));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পর্বের শিরোনাম লিখুন')),
+        SnackBar(content: Text(l10n.enterEpisodeTitle)),
       );
       return;
     }
@@ -105,7 +114,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
 
     if (blocks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('কিছু লেখা যোগ করুন')),
+        SnackBar(content: Text(l10n.addSomeText)),
       );
       return;
     }
@@ -119,14 +128,14 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('পর্ব যোগ হয়েছে')),
+        SnackBar(content: Text(l10n.episodeAdded)),
       );
       context.go('${RouteNames.episode}/${ep.id}');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_translateError(context, e))),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -169,8 +178,8 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
-                  decoration: const InputDecoration(
-                    hintText: 'পর্বের শিরোনাম',
+                  decoration: InputDecoration(
+                    hintText: l10n.episodeTitle,
                     border: InputBorder.none,
                   ),
                 ),
@@ -195,7 +204,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                                   : const Icon(Icons.image),
                             ),
                           ),
-                          title: const Text('ছবি'),
+                          title: Text(l10n.image),
                           trailing: IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () =>
@@ -228,7 +237,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                   maxLines: 10,
                   minLines: 5,
                   decoration: InputDecoration(
-                    hintText: _hintForPreset(),
+                    hintText: _hintForPreset(l10n),
                     filled: true,
                     fillColor:
                         isDark ? AppColors.darkSurface : Colors.grey.shade50,
@@ -242,7 +251,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                   child: TextButton.icon(
                     onPressed: _commitBody,
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('অংশ যোগ'),
+                    label: Text(l10n.addPart),
                   ),
                 ),
               ],
@@ -259,10 +268,10 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
-                    _chip('শিরোনাম', _Preset.heading),
-                    _chip('স্বাভাবিক', _Preset.body),
-                    _chip('গুরুত্বপূর্ণ', _Preset.emphasis),
-                    _chip('উদ্ধৃতি', _Preset.quote),
+                    _chip(l10n.blockHeading, _Preset.heading),
+                    _chip(l10n.blockBody, _Preset.body),
+                    _chip(l10n.blockEmphasis, _Preset.emphasis),
+                    _chip(l10n.blockQuote, _Preset.quote),
                     const SizedBox(width: 4),
                     ActionChip(
                       avatar: _loading
@@ -272,7 +281,7 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.image_outlined, size: 18),
-                      label: const Text('ছবি'),
+                      label: Text(l10n.image),
                       onPressed: _loading ? null : _pickImage,
                     ),
                   ],
@@ -302,16 +311,16 @@ class _AddEpisodeScreenState extends State<AddEpisodeScreen> {
     );
   }
 
-  String _hintForPreset() {
+  String _hintForPreset(AppLocalizations l10n) {
     switch (_preset) {
       case _Preset.heading:
-        return 'শিরোনাম…';
+        return l10n.hintHeadingShort;
       case _Preset.emphasis:
-        return 'গুরুত্বপূর্ণ…';
+        return l10n.hintEmphasisShort;
       case _Preset.quote:
-        return 'উদ্ধৃতি…';
+        return l10n.hintQuoteShort;
       case _Preset.body:
-        return 'পর্বের লেখা…';
+        return l10n.hintEpisodeBody;
     }
   }
 }
