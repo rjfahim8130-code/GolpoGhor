@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/novel_card.dart
-// সংশোধিত: nickname, localization
+// সংশোধিত: nickname, localization, TimeAgo.of/compactOf
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +60,7 @@ class _NovelCardState extends State<NovelCard> {
                   CachedAvatar(
                     userId: novel.authorId,
                     imageUrl: novel.authorAvatar,
-                    name: novel.authorName ?? 'লেখক',
+                    name: novel.authorName ?? l10n.author,
                     radius: 18,
                   ),
                   const SizedBox(width: 10),
@@ -76,7 +76,7 @@ class _NovelCardState extends State<NovelCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            novel.authorName ?? 'লেখক',
+                            novel.authorName ?? l10n.author,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -85,7 +85,7 @@ class _NovelCardState extends State<NovelCard> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${novel.authorFollowerCount} ${l10n.followers} · ${TimeAgo.bn(novel.createdAt)}',
+                            '${novel.authorFollowerCount} ${l10n.followers} · ${TimeAgo.of(context, novel.createdAt)}',
                             style: TextStyle(fontSize: 11, color: secondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -178,21 +178,21 @@ class _NovelCardState extends State<NovelCard> {
                   Icon(Icons.visibility_outlined, size: 16, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(novel.viewCount),
+                    TimeAgo.compactOf(context, novel.viewCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.favorite_border, size: 16, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(novel.reactionCount),
+                    TimeAgo.compactOf(context, novel.reactionCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.chat_bubble_outline, size: 15, color: secondary),
                   const SizedBox(width: 4),
                   Text(
-                    TimeAgo.compact(novel.commentCount),
+                    TimeAgo.compactOf(context, novel.commentCount),
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
