@@ -1,11 +1,15 @@
+// lib/features/home/presentation/widgets/story_card.dart
+// সংশোধিত: nickname, localization
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/story_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/models/story_model.dart';
 import '../../../../routing/route_names.dart';
 
 class StoryCard extends StatefulWidget {
@@ -29,6 +33,7 @@ class _StoryCardState extends State<StoryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final secondary =
@@ -76,10 +81,14 @@ class _StoryCardState extends State<StoryCard> {
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${story.authorFollowerCount} জন ফলোয়ার · ${TimeAgo.bn(story.createdAt)}',
+                            '${story.authorFollowerCount} ${l10n.followers} · ${TimeAgo.bn(story.createdAt)}',
                             style: TextStyle(fontSize: 11, color: secondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -92,9 +101,9 @@ class _StoryCardState extends State<StoryCard> {
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'গল্প',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.story,
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -133,7 +142,7 @@ class _StoryCardState extends State<StoryCard> {
                         ),
                         if (longDesc)
                           TextSpan(
-                            text: _expanded ? 'কম' : 'আরও',
+                            text: _expanded ? l10n.seeLess : l10n.seeMore,
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
@@ -188,8 +197,8 @@ class _StoryCardState extends State<StoryCard> {
                   ),
                   const Spacer(),
                   Text(
-                    'পড়ুন',
-                    style: TextStyle(
+                    l10n.read,
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
