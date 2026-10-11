@@ -1,6 +1,10 @@
+// lib/features/write/presentation/screens/draft_list_screen.dart
+// সংশোধিত: localization
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -59,19 +63,23 @@ class _DraftListScreenState extends State<DraftListScreen> {
   }
 
   Future<void> _deleteStory(StoryModel s) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('খসড়া মুছবেন?'),
+        title: Text(l10n.delete),
         content: Text(s.title),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -82,19 +90,23 @@ class _DraftListScreenState extends State<DraftListScreen> {
   }
 
   Future<void> _deleteNovel(NovelModel n) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('খসড়া মুছবেন?'),
+        title: Text(l10n.delete),
         content: Text(n.title),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('না'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -106,6 +118,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -113,7 +126,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('খসড়া'),
+        title: Text(l10n.drafts),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -134,7 +147,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         children: [
                           if (_storyDrafts.isNotEmpty) ...[
-                            _sectionTitle('গল্প', secondary),
+                            _sectionTitle(l10n.story, secondary),
                             ..._storyDrafts.map((s) {
                               return ListTile(
                                 title: Text(
@@ -157,16 +170,18 @@ class _DraftListScreenState extends State<DraftListScreen> {
                                     }
                                     if (v == 'delete') _deleteStory(s);
                                   },
-                                  itemBuilder: (_) => const [
+                                  itemBuilder: (_) => [
                                     PopupMenuItem(
                                       value: 'edit',
-                                      child: Text('সম্পাদনা'),
+                                      child: Text(l10n.edit),
                                     ),
                                     PopupMenuItem(
                                       value: 'delete',
                                       child: Text(
-                                        'মুছুন',
-                                        style: TextStyle(color: Colors.red),
+                                        l10n.delete,
+                                        style: const TextStyle(
+                                          color: AppColors.danger,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -178,7 +193,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
                             }),
                           ],
                           if (_novelDrafts.isNotEmpty) ...[
-                            _sectionTitle('উপন্যাস', secondary),
+                            _sectionTitle(l10n.novel, secondary),
                             ..._novelDrafts.map((n) {
                               return ListTile(
                                 title: Text(
@@ -201,16 +216,18 @@ class _DraftListScreenState extends State<DraftListScreen> {
                                     }
                                     if (v == 'delete') _deleteNovel(n);
                                   },
-                                  itemBuilder: (_) => const [
+                                  itemBuilder: (_) => [
                                     PopupMenuItem(
                                       value: 'edit',
-                                      child: Text('সম্পাদনা'),
+                                      child: Text(l10n.edit),
                                     ),
                                     PopupMenuItem(
                                       value: 'delete',
                                       child: Text(
-                                        'মুছুন',
-                                        style: TextStyle(color: Colors.red),
+                                        l10n.delete,
+                                        style: const TextStyle(
+                                          color: AppColors.danger,
+                                        ),
                                       ),
                                     ),
                                   ],
