@@ -1,6 +1,5 @@
 // lib/core/services/video_service.dart
-// username বাদ, nickname যোগ
-// Service-এ context নেই — Exception-এ key string পাঠানো হবে
+// সংশোধিত: category ফিল্ড সহ createVideo ও updateVideo
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,7 +11,6 @@ class VideoService {
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  // username বাদ, nickname যোগ
   static const String _selectWithAuthor = '''
     *,
     profiles:author_id (
@@ -121,6 +119,7 @@ class VideoService {
     required int durationSeconds,
     String title = '',
     String description = '',
+    String? category, // ক্যাটাগরি সাপোর্ট
     List<String> tags = const [],
     String? thumbnailUrl,
     String? seriesId,
@@ -137,6 +136,7 @@ class VideoService {
           'author_id': uid,
           'title': title.trim(),
           'description': description.trim(),
+          'category': category, // ডাটাবেজে ইনসার্ট
           'tags': tags,
           'video_url': videoUrl,
           'thumbnail_url': thumbnailUrl,
@@ -157,6 +157,7 @@ class VideoService {
     required String videoId,
     String? title,
     String? description,
+    String? category, // ক্যাটাগরি আপডেট সাপোর্ট
     List<String>? tags,
     String? thumbnailUrl,
     bool? isDraft,
@@ -170,6 +171,7 @@ class VideoService {
     };
     if (title != null) map['title'] = title.trim();
     if (description != null) map['description'] = description.trim();
+    if (category != null) map['category'] = category; // ম্যাপে যুক্ত
     if (tags != null) map['tags'] = tags;
     if (thumbnailUrl != null) map['thumbnail_url'] = thumbnailUrl;
     if (isDraft != null) {
