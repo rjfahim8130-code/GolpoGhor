@@ -14,6 +14,31 @@ class EpisodeService {
 
   // ---------- Reads ----------
 
+  /// হোম ফিড — প্রকাশিত পর্ব, নতুন প্রকাশিত আগে
+  Future<List<EpisodeModel>> getFeed({int limit = 15, int offset = 0}) async {
+    final data = await _client
+        .from(SupabaseConstants.episodes)
+        .select('*, profiles:author_id (full_name, nickname, avatar_url), novels:novel_id (title)')
+        .eq('is_published', true)
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
+    return (data as List).map((e) {
+      final map = Map<String, dynamic>.from(e as Map);
+      final p = map['profiles'];
+      if (p is Map) {
+        map['author_name'] = p['full_name'];
+        map['author_nickname'] = p['nickname'];
+        map['author_avatar'] = p['avatar_url'];
+      }
+      final n = map['novels'];
+      if (n is Map) {
+        map['novel_title'] = n['title'];
+      }
+      return EpisodeModel.fromJson(map);
+    }).toList();
+  }
+
   Future<List<EpisodeModel>> getByNovel(String novelId) async {
     final data = await _client
         .from(SupabaseConstants.episodes)
