@@ -1,6 +1,5 @@
 // lib/core/services/story_service.dart
-// সংশোধিত: select nickname, username বাদ
-// Service-এ context নেই — Exception-এ key string পাঠানো হবে
+// সংশোধিত: getByCategories মেথড যুক্ত
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,7 +13,6 @@ class StoryService {
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  // username বাদ, nickname যোগ
   static const String _selectWithAuthor = '''
     *,
     profiles:author_id (
@@ -98,6 +96,28 @@ class StoryService {
         .eq('is_published', true)
         .eq('is_draft', false)
         .eq('category', category)
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return (data as List)
+        .map((e) => StoryModel.fromJson(
+              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
+            ))
+        .toList();
+  }
+
+  /// একাধিক ক্যাটাগরি বা সাব-ক্যাটাগরির লিস্ট একসাথে কুয়েরি করার জন্য
+  Future<List<StoryModel>> getByCategories(
+    List<String> categories, {
+    int limit = 40,
+  }) async {
+    if (categories.isEmpty) return [];
+    final data = await _client
+        .from(SupabaseConstants.stories)
+        .select(_selectWithAuthor)
+        .eq('is_published', true)
+        .eq('is_draft', false)
+        .inFilter('category', categories)
         .order('created_at', ascending: false)
         .limit(limit);
 
