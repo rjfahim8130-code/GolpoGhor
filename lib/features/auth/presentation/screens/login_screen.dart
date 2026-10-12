@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/login_screen.dart
-// লোগো PNG + localization + full form validation + session cache saving on login
+// লোগো PNG + localization + full form validation + session cache saving on login (সংশোধিত)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,7 +54,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // সফল লগইনের পর প্রোফাইল ফেচ করে ক্যাশে সেভ করুন (অ্যাভাটার দ্রুত দেখানোর জন্য)
       try {
-        final profile = await _auth.fetchMyProfile();
+        // এখানে fetchMyProfile()-এর পরিবর্তে সঠিক মেথড getMyProfile() ব্যবহার করা হয়েছে
+        final profile = await _auth.getMyProfile();
         if (profile != null) {
           await ref.read(sessionCacheProvider.notifier).save(profile);
         }
