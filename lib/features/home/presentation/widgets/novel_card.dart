@@ -1,10 +1,11 @@
 // lib/features/home/presentation/widgets/novel_card.dart
-// সংশোধিত: nickname, localization, TimeAgo.of/compactOf
+// সংশোধিত: 'উপন্যাস' এর পাশে ক্যাটাগরি লেবেল সহ সম্পূর্ণ ফাইল
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -41,6 +42,15 @@ class _NovelCardState extends State<NovelCard> {
 
     final desc = novel.description.trim();
     final longDesc = desc.length > 90;
+
+    // ক্যাটাগরি নরমাল করে টাইটেল/লেবেল নেওয়া
+    final catKey = CategoryCatalog.normalize(novel.category);
+    final categoryLabel = catKey != null ? l10n.t(catKey) : '';
+
+    // "উপন্যাস · ক্যাটাগরি" অথবা শুধু "উপন্যাস"
+    final badgeText = categoryLabel.isNotEmpty
+        ? '${l10n.novel} · $categoryLabel'
+        : l10n.novel;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -102,7 +112,9 @@ class _NovelCardState extends State<NovelCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      l10n.novel,
+                      badgeText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,
