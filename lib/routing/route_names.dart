@@ -1,5 +1,5 @@
 // lib/routing/route_names.dart
-// সংশোধিত: unused 'write' const বাদ
+// সংশোধিত: videoSearch রাউট কনস্ট্যান্ট যুক্ত করা হয়েছে
 
 class RouteNames {
   RouteNames._();
@@ -36,6 +36,7 @@ class RouteNames {
   // ---------- Video ----------
   static const videos = '/videos';
   static const createVideo = '/create-video';
+  static const videoSearch = '/video-search'; // ✅ নতুন যুক্ত করা হলো
 
   // ---------- Profile ----------
   static const profile = '/profile';
