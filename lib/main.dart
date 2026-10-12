@@ -1,5 +1,5 @@
 // lib/main.dart
-// startup safe, error handling, runZonedGuarded
+// startup safe, error handling, runZonedGuarded, sessionCache load
 
 import 'dart:async';
 
@@ -12,6 +12,7 @@ import 'app.dart';
 import 'core/constants/supabase_constants.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/providers/session_cache_provider.dart';
 import 'core/providers/theme_provider.dart';
 
 Future<void> main() async {
@@ -36,7 +37,7 @@ Future<void> main() async {
         DeviceOrientation.portraitDown,
       ]);
 
-      // Theme + Locale prefs আগে load করি
+      // Theme + Locale + Session Cache prefs আগে load করি
       final container = ProviderContainer();
       try {
         await container.read(themeModeProvider.notifier).load();
@@ -47,6 +48,11 @@ Future<void> main() async {
         await container.read(localeProvider.notifier).load();
       } catch (e) {
         debugPrint('LOCALE_LOAD_FAILED: $e');
+      }
+      try {
+        await container.read(sessionCacheProvider.notifier).load();
+      } catch (e) {
+        debugPrint('SESSION_CACHE_LOAD_FAILED: $e');
       }
 
       Object? initError;
