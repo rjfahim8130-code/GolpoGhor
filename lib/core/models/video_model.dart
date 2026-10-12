@@ -1,12 +1,12 @@
 // lib/core/models/video_model.dart
-// authorUsername বাদ, authorNickname যোগ
-// displayTitle fallback এখন UI-তে l10n.video ব্যবহার করবে
+// সংশোধিত: category ফিল্ড সহ
 
 class VideoModel {
   final String id;
   final String authorId;
   final String title;
   final String description;
+  final String? category;
   final List<String> tags;
   final String videoUrl;
   final String? thumbnailUrl;
@@ -33,6 +33,7 @@ class VideoModel {
     required this.authorId,
     this.title = '',
     this.description = '',
+    this.category,
     this.tags = const [],
     required this.videoUrl,
     this.thumbnailUrl,
@@ -92,6 +93,7 @@ class VideoModel {
       authorId: json['author_id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
+      category: json['category'] as String?,
       tags: tags,
       videoUrl: json['video_url'] as String? ?? '',
       thumbnailUrl: json['thumbnail_url'] as String?,
@@ -122,6 +124,7 @@ class VideoModel {
       'author_id': authorId,
       'title': title,
       'description': description,
+      'category': category,
       'tags': tags,
       'video_url': videoUrl,
       'thumbnail_url': thumbnailUrl,
@@ -143,6 +146,7 @@ class VideoModel {
     String? authorId,
     String? title,
     String? description,
+    String? category,
     List<String>? tags,
     String? videoUrl,
     String? thumbnailUrl,
@@ -167,6 +171,7 @@ class VideoModel {
       authorId: authorId ?? this.authorId,
       title: title ?? this.title,
       description: description ?? this.description,
+      category: category ?? this.category,
       tags: tags ?? this.tags,
       videoUrl: videoUrl ?? this.videoUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
