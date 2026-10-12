@@ -1,6 +1,5 @@
-// lib/features/video/presentation/screens/create_video_screen.dart
-// video_compress ^3.1.3 — subscribe API
-// সংশোধিত: localization
+// lib/features/video/presentation/screens/create_video_screen.dart (Part 1)
+// video_compress ^3.1.3 — subscribe API + ভিডিও ক্যাটাগরি সিস্টেম যুক্ত
 
 import 'dart:async';
 import 'dart:io';
@@ -13,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/constants/video_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
@@ -49,6 +49,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   bool _asSeries = false;
   String? _seriesId;
 
+  String? _category;      // সাব key — DB তে যাবে
+  String? _categoryGroup; // শুধু UI এর জন্য মেইন গ্রুপ
+
   double _compressProgress = 0;
   Subscription? _progressSub;
 
@@ -66,7 +69,6 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     super.dispose();
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -196,6 +198,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         durationSeconds: _durationSec,
         title: _titleCtrl.text.trim(),
         description: _descCtrl.text.trim(),
+        category: _category, // ক্যাটাগরি সাব কি
         tags: _parseTags(_tagsCtrl.text),
         seriesId: seriesId,
         seriesTitle: seriesTitle,
@@ -232,6 +235,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       }
     }
   }
+  // lib/features/video/presentation/screens/create_video_screen.dart (Part 2)
 
   @override
   Widget build(BuildContext context) {
@@ -407,6 +411,70 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
               border: const OutlineInputBorder(),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // ---------- ক্যাটাগরি (মেইন গ্রুপ → সাব) ----------
+          Text(
+            l10n.optionalCategory,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String?>(
+            value: _categoryGroup,
+            decoration: InputDecoration(
+              labelText: l10n.selectGroup,
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text(l10n.noCategory),
+              ),
+              ...CategoryCatalog.videoGroups.map(
+                (g) => DropdownMenuItem(
+                  value: g,
+                  child: Text(l10n.t(g)),
+                ),
+              ),
+            ],
+            onChanged: (v) => setState(() {
+              _categoryGroup = v;
+              _category = null; // গ্রুপ বদলালে সাব রিসেট
+            }),
+          ),
+          if (_categoryGroup != null) ...[
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String?>(
+              value: _category,
+              decoration: InputDecoration(
+                labelText: l10n.selectSubcategory,
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: [
+                DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text(l10n.noCategory),
+                ),
+                ...CategoryCatalog.videoSubsOf(_categoryGroup!).map(
+                  (e) => DropdownMenuItem(
+                    value: e.key,
+                    child: Text(l10n.t(e.key)),
+                  ),
+                ),
+              ],
+              onChanged: (v) => setState(() => _category = v),
+            ),
+          ],
+          if (_category != null || _categoryGroup != null)
+            TextButton(
+              onPressed: () => setState(() {
+                _category = null;
+                _categoryGroup = null;
+              }),
+              child: Text(l10n.clearCategory),
+            ),
           const SizedBox(height: 12),
 
           // ---------- Tags ----------
