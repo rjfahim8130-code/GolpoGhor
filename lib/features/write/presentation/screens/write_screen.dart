@@ -1,5 +1,5 @@
-// lib/features/write/presentation/screens/write_screen.dart
-// সংশোধিত: localization
+// lib/features/write/presentation/screens/write_screen.dart (Part 1)
+// সংশোধিত: ডুপ্লিকেট রিমুভড ও নতুন ক্যাটাগরি সিস্টেম (মেইন গ্রুপ → সাব) যুক্ত
 
 import 'dart:io';
 
@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/novel_service.dart';
@@ -46,7 +47,10 @@ class _WriteScreenState extends State<WriteScreen> {
 
   final List<ContentBlockModel> _blocks = [];
   _Preset _preset = _Preset.body;
-  String? _category;
+  
+  String? _category;      // সাব key — DB তে যাবে (null = অপশনাল)
+  String? _categoryGroup; // শুধু UI
+  
   String? _coverUrl;
   bool _loading = false;
   bool _init = true;
@@ -83,7 +87,10 @@ class _WriteScreenState extends State<WriteScreen> {
           _titleCtrl.text = s.title;
           _descCtrl.text = s.description;
           _tagsCtrl.text = s.tags.join(' ');
-          _category = s.category;
+          _category = CategoryCatalog.normalize(s.category);
+          _categoryGroup = _category == null
+              ? null
+              : CategoryCatalog.groupOfSub(_category!, video: false);
           _coverUrl = s.coverUrl;
           _isDraft = s.isDraft;
           _blocks
@@ -96,7 +103,10 @@ class _WriteScreenState extends State<WriteScreen> {
           _titleCtrl.text = n.title;
           _descCtrl.text = n.description;
           _tagsCtrl.text = n.tags.join(' ');
-          _category = n.category;
+          _category = CategoryCatalog.normalize(n.category);
+          _categoryGroup = _category == null
+              ? null
+              : CategoryCatalog.groupOfSub(_category!, video: false);
           _coverUrl = n.coverUrl;
           _isDraft = n.isDraft;
         }
@@ -105,7 +115,6 @@ class _WriteScreenState extends State<WriteScreen> {
     if (mounted) setState(() => _init = false);
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -298,6 +307,7 @@ class _WriteScreenState extends State<WriteScreen> {
       context.go('${RouteNames.novel}/${n.id}');
     }
   }
+  // lib/features/write/presentation/screens/write_screen.dart (Part 2)
 
   @override
   Widget build(BuildContext context) {
@@ -405,22 +415,71 @@ class _WriteScreenState extends State<WriteScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // ক্যাটাগরি
-                DropdownButtonFormField<String>(
-                  value: _category != null &&
-                          l10n.categoryList.contains(_category)
-                      ? _category
-                      : null,
+                // ক্যাটাগরি (ঐচ্ছিক) — মেইন → সাব
+                Text(
+                  l10n.optionalCategory,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String?>(
+                  value: _categoryGroup,
                   decoration: InputDecoration(
-                    labelText: l10n.category,
+                    labelText: l10n.selectGroup,
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
-                  items: l10n.categoryList
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _category = v),
+                  items: [
+                    DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text(l10n.noCategory),
+                    ),
+                    ...CategoryCatalog.writingGroups.map(
+                      (g) => DropdownMenuItem(
+                        value: g,
+                        child: Text(l10n.t(g)),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _categoryGroup = v;
+                    _category = null; // গ্রুপ বদলালে সাব রিসেট
+                  }),
                 ),
+                if (_categoryGroup != null) ...[
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String?>(
+                    value: _category,
+                    decoration: InputDecoration(
+                      labelText: l10n.selectSubcategory,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: [
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text(l10n.noCategory),
+                      ),
+                      ...CategoryCatalog.writingSubsOf(_categoryGroup!).map(
+                        (e) => DropdownMenuItem(
+                          value: e.key,
+                          child: Text(l10n.t(e.key)),
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _category = v),
+                  ),
+                ],
+                if (_category != null || _categoryGroup != null)
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _category = null;
+                      _categoryGroup = null;
+                    }),
+                    child: Text(l10n.clearCategory),
+                  ),
                 const SizedBox(height: 12),
 
                 // ট্যাগ
