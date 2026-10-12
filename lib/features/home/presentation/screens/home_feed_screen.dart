@@ -1,20 +1,23 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// AppBar-এ লোগো PNG + session cache avatar + localization (Popular/Trending সরানো হয়েছে)
+// AppBar-এ লোগো PNG + session cache avatar + localization (Episode Feed যুক্ত করা হয়েছে)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/providers/video_feature_provider.dart';
+import '../../../../core/services/episode_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
+import '../widgets/episode_card.dart';
 import '../widgets/novel_card.dart';
 import '../widgets/story_card.dart';
 
@@ -28,6 +31,7 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   final _storyService = StoryService();
   final _novelService = NovelService();
+  final _episodeService = EpisodeService();
   final _scroll = ScrollController();
 
   final List<dynamic> _items = [];
@@ -70,15 +74,17 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       final results = await Future.wait([
         _storyService.getFeed(limit: _limit, offset: 0),
         _novelService.getFeed(limit: 8, offset: 0),
+        _episodeService.getFeed(limit: 10, offset: 0),
       ]);
 
       final stories = results[0] as List<StoryModel>;
       final novels = results[1] as List<NovelModel>;
+      final episodes = results[2] as List<EpisodeModel>;
 
-      final combined = <dynamic>[...stories, ...novels];
+      final combined = <dynamic>[...stories, ...novels, ...episodes];
       combined.sort((a, b) {
-        final ad = a is StoryModel ? a.createdAt : (a as NovelModel).createdAt;
-        final bd = b is StoryModel ? b.createdAt : (b as NovelModel).createdAt;
+        final DateTime ad = _getCreatedAt(a);
+        final DateTime bd = _getCreatedAt(b);
         return bd.compareTo(ad);
       });
 
@@ -98,6 +104,13 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         _loading = false;
       });
     }
+  }
+
+  DateTime _getCreatedAt(dynamic item) {
+    if (item is StoryModel) return item.createdAt;
+    if (item is NovelModel) return item.createdAt;
+    if (item is EpisodeModel) return item.createdAt;
+    return DateTime.now();
   }
 
   Future<void> _loadMore() async {
@@ -251,6 +264,12 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
             return NovelCard(
               novel: item,
               onTap: () => context.push('${RouteNames.novel}/${item.id}'),
+            );
+          }
+          if (item is EpisodeModel) {
+            return EpisodeCard(
+              episode: item,
+              onTap: () => context.push('${RouteNames.episode}/${item.id}'),
             );
           }
           return const SizedBox.shrink();
