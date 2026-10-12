@@ -1,5 +1,5 @@
 // lib/features/search/presentation/screens/search_screen.dart
-// সংশোধিত: username বাদ, nickname, localization, categoryList, popular & trending buttons added
+// সংশোধিত: ভিডিও সার্চ অপশন বাদ দিয়ে শুধুমাত্র গল্প, উপন্যাস ও লেখক সার্চ রাখা হয়েছে
 
 import 'dart:async';
 
@@ -12,7 +12,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
-import '../../../../core/models/video_model.dart';
 import '../../../../core/services/search_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
@@ -335,38 +334,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ],
-        if (r.videos.isNotEmpty) ...[
-          _sectionTitle('${l10n.video} (${r.videos.length})'),
-          ...r.videos.map((v) => _videoTile(v, l10n)),
-        ],
       ],
-    );
-  }
-
-  Widget _videoTile(VideoModel v, AppLocalizations l10n) {
-    return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: AppColors.primary,
-        child: Icon(Icons.play_arrow, color: Colors.white),
-      ),
-      title: Text(
-        v.displayTitleOr(l10n.video),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        [
-          v.authorName ?? l10n.author,
-          if (v.isSeries) '${l10n.episode} ${v.partNumber}',
-          '${v.viewCount} ${l10n.viewsCount}',
-        ].join(' · '),
-      ),
-      onTap: () => context.push(
-        Uri(
-          path: RouteNames.videos,
-          queryParameters: {'focus': v.id},
-        ).toString(),
-      ),
     );
   }
 
