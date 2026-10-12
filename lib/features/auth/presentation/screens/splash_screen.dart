@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
-// লোগো PNG + safe startup
+// লোগো PNG + safe startup + session cache & profile preload
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
+import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
@@ -79,6 +80,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         );
         return;
       }
+
+      // লগইন থাকলে হোম পেজে যাওয়ার আগে সেশন ক্যাশ ও প্রফাইল প্রি-লোড করুন (অ্যাভাটার দ্রুত দেখানোর জন্য)
+      try {
+        await ref.read(sessionCacheProvider.notifier).load();
+        final profile = await AuthService().fetchMyProfile();
+        if (profile != null) {
+          await ref.read(sessionCacheProvider.notifier).save(profile);
+        }
+      } catch (e) {
+        debugPrint('SPLASH_PROFILE_LOAD_FAILED: $e');
+      }
+      if (!mounted) return;
 
       context.go(RouteNames.home);
     } catch (e, st) {
