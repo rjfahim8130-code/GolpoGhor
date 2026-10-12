@@ -1,5 +1,5 @@
 // lib/features/reader/presentation/screens/reader_screen.dart
-// সংশোধিত: notification trigger, localization, author name/avatar support for episodes
+// সংশোধিত: notification trigger, localization, author name/avatar support for episodes, description removed
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -225,7 +225,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     _episodeService.recordView(ep.id);
   }
-    /// Exception থেকে key বের করে l10n দিয়ে translate
+
+  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -517,7 +518,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
     
-    final description = _isStory ? (_story?.description ?? '') : '';
     final publicCode =
         _isStory ? _story?.publicCode : _episode?.publicCode;
     final contentBlocks = _isStory
@@ -661,18 +661,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         ],
                       ],
                     ),
-
-                    if (description.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 14 * _fontScale,
-                          color: textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
 
                     const SizedBox(height: 16),
                     Center(
