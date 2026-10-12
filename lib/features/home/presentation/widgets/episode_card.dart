@@ -1,11 +1,10 @@
 // lib/features/home/presentation/widgets/episode_card.dart
-// সংশোধিত: উপন্যাসের পর্বের কার্ড উইজেটে ক্যাটাগরি লেবেল যুক্ত
+// সংশোধিত: উপন্যাসের পর্বের কার্ড উইজেট (নিরাপদ ও ক্লিন ব্যাজ সহ)
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -42,14 +41,8 @@ class _EpisodeCardState extends State<EpisodeCard> {
         ? episode.title
         : '${l10n.episodeLabel} ${episode.chapterNumber}';
 
-    // ক্যাটাগরি নরমাল করে লোকালআইজড লেবেল নেওয়া
-    final catKey = CategoryCatalog.normalize(episode.category);
-    final categoryLabel = catKey != null ? l10n.t(catKey) : '';
-
-    // ব্যাজ টেক্সট: "উপন্যাস · ক্যাটাগরি · পর্ব N" অথবা "উপন্যাস · পর্ব N"
-    final badgeText = categoryLabel.isNotEmpty
-        ? '${l10n.novel} · $categoryLabel · ${l10n.episode} ${episode.chapterNumber}'
-        : '${l10n.novel} · ${l10n.episode} ${episode.chapterNumber}';
+    // ব্যাজ টেক্সট: "উপন্যাস · পর্ব N"
+    final badgeText = '${l10n.novel} · ${l10n.episode} ${episode.chapterNumber}';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -64,7 +57,7 @@ class _EpisodeCardState extends State<EpisodeCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // হেডার: লেখক অ্যাভাটার, নাম ও টাইম এগো + ব্যাজ (উপন্যাস · ক্যাটাগরি · পর্ব N)
+              // হেডার: লেখক অ্যাভাটার, নাম ও টাইম এগো + ব্যাজ (উপন্যাস · পর্ব N)
               Row(
                 children: [
                   CachedAvatar(
@@ -103,7 +96,7 @@ class _EpisodeCardState extends State<EpisodeCard> {
                       ),
                     ),
                   ),
-                  // ব্যাজ: উপন্যাস · ক্যাটাগরি · পর্ব N
+                  // ব্যাজ: উপন্যাস · পর্ব N
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
