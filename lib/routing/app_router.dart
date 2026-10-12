@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// সংশোধিত: admin guard, set_password import, localization-aware category default, last route saving
+// সংশোধিত: admin guard, set_password import, localization-aware category default
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/localization/app_localizations.dart';
 import '../core/services/auth_service.dart';
-import '../core/utils/last_route_storage.dart';
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -68,11 +67,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isLegalRoute = loc.startsWith(RouteNames.legal);
 
-      // লগইন থাকলে বর্তমান রাউট সেভ করুন
-      if (loggedIn && !isAuthRoute) {
-        LastRouteStorage.save(loc);
-      }
-
       // লগইন ছাড়াও যাওয়া যাবে: auth routes, offline, legal
       if (!loggedIn &&
           !isAuthRoute &&
@@ -84,8 +78,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ⚠️ Admin guard — লগইন থাকলেও admin check হবে
       if (loc.startsWith(RouteNames.admin)) {
         if (!loggedIn) return RouteNames.welcome;
-        // Admin check screen-level-এ হবে (async) —
-        // এখানে শুধু লগইন চেক করা হচ্ছে
       }
 
       return null;
