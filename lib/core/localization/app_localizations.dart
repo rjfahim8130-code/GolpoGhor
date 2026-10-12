@@ -1,5 +1,5 @@
-// lib/core/localization/app_localizations.dart
-// সম্পূর্ণ — getters + appName সবসময় বাংলা
+// lib/core/localization/app_localizations.dart (Part 1)
+// সম্পূর্ণ — getters (নতুন ক্যাটাগরি ও সার্চ গেটার সহ) + appName সবসময় বাংলা
 
 import 'package:flutter/material.dart';
 
@@ -181,6 +181,112 @@ class AppLocalizations {
         catOther,
       ];
 
+  // ---- Category groups (writing) ----
+  String get grpLiterature => t('grp_literature');
+  String get grpIslamic => t('grp_islamic');
+  String get grpHistory => t('grp_history');
+  String get grpRomance => t('grp_romance');
+  String get grpThriller => t('grp_thriller');
+  String get grpSociety => t('grp_society');
+  String get grpKids => t('grp_kids');
+  String get grpPoetry => t('grp_poetry');
+  String get grpScifi => t('grp_scifi');
+  String get grpBiography => t('grp_biography');
+  String get grpPatriot => t('grp_patriot');
+  String get grpTravel => t('grp_travel');
+  String get grpComedy => t('grp_comedy');
+  String get grpFantasy => t('grp_fantasy');
+  String get grpOther => t('grp_other');
+
+  // ---- Writing subs ----
+  String get litShort => t('lit_short');
+  String get litFlash => t('lit_flash');
+  String get litSerial => t('lit_serial');
+  String get litNovel => t('lit_novel');
+  String get litSerialNovel => t('lit_serial_novel');
+  String get litFolklore => t('lit_folklore');
+  String get litFairy => t('lit_fairy');
+  String get islStory => t('isl_story');
+  String get islProphet => t('isl_prophet');
+  String get islSahaba => t('isl_sahaba');
+  String get islHistory => t('isl_history');
+  String get islMoral => t('isl_moral');
+  String get islKids => t('isl_kids');
+  String get hisBd => t('his_bd');
+  String get hisWorld => t('his_world');
+  String get hisLiberation => t('his_liberation');
+  String get hisBiography => t('his_biography');
+  String get romRomantic => t('rom_romantic');
+  String get romFirst => t('rom_first');
+  String get romSeparation => t('rom_separation');
+  String get romFamily => t('rom_family');
+  String get thrMystery => t('thr_mystery');
+  String get thrDetective => t('thr_detective');
+  String get thrHorror => t('thr_horror');
+  String get thrThriller => t('thr_thriller');
+  String get thrAdventure => t('thr_adventure');
+  String get socSocial => t('soc_social');
+  String get socFamily => t('soc_family');
+  String get socRural => t('soc_rural');
+  String get socUrban => t('soc_urban');
+  String get socInspire => t('soc_inspire');
+  String get kidChildren => t('kid_children');
+  String get kidTeen => t('kid_teen');
+  String get kidAnimal => t('kid_animal');
+  String get kidEdu => t('kid_edu');
+  String get poeLove => t('poe_love');
+  String get poePatriotic => t('poe_patriotic');
+  String get poeIslamic => t('poe_islamic');
+  String get poeModern => t('poe_modern');
+  String get sciScifi => t('sci_scifi');
+  String get sciSpace => t('sci_space');
+  String get sciTech => t('sci_tech');
+  String get bioFamous => t('bio_famous');
+  String get bioIslamic => t('bio_islamic');
+  String get bioFreedom => t('bio_freedom');
+  String get natLiberation => t('nat_liberation');
+  String get natLanguage => t('nat_language');
+  String get natCulture => t('nat_culture');
+  String get trvTravel => t('trv_travel');
+  String get trvNature => t('trv_nature');
+  String get comFunny => t('com_funny');
+  String get comSatire => t('com_satire');
+  String get fanMagic => t('fan_magic');
+  String get fanMyth => t('fan_myth');
+  String get othMisc => t('oth_misc');
+
+  // ---- Video groups & subs ----
+  String get vgrpStory => t('vgrp_story');
+  String get vgrpIslamic => t('vgrp_islamic');
+  String get vgrpHistory => t('vgrp_history');
+  String get vgrpPoetry => t('vgrp_poetry');
+  String get vgrpDrama => t('vgrp_drama');
+  String get vgrpKids => t('vgrp_kids');
+  String get vgrpComedy => t('vgrp_comedy');
+  String get vgrpDocumentary => t('vgrp_documentary');
+  String get vgrpAuthor => t('vgrp_author');
+  String get vgrpOther => t('vgrp_other');
+
+  String get vidStoryRead => t('vid_story_read');
+  String get vidNovelRead => t('vid_novel_read');
+  String get vidStorytelling => t('vid_storytelling');
+  String get vidIslamicStory => t('vid_islamic_story');
+  String get vidIslamicTalk => t('vid_islamic_talk');
+  String get vidHistory => t('vid_history');
+  String get vidEdu => t('vid_edu');
+  String get vidPoetry => t('vid_poetry');
+  String get vidDrama => t('vid_drama');
+  String get vidShortfilm => t('vid_shortfilm');
+  String get vidKids => t('vid_kids');
+  String get vidComedy => t('vid_comedy');
+  String get vidDoc => t('vid_doc');
+  String get vidTravel => t('vid_travel');
+  String get vidNature => t('vid_nature');
+  String get vidAuthor => t('vid_author');
+  String get vidReview => t('vid_review');
+  String get vidOther => t('vid_other');
+  // lib/core/localization/app_localizations.dart (Part 2)
+
   String get loadFailed => t('loadFailed');
   String get notFound => t('notFound');
   String get noStoriesYet => t('noStoriesYet');
@@ -217,6 +323,12 @@ class AppLocalizations {
   String get mostReactions => t('mostReactions');
   String get mostRead => t('mostRead');
   String get shortVideoFeed => t('shortVideoFeed');
+  String get popularSearches => t('popularSearches');
+  String get optionalCategory => t('optionalCategory');
+  String get selectGroup => t('selectGroup');
+  String get selectSubcategory => t('selectSubcategory');
+  String get noCategory => t('noCategory');
+  String get clearCategory => t('clearCategory');
 
   String get follow => t('follow');
   String get unfollow => t('unfollow');
