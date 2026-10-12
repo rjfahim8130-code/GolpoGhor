@@ -56,8 +56,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   StoryModel? _story;
   EpisodeModel? _episode;
   String? _novelTitle;
-  String? _authorName;   // যোগ করা হয়েছে
-  String? _authorAvatar; // যোগ করা হয়েছে
+  String? _authorName;   
+  String? _authorAvatar; 
   List<EpisodeModel> _siblings = [];
 
   bool _loading = true;
@@ -74,7 +74,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   bool get _isStory => widget.kind == ReaderKind.story;
 
-  /// কমেন্ট ও reaction-এর জন্য পোস্টের মালিক
   String? get _ownerId {
     if (_isStory) return _story?.authorId;
     return _episode?.authorId;
@@ -226,7 +225,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _episodeService.recordView(ep.id);
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -318,8 +316,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           reactionType: type,
           ownerId: _ownerId,
         );
-        final counts =
-            await _reactionService.countStoryReactions(widget.id);
+        final counts = await _reactionService.countStoryReactions(widget.id);
         total = counts.values.fold(0, (a, b) => a + b);
       } else {
         result = await _reactionService.toggleEpisodeReaction(
@@ -327,8 +324,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           reactionType: type,
           ownerId: _ownerId,
         );
-        final counts =
-            await _reactionService.countEpisodeReactions(widget.id);
+        final counts = await _reactionService.countEpisodeReactions(widget.id);
         total = counts.values.fold(0, (a, b) => a + b);
       }
       if (!mounted) return;
@@ -355,14 +351,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       builder: (ctx) => SizedBox(
         height: MediaQuery.of(ctx).size.height * 0.75,
         child: _isStory
-            ? CommentSection(
-                storyId: widget.id,
-                ownerId: _ownerId,
-              )
-            : CommentSection(
-                episodeId: widget.id,
-                ownerId: _ownerId,
-              ),
+            ? CommentSection(storyId: widget.id, ownerId: _ownerId)
+            : CommentSection(episodeId: widget.id, ownerId: _ownerId),
       ),
     ).then((_) async {
       try {
@@ -382,13 +372,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _share() async {
+    final l10n = context.l10n;
     final code = _isStory ? _story?.publicCode : _episode?.publicCode;
     final title = _isStory
         ? (_story?.title ?? '')
         : '${_novelTitle ?? ''} — ${_episode?.title ?? ''}';
     await Share.share(
-      '$title\nগল্পঘরে পড়ুন'
-      '${code != null && code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+      '$title\n${l10n.shareReadOnApp}'
+      '${code != null && code.isNotEmpty ? '\n${l10n.shareCodeLabel}: $code' : ''}\n#গল্পঘর',
     );
   }
 
@@ -419,8 +410,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale -
-                                      AppConstants.fontScaleStep)
+                              _fontScale = (_fontScale - AppConstants.fontScaleStep)
                                   .clamp(
                                 AppConstants.minFontScale,
                                 AppConstants.maxFontScale,
@@ -434,8 +424,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale +
-                                      AppConstants.fontScaleStep)
+                              _fontScale = (_fontScale + AppConstants.fontScaleStep)
                                   .clamp(
                                 AppConstants.minFontScale,
                                 AppConstants.maxFontScale,
@@ -513,7 +502,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ? _episode!.title
             : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
     
-    // আপডেট করা নাম ও অ্যাভাটার লজিক
     final authorName = _authorName ?? _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
@@ -528,7 +516,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
       backgroundColor: bg,
       body: Column(
         children: [
-          // সবুজ টপ বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -540,8 +527,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back,
-                              color: Colors.white),
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
@@ -559,8 +545,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.flag_outlined,
-                              color: Colors.white),
+                          icon: const Icon(Icons.flag_outlined, color: Colors.white),
                           onPressed: () {
                             ReportSheet.show(
                               context,
@@ -644,8 +629,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -738,9 +722,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
               if (_isStory)
                 ReaderBottomBarItem(
-                  icon: _bookmarked
-                      ? Icons.bookmark
-                      : Icons.bookmark_border,
+                  icon: _bookmarked ? Icons.bookmark : Icons.bookmark_border,
                   label: l10n.bookmark,
                   active: _bookmarked,
                   onTap: _toggleBookmark,
