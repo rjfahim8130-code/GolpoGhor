@@ -1,23 +1,25 @@
 // lib/features/auth/presentation/screens/login_screen.dart
-// লোগো PNG + localization + full form validation
+// লোগো PNG + localization + full form validation + session cache saving on login
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -37,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
     final l10n = context.l10n;
-    // যদি raw string-এ ":" থাকে (যেমন "loginFailed: ...") — সেটা use না করে শুধু key translate
     return l10n.t(key);
   }
 
@@ -49,6 +50,18 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _email.text,
         password: _password.text,
       );
+      if (!mounted) return;
+
+      // সফল লগইনের পর প্রোফাইল ফেচ করে ক্যাশে সেভ করুন (অ্যাভাটার দ্রুত দেখানোর জন্য)
+      try {
+        final profile = await _auth.fetchMyProfile();
+        if (profile != null) {
+          await ref.read(sessionCacheProvider.notifier).save(profile);
+        }
+      } catch (e) {
+        debugPrint('LOGIN_PROFILE_CACHE_FAILED: $e');
+      }
+
       if (!mounted) return;
       final needs = await _auth.needsProfileSetup();
       if (!mounted) return;
