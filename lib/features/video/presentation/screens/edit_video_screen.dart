@@ -1,9 +1,10 @@
-// lib/features/video/presentation/screens/edit_video_screen.dart
-// সংশোধিত: localization
+// lib/features/video/presentation/screens/edit_video_screen.dart (Part 1)
+// সংশোধিত: localization এবং ক্যাটাগরি সিলেকশন (মেইন গ্রুপ → সাব) যুক্ত
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/services/video_service.dart';
@@ -31,6 +32,9 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
+
+  String? _category;      // সাব key — DB তে যাবে
+  String? _categoryGroup; // শুধু UI এর জন্য মেইন গ্রুপ
 
   @override
   void initState() {
@@ -72,6 +76,13 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       _titleCtrl.text = v.title;
       _descCtrl.text = v.description;
       _tagsCtrl.text = v.tags.join(' ');
+      
+      // ক্যাটাগরি ও গ্রুপ সেটআপ
+      _category = CategoryCatalog.normalize(v.category);
+      _categoryGroup = _category == null
+          ? null
+          : CategoryCatalog.groupOfSub(_category!, video: true);
+
       if (mounted) {
         setState(() {
           _video = v;
@@ -102,6 +113,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
         videoId: widget.videoId,
         title: _titleCtrl.text.trim(),
         description: _descCtrl.text.trim(),
+        category: _category, // ক্যাটাগরি সাব কি আপডেট
         tags: _parseTags(_tagsCtrl.text),
       );
       if (!mounted) return;
@@ -154,6 +166,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       );
     }
   }
+  // lib/features/video/presentation/screens/edit_video_screen.dart (Part 2)
 
   @override
   Widget build(BuildContext context) {
@@ -203,8 +216,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(alpha: 0.08),
+                          color: AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -248,6 +260,70 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         border: const OutlineInputBorder(),
                       ),
                     ),
+                    const SizedBox(height: 12),
+
+                    // ---------- ক্যাটাগরি (মেইন গ্রুপ → সাব) ----------
+                    Text(
+                      l10n.optionalCategory,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String?>(
+                      value: _categoryGroup,
+                      decoration: InputDecoration(
+                        labelText: l10n.selectGroup,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: [
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text(l10n.noCategory),
+                        ),
+                        ...CategoryCatalog.videoGroups.map(
+                          (g) => DropdownMenuItem(
+                            value: g,
+                            child: Text(l10n.t(g)),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() {
+                        _categoryGroup = v;
+                        _category = null; // গ্রুপ বদলালে সাব রিসেট
+                      }),
+                    ),
+                    if (_categoryGroup != null) ...[
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<String?>(
+                        value: _category,
+                        decoration: InputDecoration(
+                          labelText: l10n.selectSubcategory,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text(l10n.noCategory),
+                          ),
+                          ...CategoryCatalog.videoSubsOf(_categoryGroup!).map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(l10n.t(e.key)),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) => setState(() => _category = v),
+                      ),
+                    ],
+                    if (_category != null || _categoryGroup != null)
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _category = null;
+                          _categoryGroup = null;
+                        }),
+                        child: Text(l10n.clearCategory),
+                      ),
                     const SizedBox(height: 12),
 
                     TextField(
