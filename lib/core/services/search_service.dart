@@ -1,5 +1,5 @@
 // lib/core/services/search_service.dart
-// সংশোধিত: username বাদ, full_name + nickname দিয়ে সার্চ
+// সংশোধিত: username বাদ, full_name + nickname দিয়ে সার্চ + ভিডিও সার্চ আলাদা করা হয়েছে
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,7 +13,6 @@ class SearchResult {
   final List<UserModel> authors;
   final List<StoryModel> stories;
   final List<NovelModel> novels;
-  final List<VideoModel> videos;
   final StoryModel? exactStoryCode;
   final NovelModel? exactNovelCode;
   final UserModel? exactUserCode;
@@ -22,7 +21,6 @@ class SearchResult {
     this.authors = const [],
     this.stories = const [],
     this.novels = const [],
-    this.videos = const [],
     this.exactStoryCode,
     this.exactNovelCode,
     this.exactUserCode,
@@ -32,7 +30,6 @@ class SearchResult {
       authors.isEmpty &&
       stories.isEmpty &&
       novels.isEmpty &&
-      videos.isEmpty &&
       exactStoryCode == null &&
       exactNovelCode == null &&
       exactUserCode == null;
@@ -52,6 +49,7 @@ class SearchService {
     return map;
   }
 
+  /// সাধারণ সার্চ (গল্প, উপন্যাস, লেখক ও কোড) - ভিডিও বাদ দেওয়া হয়েছে
   Future<SearchResult> search(String raw) async {
     final q = raw.trim();
     if (q.isEmpty) return const SearchResult();
@@ -163,8 +161,22 @@ class SearchService {
           .toList();
     } catch (_) {}
 
-    // ---- Partial — videos ----
-    List<VideoModel> videos = [];
+    return SearchResult(
+      authors: authors,
+      stories: stories,
+      novels: novels,
+      exactStoryCode: exactStory,
+      exactNovelCode: exactNovel,
+      exactUserCode: exactUser,
+    );
+  }
+
+  /// আলাদা ভিডিও সার্চ মেথড
+  Future<List<VideoModel>> searchVideos(String raw) async {
+    final q = raw.trim();
+    if (q.isEmpty) return [];
+
+    final pattern = '%$q%';
     try {
       final data = await _client
           .from(SupabaseConstants.videoPosts)
@@ -175,22 +187,15 @@ class SearchService {
             'title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern',
           )
           .order('view_count', ascending: false)
-          .limit(15);
-      videos = (data as List)
+          .limit(20);
+
+      return (data as List)
           .map((e) => VideoModel.fromJson(
                 _withAuthor(Map<String, dynamic>.from(e as Map)),
               ))
           .toList();
-    } catch (_) {}
-
-    return SearchResult(
-      authors: authors,
-      stories: stories,
-      novels: novels,
-      videos: videos,
-      exactStoryCode: exactStory,
-      exactNovelCode: exactNovel,
-      exactUserCode: exactUser,
-    );
+    } catch (_) {
+      return [];
+    }
   }
 }
