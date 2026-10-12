@@ -1,12 +1,11 @@
 // lib/routing/app_router.dart
-// সম্পূর্ণ সংশোধিত ও নিরাপদ রাউটার
+// সম্পূর্ণ ক্লিন ও নিরাপদ রাউটার
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/localization/app_localizations.dart';
 import '../core/services/auth_service.dart';
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -67,7 +66,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isLegalRoute = loc.startsWith(RouteNames.legal);
 
-      // লগইন ছাড়াও যাওয়া যাবে: auth routes, offline, legal
       if (!loggedIn &&
           !isAuthRoute &&
           !isOfflineRoute &&
@@ -75,7 +73,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return RouteNames.welcome;
       }
 
-      // ⚠️ Admin guard — লগইন থাকলেও admin check হবে
       if (loc.startsWith(RouteNames.admin)) {
         if (!loggedIn) return RouteNames.welcome;
       }
@@ -83,7 +80,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // ---------- Splash & Onboarding ----------
       GoRoute(
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
@@ -92,8 +88,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.onboarding,
         builder: (_, __) => const OnboardingScreen(),
       ),
-
-      // ---------- Auth ----------
       GoRoute(
         path: RouteNames.welcome,
         builder: (_, __) => const WelcomeScreen(),
@@ -114,8 +108,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.profileSetup,
         builder: (_, __) => const ProfileSetupScreen(),
       ),
-
-      // ---------- Home ----------
       GoRoute(
         path: RouteNames.home,
         builder: (_, __) => const HomeFeedScreen(),
@@ -135,7 +127,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.category,
         builder: (context, state) {
-          // সঠিক ক্যাটাগরি ক্যাটালগ কি 'grp_other' ফলব্যাক হিসেবে দেওয়া হলো
           final key = state.uri.queryParameters['key'] ??
               state.uri.queryParameters['name'] ??
               'grp_other';
@@ -146,7 +137,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.search,
         builder: (_, __) => const SearchScreen(),
       ),
-      // ভিডিও সার্চের জন্য সাময়িকভাবে জেনারেল সার্চ স্ক্রিন হ্যান্ডেল করা হলো
       GoRoute(
         path: RouteNames.videoSearch,
         builder: (_, __) => const SearchScreen(),
@@ -155,8 +145,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.notifications,
         builder: (_, __) => const NotificationScreen(),
       ),
-
-      // ---------- Reader ----------
       GoRoute(
         path: '${RouteNames.story}/:id',
         builder: (_, state) => ReaderScreen(
@@ -171,16 +159,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           id: state.pathParameters['id']!,
         ),
       ),
-
-      // ---------- Novel details ----------
       GoRoute(
         path: '${RouteNames.novel}/:id',
         builder: (_, state) => NovelDetailsScreen(
           novelId: state.pathParameters['id']!,
         ),
       ),
-
-      // ---------- Write ----------
       GoRoute(
         path: RouteNames.writeStory,
         builder: (_, __) => const WriteScreen(kind: WriteKind.story),
@@ -213,8 +197,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.drafts,
         builder: (_, __) => const DraftListScreen(),
       ),
-
-      // ---------- Video ----------
       GoRoute(
         path: RouteNames.videos,
         builder: (_, state) {
@@ -232,8 +214,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           videoId: state.pathParameters['id']!,
         ),
       ),
-
-      // ---------- Profile ----------
       GoRoute(
         path: RouteNames.profile,
         builder: (_, __) => const ProfileScreen(),
@@ -272,8 +252,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.insights,
         builder: (_, __) => const InsightsScreen(),
       ),
-
-      // ---------- Offline ----------
       GoRoute(
         path: RouteNames.offline,
         builder: (_, __) => const OfflineDownloadsScreen(),
@@ -284,20 +262,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           itemId: state.pathParameters['id']!,
         ),
       ),
-
-      // ---------- Settings ----------
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
       ),
-
-      // ---------- Admin ----------
       GoRoute(
         path: RouteNames.admin,
         builder: (_, __) => const AdminDashboardScreen(),
       ),
-
-      // ---------- Legal ----------
       GoRoute(
         path: '${RouteNames.legal}/:type',
         builder: (_, state) => LegalScreen(
