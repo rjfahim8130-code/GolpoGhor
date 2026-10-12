@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// সম্পূর্ণ সংশোধিত রাউটার (CategoryScreen-এর categoryKey সাপোর্ট সহ)
+// সম্পূর্ণ সংশোধিত ও নিরাপদ রাউটার
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -135,16 +135,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.category,
         builder: (context, state) {
-          final l10n = context.l10n;
-          // এখানে key অথবা name কুয়েরি প্যারামিটার রিসিভ করা হচ্ছে
+          // সঠিক ক্যাটাগরি ক্যাটালগ কি 'grp_other' ফলব্যাক হিসেবে দেওয়া হলো
           final key = state.uri.queryParameters['key'] ??
               state.uri.queryParameters['name'] ??
-              l10n.catOther;
+              'grp_other';
           return CategoryScreen(categoryKey: key);
         },
       ),
       GoRoute(
         path: RouteNames.search,
+        builder: (_, __) => const SearchScreen(),
+      ),
+      // ভিডিও সার্চের জন্য সাময়িকভাবে জেনারেল সার্চ স্ক্রিন হ্যান্ডেল করা হলো
+      GoRoute(
+        path: RouteNames.videoSearch,
         builder: (_, __) => const SearchScreen(),
       ),
       GoRoute(
