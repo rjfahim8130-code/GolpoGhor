@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
-// লোগো PNG + safe startup + last route restoration
+// লোগো PNG + safe startup
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +10,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/last_route_storage.dart';
 import '../../../../routing/route_names.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -33,7 +32,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       await Future<void>.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
 
-      // ───── ১. Network check (fail হলেও অনলাইন ধরে নাও) ─────
+      // ───── ১. Network check ─────
       bool online = true;
       try {
         online = await ref
@@ -46,7 +45,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
       if (!mounted) return;
 
-      // ───── ২. Prefs পড়া (fail হলেও চলবে) ─────
+      // ───── ২. Prefs পড়া ─────
       bool onboardingDone = false;
       bool cachedSetup = false;
       try {
@@ -58,7 +57,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
       if (!mounted) return;
 
-      // ───── ৩. Auth check (fail হলেও চলবে) ─────
+      // ───── ৩. Auth check ─────
       bool loggedIn = false;
       try {
         loggedIn = AuthService().isLoggedIn;
@@ -81,25 +80,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      // লগইন আছে — আগের শেষ রুটে (Last Route) যাওয়ার চেষ্টা করুন
-      try {
-        final lastRoute = await LastRouteStorage.read();
-        if (lastRoute != null && lastRoute.isNotEmpty && lastRoute != RouteNames.splash) {
-          if (!mounted) return;
-          context.go(lastRoute);
-          return;
-        }
-      } catch (e) {
-        debugPrint('LAST_ROUTE_READ_FAILED: $e');
-      }
-
-      if (!mounted) return;
       context.go(RouteNames.home);
     } catch (e, st) {
       debugPrint('SPLASH_ERROR: $e');
       debugPrint('$st');
       if (!mounted) return;
-      // যেকোনো সমস্যায় welcome — crash না
       context.go(RouteNames.welcome);
     }
   }
@@ -133,7 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               ),
               const SizedBox(height: 20),
 
-              // ============ অ্যাপের নাম (সবসময় বাংলা) ============
+              // ============ অ্যাপের নাম ============
               Text(
                 l10n.appName,
                 textAlign: TextAlign.center,
