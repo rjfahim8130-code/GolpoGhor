@@ -1,5 +1,5 @@
 // lib/core/services/video_service.dart
-// সংশোধিত: category ফিল্ড সহ createVideo ও updateVideo
+// সংশোধিত: category ফিল্ড সহ createVideo (null-safe) ও updateVideo
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -130,23 +130,29 @@ class VideoService {
     final uid = _uid;
     if (uid == null) throw Exception('notLoggedIn');
 
+    final row = <String, dynamic>{
+      'author_id': uid,
+      'title': title.trim(),
+      'description': description.trim(),
+      'tags': tags,
+      'video_url': videoUrl,
+      'thumbnail_url': thumbnailUrl,
+      'duration_seconds': durationSeconds,
+      'series_id': seriesId,
+      'series_title': seriesTitle,
+      'part_number': partNumber,
+      'is_published': !isDraft,
+      'is_draft': isDraft,
+    };
+
+    // নাল-সেফ ক্যাটাগরি ইনসার্ট
+    if (category != null && category.isNotEmpty) {
+      row['category'] = category;
+    }
+
     final data = await _client
         .from(SupabaseConstants.videoPosts)
-        .insert({
-          'author_id': uid,
-          'title': title.trim(),
-          'description': description.trim(),
-          'category': category, // ডাটাবেজে ইনসার্ট
-          'tags': tags,
-          'video_url': videoUrl,
-          'thumbnail_url': thumbnailUrl,
-          'duration_seconds': durationSeconds,
-          'series_id': seriesId,
-          'series_title': seriesTitle,
-          'part_number': partNumber,
-          'is_published': !isDraft,
-          'is_draft': isDraft,
-        })
+        .insert(row)
         .select()
         .single();
 
