@@ -1,3 +1,5 @@
+// lib/core/models/episode_model.dart
+
 import 'content_block_model.dart';
 
 class EpisodeModel {
@@ -15,6 +17,13 @@ class EpisodeModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
+  // অতিরিক্ত ফিল্ডস (হোম ফিড ও EpisodeCard এর জন্য)
+  final String? authorName;
+  final String? authorNickname;
+  final String? authorAvatar;
+  final String? novelTitle;
+  final String? coverUrl;
+
   const EpisodeModel({
     required this.id,
     required this.novelId,
@@ -29,6 +38,11 @@ class EpisodeModel {
     this.commentCount = 0,
     required this.createdAt,
     this.updatedAt,
+    this.authorName,
+    this.authorNickname,
+    this.authorAvatar,
+    this.novelTitle,
+    this.coverUrl,
   });
 
   factory EpisodeModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +77,11 @@ class EpisodeModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'].toString())
           : null,
+      authorName: json['author_name'] as String?,
+      authorNickname: json['author_nickname'] as String?,
+      authorAvatar: json['author_avatar'] as String?,
+      novelTitle: json['novel_title'] as String?,
+      coverUrl: json['cover_url'] as String?,
     );
   }
 
@@ -79,6 +98,11 @@ class EpisodeModel {
       'view_count': viewCount,
       'reaction_count': reactionCount,
       'comment_count': commentCount,
+      'author_name': authorName,
+      'author_nickname': authorNickname,
+      'author_avatar': authorAvatar,
+      'novel_title': novelTitle,
+      'cover_url': coverUrl,
     };
   }
 
@@ -96,6 +120,11 @@ class EpisodeModel {
     int? commentCount,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? authorName,
+    String? authorNickname,
+    String? authorAvatar,
+    String? novelTitle,
+    String? coverUrl,
   }) {
     return EpisodeModel(
       id: id ?? this.id,
@@ -111,6 +140,11 @@ class EpisodeModel {
       commentCount: commentCount ?? this.commentCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      authorName: authorName ?? this.authorName,
+      authorNickname: authorNickname ?? this.authorNickname,
+      authorAvatar: authorAvatar ?? this.authorAvatar,
+      novelTitle: novelTitle ?? this.novelTitle,
+      coverUrl: coverUrl ?? this.coverUrl,
     );
   }
 }
