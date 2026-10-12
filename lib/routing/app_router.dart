@@ -38,6 +38,7 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/video/presentation/screens/create_video_screen.dart';
 import '../features/video/presentation/screens/edit_video_screen.dart';
 import '../features/video/presentation/screens/video_feed_screen.dart';
+import '../features/video/presentation/screens/video_search_screen.dart'; // নতুন امপোর্ট
 import '../features/write/presentation/screens/add_episode_screen.dart';
 import '../features/write/presentation/screens/draft_list_screen.dart';
 import '../features/write/presentation/screens/write_screen.dart';
@@ -139,7 +140,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.videoSearch,
-        builder: (_, __) => const SearchScreen(),
+        builder: (_, __) => const VideoSearchScreen(), // আপডেট করা হয়েছে
       ),
       GoRoute(
         path: RouteNames.notifications,
