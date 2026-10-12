@@ -1,10 +1,11 @@
 // lib/features/home/presentation/widgets/story_card.dart
-// সংশোধিত: nickname, localization, TimeAgo.of/compactOf
+// সংশোধিত: 'গল্প' এর পাশে ক্যাটাগরি লেবেল সহ সম্পূর্ণ ফাইল
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -41,6 +42,15 @@ class _StoryCardState extends State<StoryCard> {
 
     final desc = story.description.trim();
     final longDesc = desc.length > 90;
+
+    // ক্যাটাগরি নরমাল করে টাইটেল/লেবেল নেওয়া
+    final catKey = CategoryCatalog.normalize(story.category);
+    final categoryLabel = catKey != null ? l10n.t(catKey) : '';
+    
+    // "গল্প · ক্যাটাগরি" অথবা শুধু "গল্প"
+    final badgeText = categoryLabel.isNotEmpty
+        ? '${l10n.story} · $categoryLabel'
+        : l10n.story;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -102,7 +112,9 @@ class _StoryCardState extends State<StoryCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      l10n.story,
+                      badgeText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,
