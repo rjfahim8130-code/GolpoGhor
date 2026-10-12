@@ -1,5 +1,5 @@
-// lib/features/search/presentation/screens/search_screen.dart
-// সংশোধিত: ভিডিও সার্চ অপশন বাদ দিয়ে শুধুমাত্র গল্প, উপন্যাস ও লেখক সার্চ রাখা হয়েছে
+// lib/features/search/presentation/screens/search_screen.dart (Part 1)
+// সংশোধিত: SearchSuggestionService ও CategoryCatalog যুক্ত
 
 import 'dart:async';
 
@@ -8,11 +8,13 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/search_service.dart';
+import '../../../../core/services/search_suggestion_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
@@ -30,17 +32,19 @@ class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
   final _searchService = SearchService();
+  final _suggestions = SearchSuggestionService();
 
   Timer? _debounce;
   bool _loading = false;
   SearchResult? _result;
   List<String> _recent = [];
+  List<String> _topSearches = [];
   String _lastQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadRecent();
+    _loadSuggestions();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focus.requestFocus();
     });
@@ -54,31 +58,20 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  Future<void> _loadRecent() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _loadSuggestions() async {
+    final top = await _suggestions.topQueries(limit: 10);
+    final recent = await _suggestions.recent();
+    if (!mounted) return;
     setState(() {
-      _recent = prefs.getStringList('search_recent') ?? [];
+      _topSearches = top;
+      _recent = recent;
     });
   }
 
-  Future<void> _saveRecent(String q) async {
-    final t = q.trim();
-    if (t.length < 2) return;
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList('search_recent') ?? [];
-    list.remove(t);
-    list.insert(0, t);
-    if (list.length > AppConstants.searchRecentMax) {
-      list.removeRange(AppConstants.searchRecentMax, list.length);
-    }
-    await prefs.setStringList('search_recent', list);
-    if (mounted) setState(() => _recent = list);
-  }
-
   Future<void> _clearRecent() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('search_recent');
-    if (mounted) setState(() => _recent = []);
+    await _suggestions.clearRecent();
+    final recent = await _suggestions.recent();
+    if (mounted) setState(() => _recent = recent);
   }
 
   void _onChanged(String v) {
@@ -111,7 +104,8 @@ class _SearchScreenState extends State<SearchScreen> {
         _result = r;
         _loading = false;
       });
-      await _saveRecent(q);
+      await _suggestions.recordQuery(q);
+      await _loadSuggestions();
     } catch (_) {
       if (mounted && _lastQuery == q) {
         setState(() => _loading = false);
@@ -172,6 +166,7 @@ class _SearchScreenState extends State<SearchScreen> {
               : _buildResults(l10n, isDark),
     );
   }
+  // lib/features/search/presentation/screens/search_screen.dart (Part 2)
 
   Widget _buildIdle(AppLocalizations l10n, bool isDark) {
     final secondary =
@@ -211,6 +206,31 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           ),
         ),
+
+        // ============ Popular Searches (Frequency) ============
+        if (_topSearches.isNotEmpty) ...[
+          Text(
+            l10n.popularSearches,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _topSearches
+                .map(
+                  (q) => ActionChip(
+                    avatar: const Icon(Icons.trending_up, size: 16),
+                    label: Text(q),
+                    onPressed: () => _applyQuery(q),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+
+        // ============ Recent Searches ============
         if (_recent.isNotEmpty) ...[
           Row(
             children: [
@@ -239,6 +259,8 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 24),
         ],
+
+        // ============ Categories (Writing Groups) ============
         Text(
           l10n.category,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -247,19 +269,14 @@ class _SearchScreenState extends State<SearchScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: l10n.categoryList
-              .map(
-                (c) => ActionChip(
-                  label: Text(c),
-                  onPressed: () => context.push(
-                    Uri(
-                      path: RouteNames.category,
-                      queryParameters: {'name': c},
-                    ).toString(),
-                  ),
-                ),
-              )
-              .toList(),
+          children: CategoryCatalog.writingGroups.map((g) {
+            return ActionChip(
+              label: Text(l10n.t(g)),
+              onPressed: () {
+                context.push('${RouteNames.category}?key=$g');
+              },
+            );
+          }).toList(),
         ),
         const SizedBox(height: 24),
         Text(
@@ -352,7 +369,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  /// লেখক টাইল — শুধু নাম ও ডাক নাম দেখায়, username নয়
   Widget _authorTile(UserModel u, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final secondary =
