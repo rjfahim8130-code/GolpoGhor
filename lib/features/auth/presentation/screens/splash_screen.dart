@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
-// লোগো PNG + safe startup (slow হলেও crash করবে না)
+// লোগো PNG + safe startup + last route restoration
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +10,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/last_route_storage.dart';
 import '../../../../routing/route_names.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -80,13 +81,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      // লগইন আছে — cached setup থাকলে home, না থাকলেও home
-      // (setup পরেও করতে পারবে)
-      if (cachedSetup) {
-        context.go(RouteNames.home);
-        return;
+      // লগইন আছে — আগের শেষ রুটে (Last Route) যাওয়ার চেষ্টা করুন
+      try {
+        final lastRoute = await LastRouteStorage.read();
+        if (lastRoute != null && lastRoute.isNotEmpty && lastRoute != RouteNames.splash) {
+          if (!mounted) return;
+          context.go(lastRoute);
+          return;
+        }
+      } catch (e) {
+        debugPrint('LAST_ROUTE_READ_FAILED: $e');
       }
 
+      if (!mounted) return;
       context.go(RouteNames.home);
     } catch (e, st) {
       debugPrint('SPLASH_ERROR: $e');
