@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
-// লোগো PNG + safe startup + session cache & profile preload
+// লোগো PNG + safe startup + session cache & profile preload (সংশোধিত)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,7 +84,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // লগইন থাকলে হোম পেজে যাওয়ার আগে সেশন ক্যাশ ও প্রফাইল প্রি-লোড করুন (অ্যাভাটার দ্রুত দেখানোর জন্য)
       try {
         await ref.read(sessionCacheProvider.notifier).load();
-        final profile = await AuthService().fetchMyProfile();
+        // এখানে fetchMyProfile()-এর পরিবর্তে সঠিক মেথড getMyProfile() ব্যবহার করা হয়েছে[span_2](start_span)[span_2](end_span)
+        final profile = await AuthService().getMyProfile();
         if (profile != null) {
           await ref.read(sessionCacheProvider.notifier).save(profile);
         }
