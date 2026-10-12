@@ -57,7 +57,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     _load();
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -109,8 +108,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
+          content: Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -125,10 +123,11 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   Future<void> _share() async {
     final n = _novel;
     if (n == null) return;
+    final l10n = context.l10n;
     final code = n.publicCode ?? '';
     await Share.share(
-      '${n.title}\nগল্পঘরে পড়ুন'
-      '${code.isNotEmpty ? '\nকোড: $code' : ''}\n#গল্পঘর',
+      '${n.title}\n${l10n.shareReadOnApp}'
+      '${code.isNotEmpty ? '\n${l10n.shareCodeLabel}: $code' : ''}\n#গল্পঘর',
     );
   }
 
@@ -192,8 +191,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
-  
-  @override
+    @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -231,7 +229,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       backgroundColor: bg,
       body: Column(
         children: [
-          // সবুজ টপ বার
           Material(
             color: AppColors.primary,
             child: SafeArea(
@@ -272,14 +269,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
             ),
           ),
 
-          // কনটেন্ট
           Expanded(
             child: RefreshIndicator(
               onRefresh: _load,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 children: [
-                  // লেখক
                   Center(
                     child: GestureDetector(
                       onTap: () {
@@ -309,7 +304,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // কভার
                   if (n.coverUrl != null && n.coverUrl!.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
@@ -330,7 +324,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                     _coverPlaceholder(),
                   const SizedBox(height: 14),
 
-                  // নাম + কোড
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -356,8 +349,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  AppColors.primary.withValues(alpha: 0.12),
+                              color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -374,7 +366,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                     ],
                   ),
 
-                  // বিবরণ
                   if (n.description.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
@@ -385,7 +376,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // মেটা
                   Wrap(
                     spacing: 16,
                     runSpacing: 8,
@@ -414,7 +404,6 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // পর্ব গ্রিড
                   if (_episodes.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 32),
@@ -532,15 +521,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               ),
             ),
           ),
-                    // নিচের বার (সার্বক্ষণিক টিয়েল সবুজ ব্যাকগ্রাউন্ড এবং সাদা আইকন/টেক্সট)
+
           Material(
             color: AppColors.primary,
             elevation: 8,
             child: SafeArea(
               top: false,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
@@ -555,7 +543,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.download_outlined, color: Colors.white),
+                          : const Icon(Icons.download_outlined,
+                              color: Colors.white),
                       onPressed: _downloadingAll ? null : _downloadAll,
                     ),
                     IconButton(
@@ -568,7 +557,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                     ),
                     IconButton(
                       color: Colors.white,
-                      icon: const Icon(Icons.share_outlined, color: Colors.white),
+                      icon:
+                          const Icon(Icons.share_outlined, color: Colors.white),
                       onPressed: _share,
                     ),
                     const Spacer(),
