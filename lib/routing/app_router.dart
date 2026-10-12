@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// সংশোধিত: admin guard, set_password import, localization-aware category default
+// সম্পূর্ণ সংশোধিত রাউটার (CategoryScreen-এর categoryKey সাপোর্ট সহ)
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -136,9 +136,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.category,
         builder: (context, state) {
           final l10n = context.l10n;
-          final name =
-              state.uri.queryParameters['name'] ?? l10n.catOther;
-          return CategoryScreen(category: name);
+          // এখানে key অথবা name কুয়েরি প্যারামিটার রিসিভ করা হচ্ছে
+          final key = state.uri.queryParameters['key'] ??
+              state.uri.queryParameters['name'] ??
+              l10n.catOther;
+          return CategoryScreen(categoryKey: key);
         },
       ),
       GoRoute(
