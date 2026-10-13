@@ -1,4 +1,4 @@
-// lib/features/video/presentation/screens/video_feed_screen.dart (Part 1 of 3)
+// lib/features/video/presentation/screens/video_feed_screen.dart
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -181,7 +181,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     );
   }
 }
-// lib/features/video/presentation/screens/video_feed_screen.dart (Part 2 of 3)
 
 class _VideoFeedItem extends ConsumerStatefulWidget {
   final VideoModel video;
@@ -226,6 +225,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   String? _myReaction;
   int _reactionCount = 0;
   int _commentCount = 0;
+  int _viewCount = 0; // ভিউ কাউন্ট স্টেট যোগ করা হলো
 
   bool get _isOwner {
     final uid = _auth.currentUser?.id;
@@ -275,6 +275,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
         _myReaction = mine;
         _reactionCount = count;
         _commentCount = widget.video.commentCount;
+        _viewCount = widget.video.viewCount; // ভিডিওর ইনিশিয়াল ভিউ সেট করা হলো
       });
     } catch (_) {
       if (mounted) setState(() => _initialized = false);
@@ -302,6 +303,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     if (_viewRecorded) return;
     _viewRecorded = true;
     _service.recordView(widget.video.id);
+    if (mounted) {
+      setState(() => _viewCount = _viewCount + 1); // ভিউ রেকর্ড হওয়ার পর লোকাল কাউন্ট ১ বাড়ানো হলো
+    }
   }
 
   @override
@@ -452,8 +456,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       ),
     );
   }
-  // lib/features/video/presentation/screens/video_feed_screen.dart (Part 3 of 3)
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -591,6 +593,15 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 ],
               ),
               const SizedBox(height: 22),
+              
+              // ৩ঘ) সাইডবারে লাইকের উপরে ভিউ কাউন্ট আইকন যোগ করা হলো
+              _sideBtn(
+                Icons.visibility,
+                '$_viewCount',
+                () {}, // শুধু দেখানোর জন্য, ট্যাপে কিছু লাগবে না
+              ),
+              const SizedBox(height: 14),
+
               _sideBtn(
                 _myReaction != null ? Icons.favorite : Icons.favorite_border,
                 '$_reactionCount',
@@ -627,21 +638,19 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    useSafeArea: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => CommentSection(
+                      targetType: 'video',
+                      targetId: v.id,
+                      ownerId: v.authorId,
                     ),
-                    builder: (ctx) => SizedBox(
-                      height: MediaQuery.of(ctx).size.height * 0.75,
-                      child: CommentSection(videoId: widget.video.id, ownerId: v.authorId),
-                    ),
-                  ).then((_) => setState(() {}));
+                  );
                 },
               ),
               const SizedBox(height: 14),
               _sideBtn(
                 _saved ? Icons.bookmark : Icons.bookmark_border,
-                l10n.saved,
+                l10n.save,
                 () async {
                   try {
                     final r = await _service.toggleSave(v.id);
@@ -657,7 +666,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 iconColor: _saved ? AppColors.primary : null,
               ),
               const SizedBox(height: 14),
-              // ডেডিকেটেড ভিডিও সার্চ রুট
               _sideBtn(
                 Icons.search,
                 l10n.search,
@@ -773,3 +781,5 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 }
+
+  
