@@ -225,7 +225,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   String? _myReaction;
   int _reactionCount = 0;
   int _commentCount = 0;
-  int _viewCount = 0; // ভিউ কাউন্ট স্টেট যোগ করা হলো
+  int _viewCount = 0;
 
   bool get _isOwner {
     final uid = _auth.currentUser?.id;
@@ -275,7 +275,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
         _myReaction = mine;
         _reactionCount = count;
         _commentCount = widget.video.commentCount;
-        _viewCount = widget.video.viewCount; // ভিডিওর ইনিশিয়াল ভিউ সেট করা হলো
+        _viewCount = widget.video.viewCount;
       });
     } catch (_) {
       if (mounted) setState(() => _initialized = false);
@@ -304,7 +304,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     _viewRecorded = true;
     _service.recordView(widget.video.id);
     if (mounted) {
-      setState(() => _viewCount = _viewCount + 1); // ভিউ রেকর্ড হওয়ার পর লোকাল কাউন্ট ১ বাড়ানো হলো
+      setState(() => _viewCount = _viewCount + 1);
     }
   }
 
@@ -456,7 +456,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       ),
     );
   }
-  @override
+    @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final v = widget.video;
@@ -594,11 +594,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 22),
               
-              // ৩ঘ) সাইডবারে লাইকের উপরে ভিউ কাউন্ট আইকন যোগ করা হলো
+              // ভিউ কাউন্ট আইকন
               _sideBtn(
                 Icons.visibility,
                 '$_viewCount',
-                () {}, // শুধু দেখানোর জন্য, ট্যাপে কিছু লাগবে না
+                () {},
               ),
               const SizedBox(height: 14),
 
@@ -631,6 +631,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 iconColor: _myReaction != null ? AppColors.love : null,
               ),
               const SizedBox(height: 14),
+              
+              // কমেন্ট সেকশন ফিক্স করা হয়েছে (targetType/targetId বাদ দিয়ে videoId ও ownerId দেওয়া হয়েছে)
               _sideBtn(
                 Icons.chat_bubble_outline,
                 '$_commentCount',
@@ -640,8 +642,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     isScrollControlled: true,
                     backgroundColor: Colors.transparent,
                     builder: (ctx) => CommentSection(
-                      targetType: 'video',
-                      targetId: v.id,
+                      videoId: v.id,
                       ownerId: v.authorId,
                     ),
                   );
@@ -781,5 +782,3 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 }
-
-  
