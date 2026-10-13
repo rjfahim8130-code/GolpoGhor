@@ -75,15 +75,15 @@ jobs:
         run: flutter test
         continue-on-error: true
 
-      - name: Build debug APK
+      - name: Build release APK
         run: |
-          flutter build apk --debug \
+          flutter build apk --release \
             --dart-define=R2_ACCESS_KEY=${{ secrets.R2_ACCESS_KEY }} \
             --dart-define=R2_SECRET_KEY=${{ secrets.R2_SECRET_KEY }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: golpoghor-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: golpoghor-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
