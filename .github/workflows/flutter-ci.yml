@@ -53,6 +53,11 @@ jobs:
             else
               echo "INTERNET permission already present"
             fi
+            
+            # অ্যাপের নাম ইংরেজিতে Golpoghor সেট করার কমান্ড
+            echo "Setting app label to Golpoghor..."
+            sed -i 's/android:label="[^"]*"/android:label="Golpoghor"/' "$MANIFEST"
+            
             echo "----- Manifest -----"
             cat "$MANIFEST"
           else
@@ -87,3 +92,4 @@ jobs:
           name: golpoghor-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+          
