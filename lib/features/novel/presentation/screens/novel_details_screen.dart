@@ -90,7 +90,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         _loading = false;
       });
 
-      _novelService.recordView(widget.novelId);
+      // recordView কলটি এখান থেকে সম্পূর্ণ মুছে ফেলা হয়েছে
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -191,7 +191,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
-    @override
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -471,7 +472,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                       const EdgeInsets.fromLTRB(8, 0, 8, 8),
                                   child: Row(
                                     children: [
-                                      Icon(
+                                     Icon(
                                         Icons.remove_red_eye_outlined,
                                         size: 12,
                                         color: secondary,
@@ -521,112 +522,4 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               ),
             ),
           ),
-
-          Material(
-            color: AppColors.primary,
-            elevation: 8,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: l10n.downloadAllEpisodes,
-                      color: Colors.white,
-                      icon: _downloadingAll
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.download_outlined,
-                              color: Colors.white),
-                      onPressed: _downloadingAll ? null : _downloadAll,
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(
-                        _bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: Colors.white,
-                      ),
-                      onPressed: _toggleBookmark,
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      icon:
-                          const Icon(Icons.share_outlined, color: Colors.white),
-                      onPressed: _share,
-                    ),
-                    const Spacer(),
-                    if (_isAuthor)
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                        ),
-                        onPressed: () => context.push(
-                          '${RouteNames.addEpisode}/${n.id}',
-                        ),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: Text(l10n.addEpisode),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _meta(String label, IconData icon) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _coverPlaceholder() {
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Center(
-        child: Icon(Icons.menu_book, size: 52, color: AppColors.primary),
-      ),
-    );
-  }
-
-  Widget _epPlaceholder(int num) {
-    final l10n = Localizations.localeOf(context).languageCode == 'bn';
-    return Container(
-      color: AppColors.primary.withValues(alpha: 0.08),
-      alignment: Alignment.center,
-      child: Text(
-        l10n ? 'পর্ব $num' : 'Episode $num',
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-    );
-  }
-}
+          
