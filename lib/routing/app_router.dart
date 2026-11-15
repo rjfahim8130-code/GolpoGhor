@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// সম্পূর্ণ ক্লিন ও নিরাপদ রাউটার
+// Deep Forest Green + ShellRoute (bottom nav) + নতুন routes
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/services/auth_service.dart';
+import '../core/widgets/main_scaffold.dart';
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../features/admin/presentation/screens/admin_users_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
@@ -15,6 +17,8 @@ import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
+import '../features/author/presentation/screens/author_profile_screen.dart';
+import '../features/history/presentation/screens/reading_history_screen.dart';
 import '../features/home/presentation/screens/category_screen.dart';
 import '../features/home/presentation/screens/discover_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
@@ -25,10 +29,13 @@ import '../features/notification/presentation/screens/notification_screen.dart';
 import '../features/novel/presentation/screens/novel_details_screen.dart';
 import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_reader_screen.dart';
+import '../features/profile/presentation/screens/blocked_users_screen.dart';
+import '../features/profile/presentation/screens/delete_account_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/follow_list_screen.dart';
 import '../features/profile/presentation/screens/insights_screen.dart';
 import '../features/profile/presentation/screens/my_posts_screen.dart';
+import '../features/profile/presentation/screens/notification_settings_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/profile/presentation/screens/saved_screen.dart';
 import '../features/profile/presentation/screens/set_password_screen.dart';
@@ -38,7 +45,7 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/video/presentation/screens/create_video_screen.dart';
 import '../features/video/presentation/screens/edit_video_screen.dart';
 import '../features/video/presentation/screens/video_feed_screen.dart';
-import '../features/video/presentation/screens/video_search_screen.dart'; // নতুন امপোর্ট
+import '../features/video/presentation/screens/video_search_screen.dart';
 import '../features/write/presentation/screens/add_episode_screen.dart';
 import '../features/write/presentation/screens/draft_list_screen.dart';
 import '../features/write/presentation/screens/write_screen.dart';
@@ -81,6 +88,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // ═════════════════════════════════════════════════════════
+      // AUTH ROUTES (No bottom nav)
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
@@ -109,14 +119,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.profileSetup,
         builder: (_, __) => const ProfileSetupScreen(),
       ),
-      GoRoute(
-        path: RouteNames.home,
-        builder: (_, __) => const HomeFeedScreen(),
+
+      // ═════════════════════════════════════════════════════════
+      // SHELL ROUTES (With bottom nav)
+      // ═════════════════════════════════════════════════════════
+      ShellRoute(
+        builder: (context, state, child) {
+          return MainScaffold(
+            currentRoute: state.matchedLocation,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: RouteNames.home,
+            builder: (_, __) => const HomeFeedScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.discover,
+            builder: (_, __) => const DiscoverScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.videos,
+            builder: (_, state) {
+              final focus = state.uri.queryParameters['focus'];
+              return VideoFeedScreen(focusVideoId: focus);
+            },
+          ),
+          GoRoute(
+            path: RouteNames.profile,
+            builder: (_, __) => const ProfileScreen(),
+          ),
+        ],
       ),
-      GoRoute(
-        path: RouteNames.discover,
-        builder: (_, __) => const DiscoverScreen(),
-      ),
+
+      // ═════════════════════════════════════════════════════════
+      // CONTENT ROUTES (No bottom nav)
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.popular,
         builder: (_, __) => const PopularScreen(),
@@ -140,7 +179,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.videoSearch,
-        builder: (_, __) => const VideoSearchScreen(), // আপডেট করা হয়েছে
+        builder: (_, __) => const VideoSearchScreen(),
       ),
       GoRoute(
         path: RouteNames.notifications,
@@ -166,6 +205,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           novelId: state.pathParameters['id']!,
         ),
       ),
+
+      // ═════════════════════════════════════════════════════════
+      // AUTHOR & HISTORY (NEW)
+      // ═════════════════════════════════════════════════════════
+      GoRoute(
+        path: '${RouteNames.author}/:id',
+        builder: (_, state) => AuthorProfileScreen(
+          userId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.history,
+        builder: (_, __) => const ReadingHistoryScreen(),
+      ),
+
+      // ═════════════════════════════════════════════════════════
+      // WRITE
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.writeStory,
         builder: (_, __) => const WriteScreen(kind: WriteKind.story),
@@ -198,13 +255,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.drafts,
         builder: (_, __) => const DraftListScreen(),
       ),
-      GoRoute(
-        path: RouteNames.videos,
-        builder: (_, state) {
-          final focus = state.uri.queryParameters['focus'];
-          return VideoFeedScreen(focusVideoId: focus);
-        },
-      ),
+
+      // ═════════════════════════════════════════════════════════
+      // VIDEO
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.createVideo,
         builder: (_, __) => const CreateVideoScreen(),
@@ -215,10 +269,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           videoId: state.pathParameters['id']!,
         ),
       ),
-      GoRoute(
-        path: RouteNames.profile,
-        builder: (_, __) => const ProfileScreen(),
-      ),
+
+      // ═════════════════════════════════════════════════════════
+      // PROFILE & USER
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: '${RouteNames.user}/:id',
         builder: (_, state) => ProfileScreen(
@@ -253,6 +307,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.insights,
         builder: (_, __) => const InsightsScreen(),
       ),
+
+      // ═════════════════════════════════════════════════════════
+      // OFFLINE
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.offline,
         builder: (_, __) => const OfflineDownloadsScreen(),
@@ -263,14 +321,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           itemId: state.pathParameters['id']!,
         ),
       ),
+
+      // ═════════════════════════════════════════════════════════
+      // SETTINGS & SUB-SCREENS
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
       ),
       GoRoute(
+        path: RouteNames.notificationSettings,
+        builder: (_, __) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.blockedUsers,
+        builder: (_, __) => const BlockedUsersScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.deleteAccount,
+        builder: (_, __) => const DeleteAccountScreen(),
+      ),
+
+      // ═════════════════════════════════════════════════════════
+      // ADMIN
+      // ═════════════════════════════════════════════════════════
+      GoRoute(
         path: RouteNames.admin,
         builder: (_, __) => const AdminDashboardScreen(),
       ),
+      GoRoute(
+        path: RouteNames.adminUsers,
+        builder: (_, __) => const AdminUsersScreen(),
+      ),
+
+      // ═════════════════════════════════════════════════════════
+      // LEGAL
+      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: '${RouteNames.legal}/:type',
         builder: (_, state) => LegalScreen(
