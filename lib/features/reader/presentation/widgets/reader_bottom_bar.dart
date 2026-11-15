@@ -1,11 +1,10 @@
 // lib/features/reader/presentation/widgets/reader_bottom_bar.dart
-// label গুলো caller থেকে locale-aware আসে — এখানে হাত দেওয়ার দরকার নেই
+// Deep Forest Green bottom bar
 
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-/// রিডারের নিচের সবুজ বার — সব স্ক্রিনে একই
 class ReaderBottomBar extends StatelessWidget {
   final List<ReaderBottomBarItem> items;
 
@@ -18,6 +17,7 @@ class ReaderBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.primary,
+      elevation: 8,
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -75,9 +75,7 @@ class _Btn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = onTap == null
-        ? Colors.white38
-        : (active ? Colors.white : Colors.white);
+    final color = onTap == null ? Colors.white38 : Colors.white;
 
     return InkWell(
       onTap: onTap,
@@ -100,7 +98,11 @@ class _Btn extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 10, color: color),
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
           ],
         ),
