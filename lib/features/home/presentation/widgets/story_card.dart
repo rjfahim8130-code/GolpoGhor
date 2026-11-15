@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/story_card.dart
-// সংশোধিত: 'গল্প' এর পাশে ক্যাটাগরি লেবেল সহ সম্পূর্ণ ফাইল
+// Deep Forest Green + category badge + expandable desc
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -36,18 +36,16 @@ class _StoryCardState extends State<StoryCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     final desc = story.description.trim();
     final longDesc = desc.length > 90;
 
-    // ক্যাটাগরি নরমাল করে টাইটেল/লেবেল নেওয়া
     final catKey = CategoryCatalog.normalize(story.category);
     final categoryLabel = catKey != null ? l10n.t(catKey) : '';
-    
-    // "গল্প · ক্যাটাগরি" অথবা শুধু "গল্প"
+
     final badgeText = categoryLabel.isNotEmpty
         ? '${l10n.story} · $categoryLabel'
         : l10n.story;
@@ -56,7 +54,12 @@ class _StoryCardState extends State<StoryCard> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 0,
       color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: widget.onTap,
@@ -78,8 +81,9 @@ class _StoryCardState extends State<StoryCard> {
                     child: GestureDetector(
                       onTap: () {
                         if (story.authorId.isNotEmpty) {
-                          context
-                              .push('${RouteNames.user}/${story.authorId}');
+                          context.push(
+                            '${RouteNames.user}/${story.authorId}',
+                          );
                         }
                       },
                       child: Column(
@@ -105,8 +109,10 @@ class _StoryCardState extends State<StoryCard> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
