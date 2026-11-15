@@ -46,31 +46,34 @@ jobs:
         run: |
           if [ -f android/build.gradle ]; then
             sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/' android/build.gradle
-            echo "Kotlin version updated to 1.9.24"
           elif [ -f android/build.gradle.kts ]; then
             sed -i 's/val kotlinVersion = .*/val kotlinVersion = "1.9.24"/' android/build.gradle.kts
-            echo "Kotlin version updated to 1.9.24"
           fi
 
-      - name: Update Gradle Wrapper (Mandatory 9.5.0)
+      - name: Update Gradle Wrapper and Disable Lint
         run: |
           cd android
+          # Gradle ভার্সন 9.5.0 এ আপডেট করা হচ্ছে
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-all.zip|' gradle/wrapper/gradle-wrapper.properties
-          echo "Gradle wrapper updated to 9.5.0"
+          
+          # অ্যাপের build.gradle ফাইলে Lint চেক ডিজেবল করা হচ্ছে (যাতে Gradle ক্র্যাশ না করে)
+          if [ -f app/build.gradle ]; then
+            echo -e "\nandroid {\n    lintOptions {\n        checkReleaseBuilds false\n        abortOnError false\n    }\n}" >> app/build.gradle
+          elif [ -f app/build.gradle.kts ]; then
+            echo -e "\nandroid {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }\n}" >> app/build.gradle.kts
+          fi
           cd ..
 
       - name: Ensure INTERNET permission in AndroidManifest
         run: |
           MANIFEST=android/app/src/main/AndroidManifest.xml
           if [ -f "$MANIFEST" ]; then
-            echo "Manifest found: $MANIFEST"
             if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
               sed -i 's|<manifest\(.*\)>|<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>|' "$MANIFEST"
             fi
             sed -i 's/android:label="[^"]*"/android:label="Golpoghor"/' "$MANIFEST"
-            cat "$MANIFEST"
           else
-            echo "Manifest NOT found at $MANIFEST"
+            echo "Manifest NOT found!"
             exit 1
           fi
 
@@ -86,10 +89,10 @@ jobs:
       - name: Test (Info only)
         run: flutter test || true
 
-      # ✅ Lint চেক বন্ধ করে বিল্ড করা হচ্ছে, যাতে Gradle 9.5.0 ক্র্যাশ না করে
+      # ✅ এবার `--no-lint` ছাড়াই বিল্ড হবে, কারণ Gradle ফাইলে Lint ডিজেবল করা হয়েছে
       - name: Build release APK
         run: |
-          flutter build apk --release --no-lint \
+          flutter build apk --release \
             --dart-define=R2_ACCESS_KEY=${{ secrets.R2_ACCESS_KEY }} \
             --dart-define=R2_SECRET_KEY=${{ secrets.R2_SECRET_KEY }}
 
