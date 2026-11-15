@@ -1,5 +1,5 @@
 // lib/features/profile/presentation/screens/profile_screen.dart
-// admin email-ভিত্তিক, nickname, ড্যাশবোর্ড UI
+// Deep Forest Green + cover image + admin badge + nickname
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -126,7 +126,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         following = await _followService.isFollowing(user.id);
       }
 
-      // এডমিন চেক — email-ভিত্তিক
       bool isAdmin = false;
       if (_isMe) {
         isAdmin = await _admin.isAdmin();
@@ -184,7 +183,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
   }
 
-  Future<void> _toggleFollow() async {
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 2 (Actions) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
+    Future<void> _toggleFollow() async {
     final u = _user;
     if (u == null || _isMe) return;
     setState(() => _followBusy = true);
@@ -293,6 +295,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
     );
   }
+
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 3 (Build method + helpers) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
     @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -345,167 +351,207 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // ---------------- হেডার ----------------
-            Container(
-              padding: const EdgeInsets.all(20),
-              color: AppColors.primary.withValues(alpha: 0.08),
-              child: Column(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
+            // ─────────────────────────────────────
+            // Cover + Avatar + Info
+            // ─────────────────────────────────────
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Cover
+                Container(
+                  height: 130,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: u.hasCover
+                        ? null
+                        : AppColors.primaryGradient,
+                    image: u.hasCover
+                        ? DecorationImage(
+                            image: NetworkImage(u.coverUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                ),
+                // Avatar + Info
+                Positioned(
+                  top: 90,
+                  left: 0,
+                  right: 0,
+                  child: Column(
                     children: [
-                      CachedAvatar(
-                        userId: u.id,
-                        imageUrl: u.avatarUrl,
-                        name: u.displayName,
-                        radius: 44,
-                        tappable: false,
-                      ),
-                      if (_isMe && _isAdmin)
-                        Positioned(
-                          right: -6,
-                          bottom: -6,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(3),
                             decoration: BoxDecoration(
-                              color: AppColors.danger,
+                              color: bg,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDark
-                                    ? AppColors.darkBg
-                                    : AppColors.lightBg,
-                                width: 2,
+                            ),
+                            child: CachedAvatar(
+                              userId: u.id,
+                              imageUrl: u.avatarUrl,
+                              name: u.displayName,
+                              radius: 44,
+                              tappable: false,
+                            ),
+                          ),
+                          if (_isMe && _isAdmin)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.danger,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: bg, width: 2),
+                                ),
+                                child: const Icon(
+                                  Icons.shield,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                            child: const Icon(
-                              Icons.shield,
-                              size: 16,
-                              color: Colors.white,
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        u.displayName,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (u.hasNickname) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '"${u.displayNickname}"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: secondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                      if (_isMe && _isAdmin) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.danger.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color:
+                                  AppColors.danger.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.shield,
+                                size: 12,
+                                color: AppColors.danger,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'ADMIN',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.danger,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (u.bio != null && u.bio!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            u.bio!,
+                            textAlign: TextAlign.center,
+                            style:
+                                const TextStyle(height: 1.4, fontSize: 14),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ProfileStatsCard(
+                          userId: u.id,
+                          followerCount: u.followerCount,
+                          followingCount: u.followingCount,
+                          totalViews: _totalViews,
+                          totalReactions: _totalReactions,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (!_isMe)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _following
+                                    ? Colors.grey.shade600
+                                    : AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed:
+                                  _followBusy ? null : _toggleFollow,
+                              icon: _followBusy
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _following
+                                          ? Icons.person_remove
+                                          : Icons.person_add,
+                                    ),
+                              label: Text(
+                                _following ? l10n.unfollow : l10n.follow,
+                              ),
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  Text(
-                    u.displayName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  if (u.hasNickname) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '"${u.displayNickname}"',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: secondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-
-                  if (_isMe && _isAdmin) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.danger.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.shield,
-                            size: 14,
-                            color: AppColors.danger,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'ADMIN',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.danger,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  if (u.bio != null && u.bio!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      u.bio!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(height: 1.4, fontSize: 14),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-
-                  ProfileStatsCard(
-                    userId: u.id,
-                    followerCount: u.followerCount,
-                    followingCount: u.followingCount,
-                    totalViews: _totalViews,
-                    totalReactions: _totalReactions,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  if (!_isMe)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _following
-                              ? Colors.grey.shade600
-                              : AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: _followBusy ? null : _toggleFollow,
-                        icon: _followBusy
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Icon(
-                                _following
-                                    ? Icons.person_remove
-                                    : Icons.person_add,
-                              ),
-                        label: Text(
-                          _following ? l10n.unfollow : l10n.follow,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 1),
+              ],
             ),
 
-            // ---------------- Invite Code ----------------
+            // Spacer for absolute positioned content
+            const SizedBox(height: 220),
+
+            // ─────────────────────────────────────
+            // Invite code
+            // ─────────────────────────────────────
             if (u.inviteCode != null && u.inviteCode!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -523,10 +569,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           children: [
                             Text(
                               l10n.myCode,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: secondary,
-                              ),
+                              style:
+                                  TextStyle(fontSize: 12, color: secondary),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -553,7 +597,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
               ),
 
-            // ---------------- Quick actions ----------------
+            // ─────────────────────────────────────
+            // Quick actions
+            // ─────────────────────────────────────
             if (_isMe)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -569,7 +615,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
               ),
 
-            // ---------------- Admin shortcut ----------------
+            // ─────────────────────────────────────
+            // Admin shortcut
+            // ─────────────────────────────────────
             if (_isMe && _isAdmin)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -586,7 +634,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.danger.withValues(alpha: 0.15),
+                              color: AppColors.danger
+                                  .withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -608,9 +657,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
-                                  l10n.youAreAdmin,
-                                  style: const TextStyle(
+                                const Text(
+                                  'Admin',
+                                  style: TextStyle(
                                     fontSize: 11,
                                     color: AppColors.danger,
                                   ),
@@ -629,11 +678,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // ---------------- TabBar ----------------
+            // ─────────────────────────────────────
+            // Tabs
+            // ─────────────────────────────────────
             Container(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
               child: TabBar(
                 controller: _tab,
                 labelColor: AppColors.primary,
@@ -646,7 +697,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
 
-            // ---------------- TabBarView ----------------
+            // ─────────────────────────────────────
+            // Tab content
+            // ─────────────────────────────────────
             SizedBox(
               height: 500,
               child: TabBarView(
@@ -661,9 +714,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               '${RouteNames.writeStory}/${s.id}',
                             )
                         : null,
-                    onDeleteStory: _isMe
-                        ? (s) async => _deleteStory(s)
-                        : null,
+                    onDeleteStory:
+                        _isMe ? (s) async => _deleteStory(s) : null,
                   ),
                   ProfilePostsTab.novels(
                     novels: _novels,
@@ -674,9 +726,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               '${RouteNames.writeNovel}/${n.id}',
                             )
                         : null,
-                    onDeleteNovel: _isMe
-                        ? (n) async => _deleteNovel(n)
-                        : null,
+                    onDeleteNovel:
+                        _isMe ? (n) async => _deleteNovel(n) : null,
                   ),
                   if (_videoOn)
                     ProfilePostsTab.videos(
@@ -692,9 +743,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 '${RouteNames.createVideo}/${v.id}',
                               )
                           : null,
-                      onDeleteVideo: _isMe
-                          ? (v) async => _deleteVideo(v)
-                          : null,
+                      onDeleteVideo:
+                          _isMe ? (v) async => _deleteVideo(v) : null,
                     ),
                 ],
               ),
