@@ -85,7 +85,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            '${l10n.reason}:',
+            // ✅ FIX: 'l10n.reason' ছিল না, 'l10n.reasonLabel' ব্যবহার করা হলো
+            '${l10n.reasonLabel}:',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
