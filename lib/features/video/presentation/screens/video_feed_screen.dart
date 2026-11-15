@@ -1,4 +1,5 @@
 // lib/features/video/presentation/screens/video_feed_screen.dart
+// Deep Forest Green + Reels feed
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,12 @@ import '../../../../core/models/video_model.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/follow_service.dart';
-import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/video_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/widgets/empty_view.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -91,30 +91,49 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     if (!videoOn) {
       return Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white),
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
         body: Center(
-          child: Text(l10n.videoFeatureDisabled, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            l10n.videoFeatureDisabled,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       );
     }
 
     if (_loading) {
-      return const Scaffold(backgroundColor: Colors.black, body: LoadingView());
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: LoadingView(),
+      );
     }
 
     if (_error != null) {
       return Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white),
-        body: ErrorView(message: l10n.t(_error!), onRetry: _load, retryLabel: l10n.retry),
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
+        body: ErrorView(
+          message: l10n.t(_error!),
+          onRetry: _load,
+          retryLabel: l10n.retry,
+        ),
       );
     }
 
     if (_items.isEmpty) {
       return Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white),
-        body: EmptyView(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
+        body: EmptyState(
           icon: Icons.videocam_outlined,
           title: l10n.noVideosYet,
           subtitle: l10n.uploadFirstVideo,
@@ -182,6 +201,9 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
   }
 }
 
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 2 (State widget) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
 class _VideoFeedItem extends ConsumerStatefulWidget {
   final VideoModel video;
   final bool isActive;
@@ -247,7 +269,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
 
   Future<void> _initPlayer() async {
     try {
-      final ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
+      final ctrl = VideoPlayerController.networkUrl(
+        Uri.parse(widget.video.videoUrl),
+      );
       await ctrl.initialize();
       ctrl.setLooping(_autoLoop);
       ctrl.setVolume(_muted ? 0 : 1);
@@ -353,7 +377,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     return context.l10n.t(key);
   }
 
-  void _openMore() {
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 3 (More menu + Build) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
+    void _openMore() {
     final l10n = context.l10n;
     final v = widget.video;
     showModalBottomSheet(
@@ -368,15 +395,23 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
           children: [
             ListTile(
               leading: const Icon(Icons.share_outlined, color: Colors.white),
-              title: Text(l10n.share, style: const TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.share,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
-                Share.share('${v.authorName ?? ""} · ${l10n.appName} ${l10n.video}');
+                Share.share(
+                  '${v.authorName ?? ""} · ${l10n.appName} ${l10n.video}',
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.white),
-              title: Text(l10n.report, style: const TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.report,
+                style: const TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 ReportSheet.show(
@@ -389,9 +424,12 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
             SwitchListTile(
               secondary: const Icon(Icons.loop, color: Colors.white),
-              title: Text(l10n.autoLoop, style: const TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.autoLoop,
+                style: const TextStyle(color: Colors.white),
+              ),
               value: _autoLoop,
-              activeColor: AppColors.primary,
+              activeColor: AppColors.primaryLight,
               onChanged: (val) {
                 setState(() => _autoLoop = val);
                 _controller?.setLooping(val);
@@ -417,15 +455,24 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               const Divider(color: Colors.white24),
               ListTile(
                 leading: const Icon(Icons.edit_outlined, color: Colors.white),
-                title: Text(l10n.edit, style: const TextStyle(color: Colors.white)),
+                title: Text(
+                  l10n.edit,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   context.push('${RouteNames.createVideo}/${v.id}');
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: AppColors.danger),
-                title: Text(l10n.delete, style: const TextStyle(color: AppColors.danger)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.danger,
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: AppColors.danger),
+                ),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final ok = await showDialog<bool>(
@@ -439,7 +486,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(d, true),
-                          child: Text(l10n.delete, style: const TextStyle(color: AppColors.danger)),
+                          child: Text(
+                            l10n.delete,
+                            style:
+                                const TextStyle(color: AppColors.danger),
+                          ),
                         ),
                       ],
                     ),
@@ -456,7 +507,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       ),
     );
   }
-    @override
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final v = widget.video;
@@ -485,11 +537,15 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             child: ok
                 ? Center(
                     child: AspectRatio(
-                      aspectRatio: c.value.aspectRatio == 0 ? 9 / 16 : c.value.aspectRatio,
+                      aspectRatio: c.value.aspectRatio == 0
+                          ? 9 / 16
+                          : c.value.aspectRatio,
                       child: VideoPlayer(c),
                     ),
                   )
-                : const Center(child: CircularProgressIndicator(color: Colors.white)),
+                : const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
           ),
         ),
         if (ok && !c.value.isPlaying)
@@ -507,7 +563,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             top: topSpace + 8,
             left: 12,
             child: Container(
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => context.pop(),
@@ -523,10 +582,21 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               color: Colors.black87,
               borderRadius: BorderRadius.circular(12),
               child: ListTile(
-                title: Text(l10n.watchNextPart, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                title: Text(
+                  l10n.watchNextPart,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 subtitle: Text(
-                  _nextPart!.title.isEmpty ? '${l10n.episodeLabel} ${_nextPart!.partNumber}' : _nextPart!.title,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  _nextPart!.title.isEmpty
+                      ? '${l10n.episodeLabel} ${_nextPart!.partNumber}'
+                      : _nextPart!.title,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
                 ),
                 trailing: TextButton(
                   onPressed: () {
@@ -571,21 +641,34 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                             await _follow.toggleFollow(v.authorId);
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(l10n.followUpdated), duration: const Duration(seconds: 1)),
+                                SnackBar(
+                                  content: Text(l10n.followUpdated),
+                                  duration: const Duration(seconds: 1),
+                                ),
                               );
                             }
                           } catch (e) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(_translateError(context, e))),
+                                SnackBar(
+                                  content:
+                                      Text(_translateError(context, e)),
+                                ),
                               );
                             }
                           }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                          child: const Icon(Icons.add, size: 14, color: Colors.white),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryLight,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -593,15 +676,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 ],
               ),
               const SizedBox(height: 22),
-              
-              // ভিউ কাউন্ট আইকন
-              _sideBtn(
-                Icons.visibility,
-                '$_viewCount',
-                () {},
-              ),
+              _sideBtn(Icons.visibility, '$_viewCount', () {}),
               const SizedBox(height: 14),
-
               _sideBtn(
                 _myReaction != null ? Icons.favorite : Icons.favorite_border,
                 '$_reactionCount',
@@ -613,7 +689,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                       reactionType: type,
                       ownerId: v.authorId,
                     );
-                    final count = await _reaction.countVideoReactions(widget.video.id);
+                    final count = await _reaction
+                        .countVideoReactions(widget.video.id);
                     if (mounted) {
                       setState(() {
                         _myReaction = res;
@@ -623,7 +700,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(_translateError(context, e))),
+                        SnackBar(
+                          content: Text(_translateError(context, e)),
+                        ),
                       );
                     }
                   }
@@ -631,8 +710,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 iconColor: _myReaction != null ? AppColors.love : null,
               ),
               const SizedBox(height: 14),
-              
-              // কমেন্ট সেকশন ফিক্স করা হয়েছে (targetType/targetId বাদ দিয়ে videoId ও ownerId দেওয়া হয়েছে)
               _sideBtn(
                 Icons.chat_bubble_outline,
                 '$_commentCount',
@@ -659,12 +736,14 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(_translateError(context, e))),
+                        SnackBar(
+                          content: Text(_translateError(context, e)),
+                        ),
                       );
                     }
                   }
                 },
-                iconColor: _saved ? AppColors.primary : null,
+                iconColor: _saved ? AppColors.primaryLight : null,
               ),
               const SizedBox(height: 14),
               _sideBtn(
@@ -701,58 +780,92 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 },
                 child: Text(
                   v.authorName ?? l10n.author,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
               ),
               if (v.description.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 GestureDetector(
-                  onTap: () => setState(() => _descExpanded = !_descExpanded),
+                  onTap: () =>
+                      setState(() => _descExpanded = !_descExpanded),
                   child: Text(
                     v.description,
                     maxLines: _descExpanded ? 20 : 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white70, height: 1.35, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      height: 1.35,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
               const SizedBox(height: 4),
               Text(
                 TimeAgo.of(context, v.createdAt),
-                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 11,
+                ),
               ),
               if (ok) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text(_fmt(pos), style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text(
+                      _fmt(pos),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
                     Expanded(
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 12,
+                          ),
                         ),
                         child: Slider(
                           value: progress.clamp(0.0, 1.0),
-                          activeColor: AppColors.primary,
+                          activeColor: AppColors.primaryLight,
                           inactiveColor: Colors.white24,
                           onChangeStart: (_) {
                             _dragging = true;
                             _dragValue = progress;
                           },
-                          onChanged: (val) => setState(() => _dragValue = val),
+                          onChanged: (val) =>
+                              setState(() => _dragValue = val),
                           onChangeEnd: (val) {
                             _dragging = false;
                             if (dur.inMilliseconds > 0) {
-                              c.seekTo(Duration(milliseconds: (val * dur.inMilliseconds).round()));
+                              c.seekTo(
+                                Duration(
+                                  milliseconds:
+                                      (val * dur.inMilliseconds).round(),
+                                ),
+                              );
                             }
                             setState(() {});
                           },
                         ),
                       ),
                     ),
-                    Text(_fmt(dur), style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                    Text(
+                      _fmt(dur),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -763,7 +876,12 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 
-  Widget _sideBtn(IconData icon, String label, VoidCallback onTap, {Color? iconColor}) {
+  Widget _sideBtn(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color? iconColor,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -774,7 +892,13 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             Icon(icon, color: iconColor ?? Colors.white, size: 28),
             if (label.isNotEmpty) ...[
               const SizedBox(height: 2),
-              Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ],
         ),
