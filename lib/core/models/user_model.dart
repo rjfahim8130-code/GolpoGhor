@@ -1,5 +1,5 @@
 // lib/core/models/user_model.dart
-// সংশোধিত: username বাদ, nickname যোগ
+// সংশোধিত: username বাদ, nickname যোগ, coverUrl যোগ
 // displayName এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
 class UserModel {
@@ -9,6 +9,7 @@ class UserModel {
   final String? nickname;
   final String? bio;
   final String? avatarUrl;
+  final String? coverUrl;
   final String? inviteCode;
   final bool isAdmin;
   final bool profileSetupDone;
@@ -24,6 +25,7 @@ class UserModel {
     this.nickname,
     this.bio,
     this.avatarUrl,
+    this.coverUrl,
     this.inviteCode,
     this.isAdmin = false,
     this.profileSetupDone = false,
@@ -41,6 +43,7 @@ class UserModel {
       nickname: json['nickname'] as String?,
       bio: json['bio'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      coverUrl: json['cover_url'] as String?,
       inviteCode: json['invite_code'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
       profileSetupDone: json['profile_setup_done'] as bool? ?? false,
@@ -63,6 +66,7 @@ class UserModel {
       'nickname': nickname,
       'bio': bio,
       'avatar_url': avatarUrl,
+      'cover_url': coverUrl,
       'invite_code': inviteCode,
       'is_admin': isAdmin,
       'profile_setup_done': profileSetupDone,
@@ -78,6 +82,7 @@ class UserModel {
     String? nickname,
     String? bio,
     String? avatarUrl,
+    String? coverUrl,
     String? inviteCode,
     bool? isAdmin,
     bool? profileSetupDone,
@@ -93,6 +98,7 @@ class UserModel {
       nickname: nickname ?? this.nickname,
       bio: bio ?? this.bio,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      coverUrl: coverUrl ?? this.coverUrl,
       inviteCode: inviteCode ?? this.inviteCode,
       isAdmin: isAdmin ?? this.isAdmin,
       profileSetupDone: profileSetupDone ?? this.profileSetupDone,
@@ -127,6 +133,9 @@ class UserModel {
           : '';
 
   bool get hasNickname => displayNickname.isNotEmpty;
+
+  /// Cover image আছে কিনা
+  bool get hasCover => coverUrl != null && coverUrl!.trim().isNotEmpty;
 
   /// Avatar না থাকলে প্রথম অক্ষর
   String get initial {
