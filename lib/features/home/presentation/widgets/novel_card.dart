@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/novel_card.dart
-// সংশোধিত: 'উপন্যাস' এর পাশে ক্যাটাগরি লেবেল সহ সম্পূর্ণ ফাইল
+// Deep Forest Green + category badge
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -36,18 +36,16 @@ class _NovelCardState extends State<NovelCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     final desc = novel.description.trim();
     final longDesc = desc.length > 90;
 
-    // ক্যাটাগরি নরমাল করে টাইটেল/লেবেল নেওয়া
     final catKey = CategoryCatalog.normalize(novel.category);
     final categoryLabel = catKey != null ? l10n.t(catKey) : '';
 
-    // "উপন্যাস · ক্যাটাগরি" অথবা শুধু "উপন্যাস"
     final badgeText = categoryLabel.isNotEmpty
         ? '${l10n.novel} · $categoryLabel'
         : l10n.novel;
@@ -56,7 +54,12 @@ class _NovelCardState extends State<NovelCard> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 0,
       color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: widget.onTap,
@@ -78,8 +81,9 @@ class _NovelCardState extends State<NovelCard> {
                     child: GestureDetector(
                       onTap: () {
                         if (novel.authorId.isNotEmpty) {
-                          context
-                              .push('${RouteNames.user}/${novel.authorId}');
+                          context.push(
+                            '${RouteNames.user}/${novel.authorId}',
+                          );
                         }
                       },
                       child: Column(
@@ -105,8 +109,10 @@ class _NovelCardState extends State<NovelCard> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -201,13 +207,8 @@ class _NovelCardState extends State<NovelCard> {
                     style: TextStyle(fontSize: 12, color: secondary),
                   ),
                   const SizedBox(width: 12),
-                  Icon(Icons.chat_bubble_outline, size: 15, color: secondary),
+                  Icon(Icons.menu_book_outlined, size: 15, color: secondary),
                   const SizedBox(width: 4),
-                  Text(
-                    TimeAgo.compactOf(context, novel.commentCount),
-                    style: TextStyle(fontSize: 12, color: secondary),
-                  ),
-                  const SizedBox(width: 12),
                   Text(
                     '${novel.episodeCount} ${l10n.episode}',
                     style: TextStyle(
