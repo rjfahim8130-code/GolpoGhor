@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// AppBar-এ লোগো PNG + session cache avatar + localization (Episode Feed যুক্ত করা হয়েছে)
+// Deep Forest Green + Continue Reading + Segmented Tabs + skeleton
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,12 +13,16 @@ import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/episode_service.dart';
 import '../../../../core/services/novel_service.dart';
+import '../../../../core/services/reading_history_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../routing/route_names.dart';
+import '../widgets/continue_reading_card.dart';
 import '../widgets/episode_card.dart';
 import '../widgets/novel_card.dart';
+import '../widgets/segmented_tabs.dart';
 import '../widgets/story_card.dart';
 
 class HomeFeedScreen extends ConsumerStatefulWidget {
@@ -32,15 +36,18 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   final _storyService = StoryService();
   final _novelService = NovelService();
   final _episodeService = EpisodeService();
+  final _historyService = ReadingHistoryService();
   final _scroll = ScrollController();
 
   final List<dynamic> _items = [];
+  final List<ReadingHistoryItem> _history = [];
   bool _loading = true;
   bool _loadingMore = false;
   bool _hasMore = true;
   String? _error;
   int _offset = 0;
   static const int _limit = 15;
+  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -71,6 +78,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       _hasMore = true;
     });
     try {
+      final history = await _historyService.getAll();
       final results = await Future.wait([
         _storyService.getFeed(limit: _limit, offset: 0),
         _novelService.getFeed(limit: 8, offset: 0),
@@ -90,6 +98,8 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
       if (!mounted) return;
       setState(() {
+        _history.clear();
+        _history.addAll(history.take(3));
         _items
           ..clear()
           ..addAll(combined);
@@ -133,12 +143,34 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     }
   }
 
+  List<dynamic> get _filteredItems {
+    if (_selectedTab == 0) return _items;
+    if (_selectedTab == 1) {
+      return _items.whereType<StoryModel>().toList();
+    }
+    if (_selectedTab == 2) {
+      return _items.whereType<NovelModel>().toList();
+    }
+    if (_selectedTab == 3) {
+      return _items.whereType<EpisodeModel>().toList();
+    }
+    return _items;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final videoOn = ref.watch(videoFeatureProvider);
     final me = ref.watch(sessionCacheProvider);
+
+    final tabs = [
+      l10n.viewAll,
+      l10n.story,
+      l10n.novel,
+      l10n.episode,
+      if (videoOn) l10n.video,
+    ];
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
@@ -149,7 +181,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         titleSpacing: 12,
         title: Row(
           children: [
-            // ============ লোগো PNG ============
             Image.asset(
               'assets/images/logo.png',
               height: 30,
@@ -158,7 +189,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
             const SizedBox(width: 8),
-            // ============ অ্যাপের নাম (সবসময় বাংলা) ============
             Text(
               l10n.appName,
               style: const TextStyle(
@@ -197,13 +227,13 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
           ),
         ],
       ),
-      body: _buildBody(l10n),
+      body: _buildBody(l10n, tabs),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  Widget _buildBody(AppLocalizations l10n, List<String> tabs) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonList(count: 3);
     }
     if (_error != null) {
       return Center(
@@ -220,61 +250,117 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         ),
       );
     }
-    if (_items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.menu_book_outlined,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.noStoriesYet,
-              style: const TextStyle(fontSize: 15),
-            ),
-          ],
-        ),
-      );
-    }
 
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView.builder(
-        controller: _scroll,
-        padding: const EdgeInsets.only(top: 8, bottom: 24),
-        itemCount: _items.length + (_loadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index >= _items.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final item = _items[index];
-          if (item is StoryModel) {
-            return StoryCard(
-              story: item,
-              onTap: () => context.push('${RouteNames.story}/${item.id}'),
-            );
-          }
-          if (item is NovelModel) {
-            return NovelCard(
-              novel: item,
-              onTap: () => context.push('${RouteNames.novel}/${item.id}'),
-            );
-          }
-          if (item is EpisodeModel) {
-            return EpisodeCard(
-              episode: item,
-              onTap: () => context.push('${RouteNames.episode}/${item.id}'),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+    final filtered = _filteredItems;
+
+    return Column(
+      children: [
+        // Segmented tabs
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: SegmentedTab(
+            labels: tabs,
+            selectedIndex: _selectedTab,
+            onChanged: (i) => setState(() => _selectedTab = i),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _load,
+            child: ListView.builder(
+              controller: _scroll,
+              padding: const EdgeInsets.only(top: 4, bottom: 24),
+              itemCount: (filtered.isEmpty && _selectedTab == 0)
+                  ? 2
+                  : (_selectedTab == 0 && _history.isNotEmpty
+                          ? 1
+                          : 0) +
+                      filtered.length +
+                      (_loadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                int adjustedIndex = index;
+
+                // Continue reading (only in "all" tab)
+                if (_selectedTab == 0 && _history.isNotEmpty) {
+                  if (index == 0) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                l10n.recent,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () =>
+                                    context.push(RouteNames.history),
+                                child: Text(
+                                  l10n.seeMore,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ..._history.map(
+                          (h) => ContinueReadingCard(item: h),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  }
+                  adjustedIndex = index - 1;
+                }
+
+                if (adjustedIndex >= filtered.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final item = filtered[adjustedIndex];
+                if (item is StoryModel) {
+                  return StoryCard(
+                    story: item,
+                    onTap: () =>
+                        context.push('${RouteNames.story}/${item.id}'),
+                  );
+                }
+                if (item is NovelModel) {
+                  return NovelCard(
+                    novel: item,
+                    onTap: () =>
+                        context.push('${RouteNames.novel}/${item.id}'),
+                  );
+                }
+                if (item is EpisodeModel) {
+                  return EpisodeCard(
+                    episode: item,
+                    onTap: () => context.push(
+                      '${RouteNames.episode}/${item.id}',
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
