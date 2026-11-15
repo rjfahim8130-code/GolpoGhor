@@ -1,5 +1,5 @@
-// lib/features/video/presentation/screens/edit_video_screen.dart (Part 1)
-// সংশোধিত: localization এবং ক্যাটাগরি সিলেকশন (মেইন গ্রুপ → সাব) যুক্ত
+// lib/features/video/presentation/screens/edit_video_screen.dart
+// সংশোধিত: localization এবং ক্যাটাগরি সিলেকশন (মেইন গ্রুপ → সাব) যুক্ত এবং Dropdown-এ initialValue ব্যবহার
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -166,7 +166,6 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       );
     }
   }
-  // lib/features/video/presentation/screens/edit_video_screen.dart (Part 2)
 
   @override
   Widget build(BuildContext context) {
@@ -268,8 +267,10 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                       style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
                     const SizedBox(height: 8),
+                    
+                    // মেইন গ্রুপ ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                     DropdownButtonFormField<String?>(
-                      value: _categoryGroup,
+                      initialValue: _categoryGroup,
                       decoration: InputDecoration(
                         labelText: l10n.selectGroup,
                         border: const OutlineInputBorder(),
@@ -292,10 +293,13 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         _category = null; // গ্রুপ বদলালে সাব রিসেট
                       }),
                     ),
+                    
                     if (_categoryGroup != null) ...[
                       const SizedBox(height: 10),
+                      
+                      // সাব ক্যাটাগরি ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                       DropdownButtonFormField<String?>(
-                        value: _category,
+                        initialValue: _category,
                         decoration: InputDecoration(
                           labelText: l10n.selectSubcategory,
                           border: const OutlineInputBorder(),
@@ -316,6 +320,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         onChanged: (v) => setState(() => _category = v),
                       ),
                     ],
+                    
                     if (_category != null || _categoryGroup != null)
                       TextButton(
                         onPressed: () => setState(() {
