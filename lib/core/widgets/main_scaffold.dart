@@ -1,11 +1,11 @@
 // lib/core/widgets/main_scaffold.dart
-// Bottom Navigation Bar সহ main shell
+// Bottom Navigation Bar সহ main shell (Discover এর পরিবর্তে Inbox যুক্ত)
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/home/presentation/screens/discover_screen.dart';
 import '../../features/home/presentation/screens/home_feed_screen.dart';
+import '../../features/inbox/presentation/screens/inbox_screen.dart'; // নিশ্চিত করুন এই স্ক্রিনটি আপনার প্রজেক্টে আছে
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/video/presentation/screens/video_feed_screen.dart';
 import '../../routing/route_names.dart';
@@ -29,7 +29,7 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _getIndex() {
-    if (widget.currentRoute.startsWith(RouteNames.discover)) return 1;
+    if (widget.currentRoute.startsWith(RouteNames.inbox)) return 1;
     if (widget.currentRoute.startsWith(RouteNames.videos)) return 3;
     if (widget.currentRoute.startsWith(RouteNames.profile) ||
         widget.currentRoute.startsWith(RouteNames.user)) {
@@ -46,8 +46,8 @@ class _MainScaffoldState extends State<MainScaffold> {
         }
         break;
       case 1:
-        if (widget.currentRoute != RouteNames.discover) {
-          context.go(RouteNames.discover);
+        if (widget.currentRoute != RouteNames.inbox) {
+          context.go(RouteNames.inbox);
         }
         break;
       case 2:
@@ -98,9 +98,9 @@ class _MainScaffoldState extends State<MainScaffold> {
                   onTap: () => _onTap(0),
                 ),
                 _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore,
-                  label: l10n.discover,
+                  icon: Icons.inbox_outlined,
+                  activeIcon: Icons.inbox,
+                  label: l10n.inbox ?? 'ইনবক্স',
                   selected: idx == 1,
                   onTap: () => _onTap(1),
                 ),
