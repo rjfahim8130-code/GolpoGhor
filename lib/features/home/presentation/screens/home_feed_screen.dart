@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// Deep Forest Green + Continue Reading + Segmented Tabs + skeleton
+// নতুন ডিজাইন হেডার (লোগো + গল্পঘর + For you, popular, trending, following + Search)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,7 +47,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   String? _error;
   int _offset = 0;
   static const int _limit = 15;
-  int _selectedTab = 0;
+  int _selectedTab = 0; // 0: For You, 1: Popular, 2: Trending, 3: Following
 
   @override
   void initState() {
@@ -144,33 +144,16 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   }
 
   List<dynamic> get _filteredItems {
-    if (_selectedTab == 0) return _items;
-    if (_selectedTab == 1) {
-      return _items.whereType<StoryModel>().toList();
-    }
-    if (_selectedTab == 2) {
-      return _items.whereType<NovelModel>().toList();
-    }
-    if (_selectedTab == 3) {
-      return _items.whereType<EpisodeModel>().toList();
-    }
+    // ফিল্টারিং লজিক আপনার প্রয়োজনমতো অ্যাডজাস্ট করতে পারেন
     return _items;
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final videoOn = ref.watch(videoFeatureProvider);
-    final me = ref.watch(sessionCacheProvider);
-
-    final tabs = [
-      l10n.viewAll,
-      l10n.story,
-      l10n.novel,
-      l10n.episode,
-      if (videoOn) l10n.video,
-    ];
+    
+    // নতুন ডিজাইন অনুযায়ী ৪টি ট্যাব: For You, Popular, Trending, Following
+    final tabs = ['For You', 'Popular', 'Trending', 'Following'];
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
@@ -182,52 +165,61 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
         title: Row(
           children: [
             Image.asset(
-              'assets/images/logo.png',
-              height: 30,
-              width: 30,
+              'assets/images/logo.png', // আপনার দেওয়া লোগো পিএনজি
+              height: 32,
+              width: 32,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              errorBuilder: (_, __, ___) => const Icon(Icons.book, color: Colors.white),
             ),
             const SizedBox(width: 8),
-            Text(
-              l10n.appName,
-              style: const TextStyle(
+            const Text(
+              'গল্পঘর',
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: 22,
                 color: Colors.white,
               ),
             ),
           ],
         ),
         actions: [
-          if (videoOn)
-            IconButton(
-              icon: const Icon(Icons.videocam_outlined),
-              tooltip: l10n.videos,
-              onPressed: () => context.push(RouteNames.videos),
-            ),
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: l10n.notifications,
-            onPressed: () => context.push(RouteNames.notifications),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: l10n.search,
+            icon: const Icon(Icons.search, size: 26),
             onPressed: () => context.push(RouteNames.search),
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: CachedAvatar(
-              userId: me?.id,
-              imageUrl: me?.avatarUrl,
-              name: me?.displayNameOr(l10n.me) ?? l10n.me,
-              radius: 16,
+          const SizedBox(width: 8),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(46),
+          child: Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(tabs.length, (index) {
+                  final isSelected = _selectedTab == index;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedTab = index),
+                      child: Text(
+                        tabs[index],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: isSelected ? 16 : 14,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
             ),
           ),
-        ],
+        ),
       ),
-      body: _buildBody(l10n, tabs),
+      body: _buildBody(context.l10n, tabs),
     );
   }
 
@@ -253,114 +245,93 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
     final filtered = _filteredItems;
 
-    return Column(
-      children: [
-        // Segmented tabs
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: SegmentedTab(
-            labels: tabs,
-            selectedIndex: _selectedTab,
-            onChanged: (i) => setState(() => _selectedTab = i),
-          ),
-        ),
-        const SizedBox(height: 8),
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.builder(
+        controller: _scroll,
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
+        itemCount: (filtered.isEmpty && _selectedTab == 0)
+            ? 2
+            : (_selectedTab == 0 && _history.isNotEmpty
+                    ? 1
+                    : 0) +
+                filtered.length +
+                (_loadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          int adjustedIndex = index;
 
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _load,
-            child: ListView.builder(
-              controller: _scroll,
-              padding: const EdgeInsets.only(top: 4, bottom: 24),
-              itemCount: (filtered.isEmpty && _selectedTab == 0)
-                  ? 2
-                  : (_selectedTab == 0 && _history.isNotEmpty
-                          ? 1
-                          : 0) +
-                      filtered.length +
-                      (_loadingMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                int adjustedIndex = index;
-
-                // Continue reading (only in "all" tab)
-                if (_selectedTab == 0 && _history.isNotEmpty) {
-                  if (index == 0) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          if (_selectedTab == 0 && _history.isNotEmpty) {
+            if (index == 0) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                l10n.recent,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () =>
-                                    context.push(RouteNames.history),
-                                child: Text(
-                                  l10n.seeMore,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        Text(
+                          l10n.recent,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        ..._history.map(
-                          (h) => ContinueReadingCard(item: h),
+                        GestureDetector(
+                          onTap: () => context.push(RouteNames.history),
+                          child: Text(
+                            l10n.seeMore,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 12),
                       ],
-                    );
-                  }
-                  adjustedIndex = index - 1;
-                }
-
-                if (adjustedIndex >= filtered.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final item = filtered[adjustedIndex];
-                if (item is StoryModel) {
-                  return StoryCard(
-                    story: item,
-                    onTap: () =>
-                        context.push('${RouteNames.story}/${item.id}'),
-                  );
-                }
-                if (item is NovelModel) {
-                  return NovelCard(
-                    novel: item,
-                    onTap: () =>
-                        context.push('${RouteNames.novel}/${item.id}'),
-                  );
-                }
-                if (item is EpisodeModel) {
-                  return EpisodeCard(
-                    episode: item,
-                    onTap: () => context.push(
-                      '${RouteNames.episode}/${item.id}',
                     ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        ),
-      ],
+                  ),
+                  ..._history.map(
+                    (h) => ContinueReadingCard(item: h),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              );
+            }
+            adjustedIndex = index - 1;
+          }
+
+          if (adjustedIndex >= filtered.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final item = filtered[adjustedIndex];
+          if (item is StoryModel) {
+            return StoryCard(
+              story: item,
+              onTap: () => context.push('${RouteNames.story}/${item.id}'),
+            );
+          }
+          if (item is NovelModel) {
+            return NovelCard(
+              novel: item,
+              onTap: () => context.push('${RouteNames.novel}/${item.id}'),
+            );
+          }
+          if (item is EpisodeModel) {
+            return EpisodeCard(
+              episode: item,
+              onTap: () => context.push(
+                '${RouteNames.episode}/${item.id}',
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
