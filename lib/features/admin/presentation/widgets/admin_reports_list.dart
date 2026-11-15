@@ -1,5 +1,5 @@
 // lib/features/admin/presentation/widgets/admin_reports_list.dart
-// সংশোধিত: localization
+// Deep Forest Green + report detail screen push + TimeAgo fix
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +9,7 @@ import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../routing/route_names.dart';
+import '../screens/admin_report_detail_screen.dart';
 
 class AdminReportsList extends StatelessWidget {
   final List<Map<String, dynamic>> reports;
@@ -39,7 +40,7 @@ class AdminReportsList extends StatelessWidget {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     return Column(
       children: reports.map((r) {
@@ -82,7 +83,7 @@ class AdminReportsList extends StatelessWidget {
                 ),
                 Text(
                   'ID: $id'
-                  '${createdAt != null ? " · ${TimeAgo.bn(createdAt)}" : ""}',
+                  '${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.grey,
@@ -101,14 +102,14 @@ class AdminReportsList extends StatelessWidget {
                   await service.dismiss(rid);
                 }
                 if (v == 'open') {
-                  _openTarget(context, type, id);
+                  _openDetail(context, r);
                 }
                 await onChanged();
               },
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'open',
-                  child: Text(l10n.story),
+                  child: Text(l10n.open),
                 ),
                 PopupMenuItem(
                   value: 'reviewed',
@@ -120,35 +121,18 @@ class AdminReportsList extends StatelessWidget {
                 ),
               ],
             ),
-            onTap: () => _openTarget(context, type, id),
+            onTap: () => _openDetail(context, r),
           ),
         );
       }).toList(),
     );
   }
 
-  void _openTarget(BuildContext context, String type, String id) {
-    switch (type) {
-      case 'story':
-        context.push('${RouteNames.story}/$id');
-        break;
-      case 'novel':
-        context.push('${RouteNames.novel}/$id');
-        break;
-      case 'episode':
-        context.push('${RouteNames.episode}/$id');
-        break;
-      case 'video':
-        context.push(
-          Uri(
-            path: RouteNames.videos,
-            queryParameters: {'focus': id},
-          ).toString(),
-        );
-        break;
-      case 'profile':
-        context.push('${RouteNames.user}/$id');
-        break;
-    }
+  void _openDetail(BuildContext context, Map<String, dynamic> report) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdminReportDetailScreen(report: report),
+      ),
+    );
   }
 }
