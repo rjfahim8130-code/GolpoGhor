@@ -1,5 +1,5 @@
 // lib/routing/route_names.dart
-// নতুন ফিচারের জন্য route constants
+// discover রুট অক্ষুণ্ণ রেখে নতুন inbox রুট যুক্ত করা হয়েছে
 
 class RouteNames {
   RouteNames._();
@@ -15,7 +15,8 @@ class RouteNames {
 
   // ---------- Main ----------
   static const home = '/home';
-  static const discover = '/discover';
+  static const discover = '/discover'; // অক্ষুণ্ণ রাখা হলো
+  static const inbox = '/inbox';       // নতুন ইনবক্স রুট
   static const popular = '/popular';
   static const trending = '/trending';
   static const category = '/category';
