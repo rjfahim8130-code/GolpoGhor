@@ -1,5 +1,5 @@
 // lib/main.dart
-// startup safe, error handling, runZonedGuarded, sessionCache load
+// startup safe, error handling, runZonedGuarded, sessionCache load + Supabase publishableKey update
 
 import 'dart:async';
 
@@ -59,7 +59,7 @@ Future<void> main() async {
       try {
         await Supabase.initialize(
           url: SupabaseConstants.supabaseUrl,
-          anonKey: SupabaseConstants.supabaseAnonKey,
+          publishableKey: SupabaseConstants.supabaseAnonKey, // <-- আপডেট করা হলো
         );
         debugPrint('SUPABASE_INIT: success');
       } catch (e, st) {
