@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/episode_card.dart
-// সংশোধিত: উপন্যাসের পর্বের কার্ড উইজেট (নিরাপদ ও ক্লিন ব্যাজ সহ)
+// Deep Forest Green + episode card
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +33,7 @@ class _EpisodeCardState extends State<EpisodeCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
@@ -41,14 +41,19 @@ class _EpisodeCardState extends State<EpisodeCard> {
         ? episode.title
         : '${l10n.episodeLabel} ${episode.chapterNumber}';
 
-    // ব্যাজ টেক্সট: "উপন্যাস · পর্ব N"
-    final badgeText = '${l10n.novel} · ${l10n.episode} ${episode.chapterNumber}';
+    final badgeText =
+        '${l10n.novel} · ${l10n.episode} ${episode.chapterNumber}';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 0,
       color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: widget.onTap,
@@ -57,7 +62,6 @@ class _EpisodeCardState extends State<EpisodeCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // হেডার: লেখক অ্যাভাটার, নাম ও টাইম এগো + ব্যাজ (উপন্যাস · পর্ব N)
               Row(
                 children: [
                   CachedAvatar(
@@ -71,7 +75,9 @@ class _EpisodeCardState extends State<EpisodeCard> {
                     child: GestureDetector(
                       onTap: () {
                         if (episode.authorId.isNotEmpty) {
-                          context.push('${RouteNames.user}/${episode.authorId}');
+                          context.push(
+                            '${RouteNames.user}/${episode.authorId}',
+                          );
                         }
                       },
                       child: Column(
@@ -96,10 +102,11 @@ class _EpisodeCardState extends State<EpisodeCard> {
                       ),
                     ),
                   ),
-                  // ব্যাজ: উপন্যাস · পর্ব N
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -118,9 +125,8 @@ class _EpisodeCardState extends State<EpisodeCard> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // উপন্যাসের নাম (যদি থাকে)
-              if (episode.novelTitle != null && episode.novelTitle!.isNotEmpty) ...[
+              if (episode.novelTitle != null &&
+                  episode.novelTitle!.isNotEmpty) ...[
                 Text(
                   episode.novelTitle!,
                   style: TextStyle(
@@ -133,8 +139,6 @@ class _EpisodeCardState extends State<EpisodeCard> {
                 ),
                 const SizedBox(height: 2),
               ],
-
-              // পর্বের টাইটেল
               Text(
                 episodeTitle,
                 style: const TextStyle(
@@ -143,9 +147,8 @@ class _EpisodeCardState extends State<EpisodeCard> {
                   height: 1.3,
                 ),
               ),
-
-              // কভার পিকচার (যদি থাকে)
-              if (episode.coverUrl != null && episode.coverUrl!.isNotEmpty) ...[
+              if (episode.coverUrl != null &&
+                  episode.coverUrl!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -165,8 +168,6 @@ class _EpisodeCardState extends State<EpisodeCard> {
                 ),
               ],
               const SizedBox(height: 10),
-
-              // বটম বার: এই নির্দিষ্ট পর্বের ভিউ, রিঅ্যাকশন ও কমেন্ট মেট্রিক্স + পড়ুন বাটন
               Row(
                 children: [
                   Icon(Icons.visibility_outlined, size: 16, color: secondary),
