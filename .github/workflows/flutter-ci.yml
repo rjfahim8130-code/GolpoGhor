@@ -42,7 +42,7 @@ jobs:
           fi
           ls -la android/app/ || true
 
-      # ✅ নতুন স্টেপ ১: Kotlin ভার্সন আপডেট (এরর ফিক্সের জন্য)
+      # ✅ নতুন স্টেপ ১: Kotlin ভার্সন আপডেট
       - name: Update Kotlin Version in Gradle
         run: |
           if [ -f android/build.gradle ]; then
@@ -53,13 +53,13 @@ jobs:
             echo "Kotlin version updated to 1.9.24 in build.gradle.kts"
           fi
 
-      # ✅ নতুন স্টেপ ২: Gradle Wrapper আপডেট (এরর ফিক্সের জন্য)
+      # ✅ নতুন স্টেপ ২: Gradle Wrapper আপডেট (9.5.0 এ আপডেট করা হলো)
       - name: Update Gradle Wrapper
         run: |
           cd android
-          # Gradle Wrapper 8.4 এ আপডেট করা হচ্ছে (Kotlin 1.9.24 সাপোর্টের জন্য)
-          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-all.zip|' gradle/wrapper/gradle-wrapper.properties
-          echo "Gradle wrapper updated to 8.4"
+          # ফ্লাটার প্লাগিনের চাহিদা অনুযায়ী Gradle 9.5.0 এ আপডেট করা হচ্ছে
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+          echo "Gradle wrapper updated to 9.5.0"
           cd ..
 
       - name: Ensure INTERNET permission in AndroidManifest
@@ -74,7 +74,6 @@ jobs:
               echo "INTERNET permission already present"
             fi
             
-            # অ্যাপের নাম ইংরেজিতে Golpoghor সেট করার কমান্ড
             echo "Setting app label to Golpoghor..."
             sed -i 's/android:label="[^"]*"/android:label="Golpoghor"/' "$MANIFEST"
             
