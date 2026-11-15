@@ -113,11 +113,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
         context.push('${RouteNames.user}/$id');
         break;
       case 'comment':
-        // target_type == comment — comment-এর parent target-এ যাবে
-        if (n.targetId != null && n.targetId!.isNotEmpty) {
-          // আমরা target_type-এ 'comment' হলে নিচের fallback করব
-          // পোস্টে যাওয়ার লজিক পরে যোগ হবে
-        }
         break;
     }
   }
