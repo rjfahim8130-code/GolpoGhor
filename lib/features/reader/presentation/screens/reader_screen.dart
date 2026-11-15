@@ -1,5 +1,5 @@
 // lib/features/reader/presentation/screens/reader_screen.dart
-// সংশোধিত: notification trigger, localization, author name/avatar support for episodes, description removed
+// Deep Forest Green + TTS + Sepia + Font slider + font family switcher
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +16,9 @@ import '../../../../core/services/episode_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/offline_service.dart';
 import '../../../../core/services/reaction_service.dart';
+import '../../../../core/services/reading_history_service.dart';
 import '../../../../core/services/story_service.dart';
+import '../../../../core/services/tts_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
@@ -29,6 +31,8 @@ import '../widgets/reader_content.dart';
 import '../widgets/reader_watermark.dart';
 
 enum ReaderKind { story, episode }
+
+enum ReaderTheme { light, sepia, dark }
 
 class ReaderScreen extends StatefulWidget {
   final ReaderKind kind;
@@ -51,13 +55,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
   final _bookmarkService = BookmarkService();
   final _reactionService = ReactionService();
   final _offlineService = OfflineService();
+  final _historyService = ReadingHistoryService();
+  final _tts = TtsService.instance;
   final _scroll = ScrollController();
 
   StoryModel? _story;
   EpisodeModel? _episode;
   String? _novelTitle;
-  String? _authorName;   
-  String? _authorAvatar; 
+  String? _authorName;
+  String? _authorAvatar;
   List<EpisodeModel> _siblings = [];
 
   bool _loading = true;
@@ -71,6 +77,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   int _viewCount = 0;
   double _fontScale = AppConstants.defaultFontScale;
   double _progress = 0;
+  ReaderTheme _readerTheme = ReaderTheme.light;
+  bool _ttsPlaying = false;
 
   bool get _isStory => widget.kind == ReaderKind.story;
 
@@ -106,6 +114,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   @override
   void dispose() {
+    _tts.stop();
     _scroll.dispose();
     super.dispose();
   }
@@ -130,6 +139,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
       if (!mounted) return;
       setState(() => _loading = false);
+      _recordHistory();
     } catch (e) {
       final offline = await _offlineService.get(widget.id);
       if (offline != null) {
@@ -225,14 +235,41 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _episodeService.recordView(ep.id);
   }
 
+  Future<void> _recordHistory() async {
+    try {
+      if (_isStory && _story != null) {
+        await _historyService.record(
+          id: _story!.id,
+          title: _story!.title,
+          author: _story!.authorName,
+          coverUrl: _story!.coverUrl,
+          kind: 'story',
+          progress: _progress,
+        );
+      } else if (!_isStory && _episode != null) {
+        await _historyService.record(
+          id: 'ep_${_episode!.id}',
+          title: _episode!.title.isNotEmpty
+              ? _episode!.title
+              : 'Episode ${_episode!.chapterNumber}',
+          author: _authorName,
+          kind: 'episode',
+          progress: _progress,
+        );
+      }
+    } catch (_) {}
+  }
+
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
-    final l10n = context.l10n;
-    return l10n.t(key);
+    return context.l10n.t(key);
   }
 
-  Future<void> _toggleBookmark() async {
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 2 (Actions) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
+    Future<void> _toggleBookmark() async {
     try {
       if (_isStory) {
         final on = await _bookmarkService.toggleStoryBookmark(widget.id);
@@ -241,7 +278,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
         final l10n = context.l10n;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
+            content:
+                Text(on ? l10n.bookmarkAdded : l10n.bookmarkRemoved),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -257,7 +295,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Future<void> _download() async {
     final l10n = context.l10n;
     if (_downloaded) {
-      await _offlineService.remove(_isStory ? widget.id : 'ep_${widget.id}');
+      await _offlineService.remove(
+        _isStory ? widget.id : 'ep_${widget.id}',
+      );
       if (!mounted) return;
       setState(() => _downloaded = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -324,7 +364,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
           reactionType: type,
           ownerId: _ownerId,
         );
-        final counts = await _reactionService.countEpisodeReactions(widget.id);
+        final counts =
+            await _reactionService.countEpisodeReactions(widget.id);
         total = counts.values.fold(0, (a, b) => a + b);
       }
       if (!mounted) return;
@@ -383,10 +424,34 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  Future<void> _toggleTts() async {
+    if (_ttsPlaying) {
+      await _tts.stop();
+      if (mounted) setState(() => _ttsPlaying = false);
+      return;
+    }
+    final blocks = _isStory
+        ? (_story?.contentBlocks ?? [])
+        : (_episode?.contentBlocks ?? []);
+    final text = blocks
+        .where((b) => b.isText && (b.text ?? '').isNotEmpty)
+        .map((b) => b.text!)
+        .join(' ');
+    if (text.isEmpty) return;
+    setState(() => _ttsPlaying = true);
+    try {
+      await _tts.speak(text);
+      if (mounted) setState(() => _ttsPlaying = false);
+    } catch (_) {
+      if (mounted) setState(() => _ttsPlaying = false);
+    }
+  }
+
   void _showFontSheet() {
     final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -395,7 +460,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Font size
                     Text(
                       l10n.fontSize,
                       style: const TextStyle(
@@ -403,14 +470,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale - AppConstants.fontScaleStep)
+                              _fontScale = (_fontScale -
+                                      AppConstants.fontScaleStep)
                                   .clamp(
                                 AppConstants.minFontScale,
                                 AppConstants.maxFontScale,
@@ -420,11 +488,29 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           },
                           icon: const Icon(Icons.text_decrease),
                         ),
-                        Text('${(_fontScale * 100).round()}%'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${(_fontScale * 100).round()}%',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale + AppConstants.fontScaleStep)
+                              _fontScale = (_fontScale +
+                                      AppConstants.fontScaleStep)
                                   .clamp(
                                 AppConstants.minFontScale,
                                 AppConstants.maxFontScale,
@@ -433,6 +519,52 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             setModal(() {});
                           },
                           icon: const Icon(Icons.text_increase),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+
+                    // Theme switch
+                    Text(
+                      l10n.theme,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _themeChip(
+                          l10n.light,
+                          ReaderTheme.light,
+                          Colors.white,
+                          Colors.black87,
+                          () {
+                            setState(() => _readerTheme = ReaderTheme.light);
+                            setModal(() {});
+                          },
+                        ),
+                        _themeChip(
+                          'Sepia',
+                          ReaderTheme.sepia,
+                          AppColors.sepiaBg,
+                          AppColors.sepiaText,
+                          () {
+                            setState(() => _readerTheme = ReaderTheme.sepia);
+                            setModal(() {});
+                          },
+                        ),
+                        _themeChip(
+                          l10n.dark,
+                          ReaderTheme.dark,
+                          Colors.black87,
+                          Colors.white,
+                          () {
+                            setState(() => _readerTheme = ReaderTheme.dark);
+                            setModal(() {});
+                          },
                         ),
                       ],
                     ),
@@ -446,6 +578,41 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  Widget _themeChip(
+    String label,
+    ReaderTheme theme,
+    Color bg,
+    Color fg,
+    VoidCallback onTap,
+  ) {
+    final selected = _readerTheme == theme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 80,
+        height: 60,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.grey,
+            width: selected ? 2.5 : 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: fg,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
     final l10n = context.l10n;
@@ -453,14 +620,47 @@ class _ReaderScreenState extends State<ReaderScreen> {
       SnackBar(content: Text(l10n.copied)),
     );
   }
-    @override
+
+// ─────────────────────────────────────────────────────────
+// ⬇️ Part 3 (Build method) এখন নিচে paste করবেন
+// ─────────────────────────────────────────────────────────
+    Color get _bgColor {
+    switch (_readerTheme) {
+      case ReaderTheme.light:
+        return Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkBg
+            : AppColors.lightBg;
+      case ReaderTheme.sepia:
+        return AppColors.sepiaBg;
+      case ReaderTheme.dark:
+        return const Color(0xFF0A0E14);
+    }
+  }
+
+  Color get _textColor {
+    switch (_readerTheme) {
+      case ReaderTheme.light:
+        return Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkText
+            : AppColors.lightText;
+      case ReaderTheme.sepia:
+        return AppColors.sepiaText;
+      case ReaderTheme.dark:
+        return Colors.white70;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final textPrimary = isDark ? AppColors.darkText : AppColors.lightText;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = _bgColor;
+    final textPrimary = _textColor;
+    final textSecondary = _readerTheme == ReaderTheme.sepia
+        ? AppColors.sepiaText.withValues(alpha: 0.7)
+        : (isDark
+            ? AppColors.darkTextSecondary
+            : AppColors.lightTextSecondary);
 
     if (_loading) {
       return Scaffold(
@@ -501,11 +701,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
         : (_episode?.title.isNotEmpty == true
             ? _episode!.title
             : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
-    
+
     final authorName = _authorName ?? _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
-    
+
     final publicCode =
         _isStory ? _story?.publicCode : _episode?.publicCode;
     final contentBlocks = _isStory
@@ -527,7 +727,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
@@ -545,7 +748,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.flag_outlined, color: Colors.white),
+                          icon: const Icon(
+                            Icons.flag_outlined,
+                            color: Colors.white,
+                          ),
                           onPressed: () {
                             ReportSheet.show(
                               context,
@@ -618,7 +824,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             ),
                           ),
                         ),
-                        if (publicCode != null && publicCode.isNotEmpty) ...[
+                        if (publicCode != null &&
+                            publicCode.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => _copyCode(publicCode),
@@ -629,7 +836,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -719,6 +927,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 icon: Icons.text_fields,
                 label: l10n.fontSize,
                 onTap: _showFontSheet,
+              ),
+              ReaderBottomBarItem(
+                icon: _ttsPlaying ? Icons.stop : Icons.volume_up,
+                label: 'TTS',
+                active: _ttsPlaying,
+                onTap: _toggleTts,
               ),
               if (_isStory)
                 ReaderBottomBarItem(
