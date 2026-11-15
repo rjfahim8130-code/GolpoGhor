@@ -1,5 +1,5 @@
 // lib/features/offline/presentation/screens/offline_reader_screen.dart
-// সংশোধিত: localization
+// Deep Forest Green + font slider styled + offline indicator
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,7 +100,24 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           },
                           icon: const Icon(Icons.text_decrease),
                         ),
-                        Text('${(_fontScale * 100).round()}%'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${(_fontScale * 100).round()}%',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
                         IconButton(
                           onPressed: () {
                             setState(() {
@@ -264,6 +281,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                   children: [
+                    // Offline badge
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
@@ -275,13 +293,24 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           color: AppColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          '${l10n.offline} MODE',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.offline_bolt,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.offline,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
