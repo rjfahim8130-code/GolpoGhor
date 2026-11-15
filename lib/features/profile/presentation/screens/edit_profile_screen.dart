@@ -1,5 +1,5 @@
 // lib/features/profile/presentation/screens/edit_profile_screen.dart
-// সংশোধিত: username বাদ, nickname যোগ, avatar delete R2, localization
+// Deep Forest Green + cover image + R2 avatar delete
 
 import 'dart:io';
 
@@ -34,6 +34,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   String? _avatarUrl;
   String? _oldAvatarUrl;
+  String? _coverUrl;
+  String? _oldCoverUrl;
   String _userId = '';
   bool _loading = true;
   bool _saving = false;
@@ -60,6 +62,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _bio.text = p.bio ?? '';
       _avatarUrl = p.avatarUrl;
       _oldAvatarUrl = p.avatarUrl;
+      _coverUrl = p.coverUrl;
+      _oldCoverUrl = p.coverUrl;
       _userId = p.id;
     }
     if (mounted) setState(() => _loading = false);
@@ -85,6 +89,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
+  Future<void> _pickCover() async {
+    final x = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (x == null) return;
+    setState(() => _saving = true);
+    try {
+      final url = await _storage.uploadCover(File(x.path));
+      if (!mounted) return;
+      setState(() => _coverUrl = url);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -96,7 +120,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         avatarUrl: _avatarUrl,
       );
 
-      // পুরনো avatar R2 থেকে ডিলিট (নতুন থাকলে)
+      // পুরনো avatar R2 থেকে ডিলিট
       if (_oldAvatarUrl != null &&
           _oldAvatarUrl!.isNotEmpty &&
           _avatarUrl != null &&
@@ -104,7 +128,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         await _storage.deleteByUrl(_oldAvatarUrl);
       }
 
-      // Session cache আপডেট
+      // পুরনো cover R2 থেকে ডিলিট
+      if (_oldCoverUrl != null &&
+          _oldCoverUrl!.isNotEmpty &&
+          _coverUrl != null &&
+          _coverUrl != _oldCoverUrl) {
+        await _storage.deleteByUrl(_oldCoverUrl);
+      }
+
       await ref.read(sessionCacheProvider.notifier).save(updated);
 
       if (!mounted) return;
@@ -158,6 +189,56 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
+              // Cover image
+              GestureDetector(
+                onTap: _saving ? null : _pickCover,
+                child: Container(
+                  height: 130,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                    image: (_coverUrl != null && _coverUrl!.isNotEmpty)
+                        ? DecorationImage(
+                            image: NetworkImage(_coverUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: (_coverUrl == null || _coverUrl!.isEmpty)
+                      ? const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.photo_camera_back_outlined,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Cover',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.coverImageOptional,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Avatar
               GestureDetector(
                 onTap: _saving ? null : _pickAvatar,
@@ -208,7 +289,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // নাম
+              // Name
               TextFormField(
                 controller: _name,
                 decoration: InputDecoration(
@@ -219,7 +300,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ডাক নাম
+              // Nickname
               TextFormField(
                 controller: _nickname,
                 decoration: InputDecoration(
@@ -230,7 +311,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // বায়ো
+              // Bio
               TextFormField(
                 controller: _bio,
                 maxLines: 3,
@@ -245,13 +326,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                   onPressed: _saving ? null : _save,
                   child: _saving
                       ? const SizedBox(
