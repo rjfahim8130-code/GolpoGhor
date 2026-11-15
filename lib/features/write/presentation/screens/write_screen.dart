@@ -1,5 +1,5 @@
 // lib/features/write/presentation/screens/write_screen.dart (Part 1)
-// সংশোধিত: ডুপ্লিকেট রিমুভড ও নতুন ক্যাটাগরি সিস্টেম (মেইন গ্রুপ → সাব) যুক্ত
+// সংশোধিত: ডুপ্লিকেট রিমুভড, _isDraft বাদ দেওয়া এবং ড্রপডাউন সংক্রান্ত লজিক
 
 import 'dart:io';
 
@@ -54,7 +54,6 @@ class _WriteScreenState extends State<WriteScreen> {
   String? _coverUrl;
   bool _loading = false;
   bool _init = true;
-  bool _isDraft = false;
 
   bool get _isStory => widget.kind == WriteKind.story;
   bool get _isEdit => widget.editId != null;
@@ -92,7 +91,6 @@ class _WriteScreenState extends State<WriteScreen> {
               ? null
               : CategoryCatalog.groupOfSub(_category!, video: false);
           _coverUrl = s.coverUrl;
-          _isDraft = s.isDraft;
           _blocks
             ..clear()
             ..addAll(s.contentBlocks);
@@ -108,7 +106,6 @@ class _WriteScreenState extends State<WriteScreen> {
               ? null
               : CategoryCatalog.groupOfSub(_category!, video: false);
           _coverUrl = n.coverUrl;
-          _isDraft = n.isDraft;
         }
       }
     } catch (_) {}
@@ -424,8 +421,10 @@ class _WriteScreenState extends State<WriteScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                
+                // মেইন গ্রুপ ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                 DropdownButtonFormField<String?>(
-                  value: _categoryGroup,
+                  initialValue: _categoryGroup,
                   decoration: InputDecoration(
                     labelText: l10n.selectGroup,
                     border: const OutlineInputBorder(),
@@ -448,10 +447,13 @@ class _WriteScreenState extends State<WriteScreen> {
                     _category = null; // গ্রুপ বদলালে সাব রিসেট
                   }),
                 ),
+                
                 if (_categoryGroup != null) ...[
                   const SizedBox(height: 10),
+                  
+                  // সাব ক্যাটাগরি ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                   DropdownButtonFormField<String?>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: InputDecoration(
                       labelText: l10n.selectSubcategory,
                       border: const OutlineInputBorder(),
@@ -472,6 +474,7 @@ class _WriteScreenState extends State<WriteScreen> {
                     onChanged: (v) => setState(() => _category = v),
                   ),
                 ],
+                
                 if (_category != null || _categoryGroup != null)
                   TextButton(
                     onPressed: () => setState(() {
