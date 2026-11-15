@@ -1,5 +1,5 @@
 // lib/features/profile/presentation/screens/settings_screen.dart
-// সম্পূর্ণ নতুন: logout, delete account, language default system, localization
+// Deep Forest Green + নতুন ৩টি entry (blocked, notif settings, delete account screen)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +20,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final currentMode = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeProvider);
     final localeCode = ref.read(localeProvider.notifier).currentCode;
 
     return Scaffold(
@@ -113,6 +112,19 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push(RouteNames.setPassword),
           ),
           ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: Text(l10n.notifications),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(RouteNames.notificationSettings),
+          ),
+          ListTile(
+            leading: const Icon(Icons.block_outlined),
+            title: Text(l10n.settings),
+            subtitle: const Text('Blocked users'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(RouteNames.blockedUsers),
+          ),
+          ListTile(
             leading: const Icon(Icons.logout, color: AppColors.warning),
             title: Text(
               l10n.logout,
@@ -126,7 +138,8 @@ class SettingsScreen extends ConsumerWidget {
               l10n.deleteAccount,
               style: const TextStyle(color: AppColors.danger),
             ),
-            onTap: () => _confirmDeleteAccount(context, ref, l10n),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(RouteNames.deleteAccount),
           ),
           const Divider(),
 
@@ -199,40 +212,5 @@ class SettingsScreen extends ConsumerWidget {
     if (ok != true) return;
     await AuthService().signOut();
     if (context.mounted) context.go(RouteNames.welcome);
-  }
-
-  Future<void> _confirmDeleteAccount(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-  ) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteAccount),
-        content: Text(l10n.deleteAccountConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l10n.deleteAction,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-
-    // পরবর্তী ব্যাচে deletion service যোগ হবে
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.accountDeletionScheduled)),
-      );
-    }
   }
 }
