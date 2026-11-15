@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// Deep Forest Green + ShellRoute (bottom nav) + নতুন routes
+// ShellRoute (bottom nav) এ Discover এর পরিবর্তে Inbox যুক্ত করা হয়েছে
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +20,10 @@ import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/author/presentation/screens/author_profile_screen.dart';
 import '../features/history/presentation/screens/reading_history_screen.dart';
 import '../features/home/presentation/screens/category_screen.dart';
-import '../features/home/presentation/screens/discover_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
 import '../features/home/presentation/screens/popular_screen.dart';
 import '../features/home/presentation/screens/trending_screen.dart';
+import '../features/inbox/presentation/screens/inbox_screen.dart'; // ইনবক্স স্ক্রিন ইমপোর্ট
 import '../features/legal/presentation/screens/legal_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
 import '../features/novel/presentation/screens/novel_details_screen.dart';
@@ -88,9 +88,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // ═════════════════════════════════════════════════════════
-      // AUTH ROUTES (No bottom nav)
-      // ═════════════════════════════════════════════════════════
+      // AUTH ROUTES
       GoRoute(
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
@@ -120,9 +118,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const ProfileSetupScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // SHELL ROUTES (With bottom nav)
-      // ═════════════════════════════════════════════════════════
       ShellRoute(
         builder: (context, state, child) {
           return MainScaffold(
@@ -136,8 +132,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const HomeFeedScreen(),
           ),
           GoRoute(
-            path: RouteNames.discover,
-            builder: (_, __) => const DiscoverScreen(),
+            path: RouteNames.inbox, // Discover এর বদলে ইনবক্স
+            builder: (_, __) => const InboxScreen(),
           ),
           GoRoute(
             path: RouteNames.videos,
@@ -153,9 +149,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ═════════════════════════════════════════════════════════
-      // CONTENT ROUTES (No bottom nav)
-      // ═════════════════════════════════════════════════════════
+      // CONTENT ROUTES
       GoRoute(
         path: RouteNames.popular,
         builder: (_, __) => const PopularScreen(),
@@ -206,9 +200,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // ═════════════════════════════════════════════════════════
-      // AUTHOR & HISTORY (NEW)
-      // ═════════════════════════════════════════════════════════
+      // AUTHOR & HISTORY
       GoRoute(
         path: '${RouteNames.author}/:id',
         builder: (_, state) => AuthorProfileScreen(
@@ -220,9 +212,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const ReadingHistoryScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // WRITE
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.writeStory,
         builder: (_, __) => const WriteScreen(kind: WriteKind.story),
@@ -256,9 +246,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const DraftListScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // VIDEO
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.createVideo,
         builder: (_, __) => const CreateVideoScreen(),
@@ -270,9 +258,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // PROFILE & USER
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: '${RouteNames.user}/:id',
         builder: (_, state) => ProfileScreen(
@@ -308,9 +294,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const InsightsScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // OFFLINE
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.offline,
         builder: (_, __) => const OfflineDownloadsScreen(),
@@ -322,9 +306,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // SETTINGS & SUB-SCREENS
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
@@ -342,9 +324,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const DeleteAccountScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // ADMIN
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: RouteNames.admin,
         builder: (_, __) => const AdminDashboardScreen(),
@@ -354,9 +334,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const AdminUsersScreen(),
       ),
 
-      // ═════════════════════════════════════════════════════════
       // LEGAL
-      // ═════════════════════════════════════════════════════════
       GoRoute(
         path: '${RouteNames.legal}/:type',
         builder: (_, state) => LegalScreen(
