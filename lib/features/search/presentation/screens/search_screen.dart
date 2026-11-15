@@ -1,17 +1,14 @@
-// lib/features/search/presentation/screens/search_screen.dart (Part 1)
-// সংশোধিত: SearchSuggestionService ও CategoryCatalog যুক্ত
+// lib/features/search/presentation/screens/search_screen.dart
+// ট্রেন্ডিং ও জনপ্রিয় বাটন এবং নিচের গাইড টেক্সট বাদ দেওয়া হয়েছে
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/models/novel_model.dart';
-import '../../../../core/models/story_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/search_service.dart';
 import '../../../../core/services/search_suggestion_service.dart';
@@ -166,52 +163,16 @@ class _SearchScreenState extends State<SearchScreen> {
               : _buildResults(l10n, isDark),
     );
   }
-  // lib/features/search/presentation/screens/search_screen.dart (Part 2)
 
   Widget _buildIdle(AppLocalizations l10n, bool isDark) {
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ============ Popular & Trending বাটন ============
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => context.push(RouteNames.popular),
-                  icon: const Icon(Icons.star_outline),
-                  label: Text(l10n.popular),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => context.push(RouteNames.trending),
-                  icon: const Icon(Icons.local_fire_department_outlined),
-                  label: Text(l10n.trending),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
         // ============ Popular Searches (Frequency) ============
         if (_topSearches.isNotEmpty) ...[
           Text(
             l10n.popularSearches,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -236,7 +197,7 @@ class _SearchScreenState extends State<SearchScreen> {
             children: [
               Text(
                 l10n.recent,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const Spacer(),
               TextButton(
@@ -263,7 +224,7 @@ class _SearchScreenState extends State<SearchScreen> {
         // ============ Categories (Writing Groups) ============
         Text(
           l10n.category,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -277,11 +238,6 @@ class _SearchScreenState extends State<SearchScreen> {
               },
             );
           }).toList(),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          l10n.searchCodeHint,
-          style: TextStyle(fontSize: 13, color: secondary),
         ),
       ],
     );
