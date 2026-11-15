@@ -1,5 +1,5 @@
 // lib/routing/route_names.dart
-// সংশোধিত: videoSearch রাউট কনস্ট্যান্ট যুক্ত করা হয়েছে
+// নতুন ফিচারের জন্য route constants
 
 class RouteNames {
   RouteNames._();
@@ -36,7 +36,13 @@ class RouteNames {
   // ---------- Video ----------
   static const videos = '/videos';
   static const createVideo = '/create-video';
-  static const videoSearch = '/video-search'; // ✅ নতুন যুক্ত করা হলো
+  static const videoSearch = '/video-search';
+
+  // ---------- Author (NEW) ----------
+  static const author = '/author';
+
+  // ---------- History (NEW) ----------
+  static const history = '/history';
 
   // ---------- Profile ----------
   static const profile = '/profile';
@@ -48,6 +54,11 @@ class RouteNames {
   static const follows = '/follows';
   static const insights = '/insights';
 
+  // ---------- Settings sub (NEW) ----------
+  static const notificationSettings = '/settings/notifications';
+  static const blockedUsers = '/settings/blocked';
+  static const deleteAccount = '/settings/delete-account';
+
   // ---------- Offline ----------
   static const offline = '/offline';
   static const offlineReader = '/offline-reader';
@@ -57,6 +68,9 @@ class RouteNames {
 
   // ---------- Admin ----------
   static const admin = '/admin';
+  static const adminReports = '/admin/reports';
+  static const adminReportDetail = '/admin/report-detail';
+  static const adminUsers = '/admin/users';
 
   // ---------- Legal ----------
   static const legal = '/legal';
