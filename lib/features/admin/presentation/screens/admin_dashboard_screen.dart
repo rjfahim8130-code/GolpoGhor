@@ -1,5 +1,5 @@
 // lib/features/admin/presentation/screens/admin_dashboard_screen.dart
-// সংশোধিত: localization + মাসিক ইউজার স্ট্যাটস
+// Deep Forest Green + User Management entry + localization
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,11 +11,12 @@ import '../../../../core/services/admin_service.dart';
 import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
-import '../../../../core/widgets/empty_view.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
 import '../widgets/admin_stats_card.dart';
+import 'admin_users_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -107,7 +108,7 @@ class _AdminDashboardScreenState
             onPressed: () => context.pop(),
           ),
         ),
-        body: EmptyView(
+        body: EmptyState(
           icon: Icons.lock_outline,
           title: l10n.accessDenied,
           subtitle: l10n.adminOnlyScreen,
@@ -129,7 +130,7 @@ class _AdminDashboardScreenState
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final secondary =
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
@@ -197,6 +198,45 @@ class _AdminDashboardScreenState
 
             const SizedBox(height: 24),
 
+            // ---------------- User Management ----------------
+            _sectionHeader(l10n.users),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                ),
+              ),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: Icon(Icons.people, color: Colors.white, size: 20),
+                ),
+                title: Text(
+                  l10n.users,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  '${_stats['users'] ?? 0} ${l10n.totalUsers}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AdminUsersScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // ---------------- Monthly Users ----------------
             _sectionHeader(l10n.monthlyUsers),
             Card(
@@ -204,6 +244,11 @@ class _AdminDashboardScreenState
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -287,6 +332,11 @@ class _AdminDashboardScreenState
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                ),
               ),
               child: SwitchListTile(
                 activeColor: AppColors.primary,
@@ -353,6 +403,11 @@ class _AdminDashboardScreenState
                   margin: const EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.lightDivider,
+                    ),
                   ),
                   child: ListTile(
                     leading: const CircleAvatar(
@@ -423,6 +478,11 @@ class _AdminDashboardScreenState
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
