@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
+import 'package:rxdart/rxdart.dart';
 import 'package:video_compress/video_compress.dart';
 
 class MediaCompressService {
