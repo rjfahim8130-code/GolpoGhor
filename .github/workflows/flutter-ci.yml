@@ -42,7 +42,7 @@ jobs:
           fi
           ls -la android/app/ || true
 
-      # ✅ নতুন স্টেপ ১: Kotlin ভার্সন আপডেট
+      # ✅ Kotlin ভার্সন আপডেট
       - name: Update Kotlin Version in Gradle
         run: |
           if [ -f android/build.gradle ]; then
@@ -53,13 +53,12 @@ jobs:
             echo "Kotlin version updated to 1.9.24 in build.gradle.kts"
           fi
 
-      # ✅ নতুন স্টেপ ২: Gradle Wrapper আপডেট (9.5.0 এ আপডেট করা হলো)
+      # ✅ Gradle Wrapper আপডেট (Lint এরর ফিক্সের জন্য 8.14.3 এ সেট করা হলো)
       - name: Update Gradle Wrapper
         run: |
           cd android
-          # ফ্লাটার প্লাগিনের চাহিদা অনুযায়ী Gradle 9.5.0 এ আপডেট করা হচ্ছে
-          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
-          echo "Gradle wrapper updated to 9.5.0"
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14.3-all.zip|' gradle/wrapper/gradle-wrapper.properties
+          echo "Gradle wrapper updated to 8.14.3"
           cd ..
 
       - name: Ensure INTERNET permission in AndroidManifest
