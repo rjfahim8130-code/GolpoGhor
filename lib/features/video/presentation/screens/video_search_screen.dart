@@ -1,5 +1,5 @@
 // lib/features/video/presentation/screens/video_search_screen.dart
-// শুধু ভিডিও — SearchService.searchVideos()
+// শুধু ভিডিও — SearchService.searchVideos() + focus query fix
 
 import 'dart:async';
 
@@ -26,9 +26,6 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
   final _focus = FocusNode();
   final _search = SearchService();
   final _suggestions = SearchSuggestionService();
-
-  // ভিডিও trending আলাদা key চাইলে service-এ namespace prefix দিন
-  // এখনকার recordQuery একই local map ব্যবহার করতে পারে
 
   Timer? _debounce;
   bool _loading = false;
@@ -103,9 +100,13 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
 
   void _apply(String q) {
     _controller.text = q;
-    _controller.selection =
-        TextSelection.collapsed(offset: q.length);
+    _controller.selection = TextSelection.collapsed(offset: q.length);
     _run(q);
+  }
+
+  void _openVideo(VideoModel v) {
+    // ✅ FIX: focus query param সহ navigate
+    context.push('${RouteNames.videos}?focus=${v.id}');
   }
 
   @override
@@ -123,7 +124,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
           onChanged: _onChanged,
           onSubmitted: _run,
           decoration: InputDecoration(
-            hintText: l10n.searchHint, // বা videoSearchHint key
+            hintText: l10n.searchHint,
             border: InputBorder.none,
           ),
         ),
@@ -144,7 +145,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _last.isEmpty
-              ? _buildIdle(l10n)
+              ? _buildIdle(l10n, isDark)
               : _results.isEmpty
                   ? Center(child: Text(l10n.noSearchResults))
                   : ListView.builder(
@@ -154,9 +155,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                         return ListTile(
                           leading: const Icon(Icons.videocam_outlined),
                           title: Text(
-                            v.title.trim().isEmpty
-                                ? l10n.video
-                                : v.title,
+                            v.displayTitleOr(l10n.video),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -164,17 +163,17 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                             v.authorName ?? l10n.author,
                             maxLines: 1,
                           ),
-                          onTap: () {
-                            // ফিডে নির্দিষ্ট ভিডিও খুলতে চাইলে id পাস করুন
-                            context.push(RouteNames.videos);
-                          },
+                          onTap: () => _openVideo(v),
                         );
                       },
                     ),
     );
   }
 
-  Widget _buildIdle(AppLocalizations l10n) {
+  Widget _buildIdle(AppLocalizations l10n, bool isDark) {
+    final secondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -194,6 +193,22 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
           ),
           const SizedBox(height: 20),
         ],
+        if (_recent.isNotEmpty) ...[
+          Text(l10n.recent,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _recent
+                .map((q) => ActionChip(
+                      label: Text(q),
+                      onPressed: () => _apply(q),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 20),
+        ],
         Text(l10n.category,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
@@ -204,9 +219,13 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
             return ActionChip(
               label: Text(l10n.t(g)),
               onPressed: () => _apply(l10n.t(g)),
-              // উন্নত: category key দিয়ে filter API
             );
           }).toList(),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.searchCodeHint,
+          style: TextStyle(fontSize: 13, color: secondary),
         ),
       ],
     );
