@@ -156,6 +156,38 @@ class BookmarkService {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // Episode Bookmark (উপন্যাসের পর্বের জন্য)
+  // ═══════════════════════════════════════════════════════════
+
+  /// Episode-এর জন্য (উপন্যাসের আওতায়) বুকমার্ক টগল
+  Future<bool> toggleEpisodeBookmark(String episodeId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('notLoggedIn');
+
+    final existing = await _client
+        .from(SupabaseConstants.bookmarks)
+        .select('id')
+        .eq('user_id', uid)
+        .eq('episode_id', episodeId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from(SupabaseConstants.bookmarks)
+          .delete()
+          .eq('user_id', uid)
+          .eq('episode_id', episodeId);
+      return false;
+    }
+
+    await _client.from(SupabaseConstants.bookmarks).insert({
+      'user_id': uid,
+      'episode_id': episodeId,
+    });
+    return true;
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // Saved List (সম্পূর্ণ তথ্য সহ)
   // ═══════════════════════════════════════════════════════════
 
