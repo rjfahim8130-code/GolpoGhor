@@ -219,6 +219,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Future<void> _toggleBookmark() async {
     try {
+      // ✅ সঠিক মেথড (Story হলে toggleStoryBookmark এবং Episode হলে toggleEpisodeBookmark)
       final on = _isStory
           ? await _bookmarkService.toggleStoryBookmark(widget.id)
           : await _bookmarkService.toggleEpisodeBookmark(widget.id);
@@ -587,7 +588,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             Expanded(
                               child: Text(
                                 title,
-                                style: TextStyle(fontSize: 22 * _globalFontScale, fontWeight: FontWeight.bold, height: 1.3, color: textPrimary),
+                                // ✅ ডাবল টাইপ ফিক্স করা হয়েছে (.toDouble())
+                                style: TextStyle(fontSize: (22 * _globalFontScale).toDouble(), fontWeight: FontWeight.bold, height: 1.3, color: textPrimary),
                               ),
                             ),
                             if (publicCode != null && publicCode.isNotEmpty) ...[
