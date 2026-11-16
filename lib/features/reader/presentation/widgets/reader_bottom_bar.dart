@@ -1,5 +1,5 @@
 // lib/features/reader/presentation/widgets/reader_bottom_bar.dart
-// Deep Forest Green bottom bar
+// শুধু আইকন সম্বলিত বটম বার (লেবেল ছাড়া)
 
 import 'package:flutter/material.dart';
 
@@ -28,10 +28,10 @@ class ReaderBottomBar extends StatelessWidget {
                 .map(
                   (item) => _Btn(
                     icon: item.icon,
-                    label: item.label,
                     onTap: item.onTap,
                     loading: item.loading,
                     active: item.active,
+                    tooltip: item.tooltip,
                   ),
                 )
                 .toList(),
@@ -44,14 +44,14 @@ class ReaderBottomBar extends StatelessWidget {
 
 class ReaderBottomBarItem {
   final IconData? icon;
-  final String label;
+  final String tooltip;
   final VoidCallback? onTap;
   final bool loading;
   final bool active;
 
   const ReaderBottomBarItem({
     this.icon,
-    required this.label,
+    required this.tooltip,
     this.onTap,
     this.loading = false,
     this.active = false,
@@ -60,14 +60,14 @@ class ReaderBottomBarItem {
 
 class _Btn extends StatelessWidget {
   final IconData? icon;
-  final String label;
+  final String tooltip;
   final VoidCallback? onTap;
   final bool loading;
   final bool active;
 
   const _Btn({
     this.icon,
-    required this.label,
+    required this.tooltip,
     this.onTap,
     this.loading = false,
     this.active = false,
@@ -75,38 +75,21 @@ class _Btn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = onTap == null ? Colors.white38 : Colors.white;
+    final color = onTap == null ? Colors.white38 : (active ? Colors.amber : Colors.white);
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (loading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            else
-              Icon(icon ?? Icons.circle, size: 22, color: color),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+    return IconButton(
+      onPressed: onTap,
+      tooltip: tooltip,
+      icon: loading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : Icon(icon ?? Icons.circle, size: 24, color: color),
     );
   }
 }
