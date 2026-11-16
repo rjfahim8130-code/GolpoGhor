@@ -19,12 +19,12 @@ import '../../../reader/presentation/widgets/reader_bottom_bar.dart';
 import '../../../reader/presentation/widgets/reader_content.dart';
 import '../../../reader/presentation/widgets/reader_watermark.dart';
 
-// রিডার স্ক্রিন থেকে গ্লোবাল ভ্যারিয়েবল রিউজ করা হচ্ছে
+// রিডার স্ক্রিন থেকে গ্লোবাল থিম এবং ফন্ট কনফিগারেশন শেয়ার করা হচ্ছে
 enum ReaderTheme { light, sepia, dark }
 
-// গ্লোবাল স্টেট রেফারেন্স (অনলাইনের সাথে সিংক্রোনাইজড থাকবে)
-extern double _globalFontScale;
-extern ReaderTheme _globalReaderTheme;
+// গ্লোবাল স্টেট ভ্যারিয়েবল (অনলাইন ও অফলাইন উভয় স্ক্রিনের জন্য সিংক্রোনাইজড)
+double _globalFontScale = AppConstants.defaultFontScale;
+ReaderTheme _globalReaderTheme = ReaderTheme.light;
 
 class OfflineReaderScreen extends StatefulWidget {
   final String itemId;
@@ -82,7 +82,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   EpisodeModel? get _prev {
     final item = _item;
     if (item == null || item.novelId == null || _siblings.isEmpty) return null;
-    // itemId বা ep_id ম্যাচ করে আগের পর্ব বের করা
     final cleanId = widget.itemId.startsWith('ep_') ? widget.itemId.substring(3) : widget.itemId;
     final i = _siblings.indexWhere((e) => e.id == cleanId);
     if (i > 0) return _siblings[i - 1];
@@ -383,7 +382,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                         Text(
                           item.title,
                           style: TextStyle(
-                            fontSize: 22 * _globalFontScale,
+                            fontSize: (22 * _globalFontScale).toDouble(),
                             fontWeight: FontWeight.bold,
                             height: 1.3,
                             color: textPrimary,
@@ -422,7 +421,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   ],
                 ),
               ),
-              // অফলাইন বটম বার (ডাউনলোডের বদলে ডিলিট বাটন এবং ৪টি আইকন)
+              // অফলাইন বটম বার (ডাউনলোডের বদলে ডিলিট বাটন এবং অন্যান্য আইকন)
               ReaderBottomBar(
                 items: [
                   ReaderBottomBarItem(
@@ -433,9 +432,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   ReaderBottomBarItem(
                     icon: Icons.bookmark_border,
                     tooltip: l10n.bookmark,
-                    onTap: () {
-                      // অফলাইন বুকমার্ক লজিক বা মেসেজ
-                    },
+                    onTap: () {},
                   ),
                   ReaderBottomBarItem(
                     icon: Icons.text_fields,
@@ -456,7 +453,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
               ),
             ],
           ),
-          // অফলাইন স্ক্রিনেও আগের/পরের পর্বের ফ্লোটিং তীর চিহ্ন
+          // আগের/পরের পর্বের ফ্লোটিং তীর চিহ্ন
           if (_prev != null || _next != null)
             Positioned(
               left: 16,
@@ -471,7 +468,6 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       onPressed: () {
-                        // অফলাইন আইটেমের আইডি ফরম্যাট (ep_id অথবা id)
                         final targetId = _prev!.id;
                         context.pushReplacement('${RouteNames.offlineReader}/ep_$targetId');
                       },
