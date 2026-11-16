@@ -1,5 +1,5 @@
 // lib/features/offline/presentation/screens/offline_reader_screen.dart
-// Deep Forest Green + font slider styled + offline indicator
+// Offline Reader: Delete instead of download, Global Theme/Font, Floating Episode Arrows
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,11 +9,22 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/offline_service.dart';
+import '../../../../core/services/episode_service.dart'; // সিকোয়েন্স বা সিবলিং পর্বের জন্য
+import '../../../../core/models/episode_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
+import '../../../../routing/route_names.dart';
+import '../../../reader/presentation/widgets/reader_bottom_bar.dart';
 import '../../../reader/presentation/widgets/reader_content.dart';
 import '../../../reader/presentation/widgets/reader_watermark.dart';
+
+// রিডার স্ক্রিন থেকে গ্লোবাল ভ্যারিয়েবল রিউজ করা হচ্ছে
+enum ReaderTheme { light, sepia, dark }
+
+// গ্লোবাল স্টেট রেফারেন্স (অনলাইনের সাথে সিংক্রোনাইজড থাকবে)
+extern double _globalFontScale;
+extern ReaderTheme _globalReaderTheme;
 
 class OfflineReaderScreen extends StatefulWidget {
   final String itemId;
@@ -26,12 +37,13 @@ class OfflineReaderScreen extends StatefulWidget {
 
 class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   final _service = OfflineService();
+  final _episodeService = EpisodeService();
   final _scroll = ScrollController();
 
   OfflineItem? _item;
   bool _loading = true;
-  double _fontScale = AppConstants.defaultFontScale;
   double _progress = 0;
+  List<EpisodeModel> _siblings = [];
 
   @override
   void initState() {
@@ -55,6 +67,11 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
 
   Future<void> _load() async {
     final item = await _service.get(widget.itemId);
+    if (item != null && item.novelId != null) {
+      try {
+        _siblings = await _episodeService.getByNovel(item.novelId!);
+      } catch (_) {}
+    }
     if (!mounted) return;
     setState(() {
       _item = item;
@@ -62,10 +79,30 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
     });
   }
 
+  EpisodeModel? get _prev {
+    final item = _item;
+    if (item == null || item.novelId == null || _siblings.isEmpty) return null;
+    // itemId বা ep_id ম্যাচ করে আগের পর্ব বের করা
+    final cleanId = widget.itemId.startsWith('ep_') ? widget.itemId.substring(3) : widget.itemId;
+    final i = _siblings.indexWhere((e) => e.id == cleanId);
+    if (i > 0) return _siblings[i - 1];
+    return null;
+  }
+
+  EpisodeModel? get _next {
+    final item = _item;
+    if (item == null || item.novelId == null || _siblings.isEmpty) return null;
+    final cleanId = widget.itemId.startsWith('ep_') ? widget.itemId.substring(3) : widget.itemId;
+    final i = _siblings.indexWhere((e) => e.id == cleanId);
+    if (i >= 0 && i < _siblings.length - 1) return _siblings[i + 1];
+    return null;
+  }
+
   void _showFontSheet() {
     final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -74,43 +111,34 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
                       l10n.fontSize,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale -
-                                      AppConstants.fontScaleStep)
-                                  .clamp(
-                                AppConstants.minFontScale,
-                                AppConstants.maxFontScale,
-                              );
+                              _globalFontScale = (_globalFontScale - AppConstants.fontScaleStep)
+                                  .clamp(AppConstants.minFontScale, AppConstants.maxFontScale);
                             });
                             setModal(() {});
                           },
                           icon: const Icon(Icons.text_decrease),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${(_fontScale * 100).round()}%',
+                            '${(_globalFontScale * 100).round()}%',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -121,17 +149,36 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _fontScale = (_fontScale +
-                                      AppConstants.fontScaleStep)
-                                  .clamp(
-                                AppConstants.minFontScale,
-                                AppConstants.maxFontScale,
-                              );
+                              _globalFontScale = (_globalFontScale + AppConstants.fontScaleStep)
+                                  .clamp(AppConstants.minFontScale, AppConstants.maxFontScale);
                             });
                             setModal(() {});
                           },
                           icon: const Icon(Icons.text_increase),
                         ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+                    Text(
+                      l10n.theme,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _themeChip(l10n.light, ReaderTheme.light, Colors.white, Colors.black87, () {
+                          setState(() => _globalReaderTheme = ReaderTheme.light);
+                          setModal(() {});
+                        }),
+                        _themeChip('Sepia', ReaderTheme.sepia, AppColors.sepiaBg, AppColors.sepiaText, () {
+                          setState(() => _globalReaderTheme = ReaderTheme.sepia);
+                          setModal(() {});
+                        }),
+                        _themeChip(l10n.dark, ReaderTheme.dark, Colors.black87, Colors.white, () {
+                          setState(() => _globalReaderTheme = ReaderTheme.dark);
+                          setModal(() {});
+                        }),
                       ],
                     ),
                   ],
@@ -141,6 +188,31 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _themeChip(String label, ReaderTheme theme, Color bg, Color fg, VoidCallback onTap) {
+    final selected = _globalReaderTheme == theme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 80,
+        height: 60,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.grey,
+            width: selected ? 2.5 : 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(color: fg, fontSize: 12, fontWeight: selected ? FontWeight.bold : FontWeight.normal),
+        ),
+      ),
     );
   }
 
@@ -166,16 +238,10 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
         title: Text(l10n.delete),
         content: Text(item.title),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
-            ),
+            child: Text(l10n.delete, style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -189,19 +255,42 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
 
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    final l10n = context.l10n;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.copied)),
+      SnackBar(content: Text(context.l10n.copied)),
     );
+  }
+
+  Color get _bgColor {
+    switch (_globalReaderTheme) {
+      case ReaderTheme.light:
+        return Theme.of(context).brightness == Brightness.dark ? AppColors.darkBg : AppColors.lightBg;
+      case ReaderTheme.sepia:
+        return AppColors.sepiaBg;
+      case ReaderTheme.dark:
+        return const Color(0xFF0A0E14);
+    }
+  }
+
+  Color get _textColor {
+    switch (_globalReaderTheme) {
+      case ReaderTheme.light:
+        return Theme.of(context).brightness == Brightness.dark ? AppColors.darkText : AppColors.lightText;
+      case ReaderTheme.sepia:
+        return AppColors.sepiaText;
+      case ReaderTheme.dark:
+        return Colors.white70;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = _bgColor;
+    final textPrimary = _textColor;
+    final secondary = _globalReaderTheme == ReaderTheme.sepia
+        ? AppColors.sepiaText.withValues(alpha: 0.7)
+        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
 
     if (_loading) {
       return Scaffold(backgroundColor: bg, body: const LoadingView());
@@ -209,10 +298,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
     if (_item == null) {
       return Scaffold(
         backgroundColor: bg,
-        appBar: AppBar(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-        ),
+        appBar: AppBar(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
         body: ErrorView(message: l10n.offlineFileNotFound),
       );
     }
@@ -221,201 +307,195 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
 
     return Scaffold(
       backgroundColor: bg,
-      body: Column(
+      body: Stack(
         children: [
-          Material(
-            color: AppColors.primary,
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 48,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => context.pop(),
+          Column(
+            children: [
+              Material(
+                color: AppColors.primary,
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 48,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Colors.white),
+                              onPressed: () => context.pop(),
+                            ),
+                            Expanded(
+                              child: Text(
+                                item.subtitle ?? item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(right: 12),
+                              child: Icon(Icons.offline_bolt, size: 18, color: Colors.white70),
+                            ),
+                          ],
                         ),
-                        Expanded(
-                          child: Text(
-                            item.subtitle ?? item.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                      ),
+                      LinearProgressIndicator(
+                        value: _progress,
+                        minHeight: 2,
+                        backgroundColor: Colors.white24,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    const Positioned.fill(child: ReaderWatermark()),
+                    ListView(
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.offline_bolt, size: 14, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.offline,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: Icon(
-                            Icons.offline_bolt,
-                            size: 18,
-                            color: Colors.white70,
+                        const SizedBox(height: 12),
+                        Text(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 22 * _globalFontScale,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                            color: textPrimary,
+                          ),
+                        ),
+                        if (item.authorName != null || item.publicCode != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (item.authorName != null)
+                                Text(item.authorName!, style: TextStyle(color: secondary)),
+                              if (item.publicCode != null) ...[
+                                if (item.authorName != null) Text(' · ', style: TextStyle(color: secondary)),
+                                Text(
+                                  item.publicCode!,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 4),
+                                GestureDetector(
+                                  onTap: () => _copyCode(item.publicCode!),
+                                  child: const Icon(Icons.copy, size: 14),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        SelectionContainer.disabled(
+                          child: ReaderContent(
+                            blocks: item.contentBlocks,
+                            fontScale: _globalFontScale,
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              // অফলাইন বটম বার (ডাউনলোডের বদলে ডিলিট বাটন এবং ৪টি আইকন)
+              ReaderBottomBar(
+                items: [
+                  ReaderBottomBarItem(
+                    icon: Icons.delete_outline,
+                    tooltip: l10n.delete,
+                    onTap: _deleteOffline,
                   ),
-                  LinearProgressIndicator(
-                    value: _progress,
-                    minHeight: 2,
-                    backgroundColor: Colors.white24,
-                    color: Colors.white,
+                  ReaderBottomBarItem(
+                    icon: Icons.bookmark_border,
+                    tooltip: l10n.bookmark,
+                    onTap: () {
+                      // অফলাইন বুকমার্ক লজিক বা মেসেজ
+                    },
+                  ),
+                  ReaderBottomBarItem(
+                    icon: Icons.text_fields,
+                    tooltip: l10n.fontSize,
+                    onTap: _showFontSheet,
+                  ),
+                  ReaderBottomBarItem(
+                    icon: Icons.palette_outlined,
+                    tooltip: l10n.theme,
+                    onTap: _showFontSheet,
+                  ),
+                  ReaderBottomBarItem(
+                    icon: Icons.share_outlined,
+                    tooltip: l10n.share,
+                    onTap: _share,
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-          Expanded(
-            child: Stack(
-              children: [
-                const Positioned.fill(child: ReaderWatermark()),
-                ListView(
-                  controller: _scroll,
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                  children: [
-                    // Offline badge
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.offline_bolt,
-                              size: 14,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              l10n.offline,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      item.title,
-                      style: TextStyle(
-                        fontSize: 22 * _fontScale,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-                    if (item.authorName != null ||
-                        item.publicCode != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (item.authorName != null)
-                            Text(
-                              item.authorName!,
-                              style: TextStyle(color: secondary),
-                            ),
-                          if (item.publicCode != null) ...[
-                            if (item.authorName != null)
-                              Text(' · ',
-                                  style: TextStyle(color: secondary)),
-                            Text(
-                              item.publicCode!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () => _copyCode(item.publicCode!),
-                              child: const Icon(Icons.copy, size: 14),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    SelectionContainer.disabled(
-                      child: ReaderContent(
-                        blocks: item.contentBlocks,
-                        fontScale: _fontScale,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Material(
-            color: AppColors.primary,
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _barBtn(
-                      Icons.text_fields,
-                      l10n.fontSize,
-                      _showFontSheet,
-                    ),
-                    _barBtn(
-                      Icons.share_outlined,
-                      l10n.share,
-                      _share,
-                    ),
-                    _barBtn(
-                      Icons.delete_outline,
-                      l10n.delete,
-                      _deleteOffline,
-                    ),
-                  ],
-                ),
+          // অফলাইন স্ক্রিনেও আগের/পরের পর্বের ফ্লোটিং তীর চিহ্ন
+          if (_prev != null || _next != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 70,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_prev != null)
+                    FloatingActionButton.small(
+                      heroTag: 'offline_prev',
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      onPressed: () {
+                        // অফলাইন আইটেমের আইডি ফরম্যাট (ep_id অথবা id)
+                        final targetId = _prev!.id;
+                        context.pushReplacement('${RouteNames.offlineReader}/ep_$targetId');
+                      },
+                      child: const Icon(Icons.chevron_left),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (_next != null)
+                    FloatingActionButton.small(
+                      heroTag: 'offline_next',
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      onPressed: () {
+                        final targetId = _next!.id;
+                        context.pushReplacement('${RouteNames.offlineReader}/ep_$targetId');
+                      },
+                      child: const Icon(Icons.chevron_right),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                ],
               ),
             ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _barBtn(IconData icon, String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 22, color: Colors.white),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 10, color: Colors.white),
-            ),
-          ],
-        ),
       ),
     );
   }
