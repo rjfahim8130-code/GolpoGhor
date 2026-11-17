@@ -1,4 +1,4 @@
-// lib/core/localization/app_bn.dart (Part 1)
+// lib/core/localization/app_bn.dart
 // সম্পূর্ণ — বাংলা strings (ক্যাটাগরি ও সার্চ ইউআই সহ)
 
 class AppBn {
@@ -12,6 +12,7 @@ class AppBn {
 
     // ---- Navigation ----
     'home': 'হোম',
+    'inbox': 'ইনবক্স', // ✅ নতুন যোগ করা হলো
     'discover': 'আবিষ্কার',
     'popular': 'জনপ্রিয়',
     'trending': 'ট্রেন্ডিং',
@@ -250,7 +251,6 @@ class AppBn {
     'vid_author': 'লেখকের আলোচনা',
     'vid_review': 'বই রিভিউ',
     'vid_other': 'অন্যান্য',
-    // lib/core/localization/app_bn.dart (Part 2)
 
     // ---- Empty / status ----
     'loadFailed': 'লোড করা যায়নি',
