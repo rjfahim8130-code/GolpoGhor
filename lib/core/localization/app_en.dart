@@ -10,6 +10,7 @@ class AppEn {
     'welcomeFooter': 'GolpoGhor — a digital home for Bangla literature',
 
     'home': 'Home',
+    'inbox': 'Inbox', // ✅ নতুন যোগ করা হলো
     'discover': 'Discover',
     'popular': 'Popular',
     'trending': 'Trending',
@@ -243,8 +244,8 @@ class AppEn {
     'vid_author': 'Author talk',
     'vid_review': 'Book review',
     'vid_other': 'Others',
-    // lib/core/localization/app_en.dart (Part 2)
 
+    // ---- Empty / status ----
     'loadFailed': 'Failed to load',
     'notFound': 'Not found',
     'noStoriesYet': 'No stories yet',
