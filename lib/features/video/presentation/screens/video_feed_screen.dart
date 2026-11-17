@@ -638,10 +638,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ),
           ),
 
-        // ✅ ডান পাশের কলাম (নিচ থেকে উপরে, লেখা ছাড়া)
+        // ✅ ডান পাশের কলাম (খুব বেশি কম্প্যাক্ট/চেপে চেপে রাখা হয়েছে)
         Positioned(
-          right: 10,
-          bottom: bottomPad + 65, // একটু নিচে নামানো হয়েছে
+          right: 8,
+          bottom: bottomPad + 65, // প্রোগ্রেস বারের ঠিক ওপরে
           child: Column(
             children: [
               // ১. রিঅ্যাক্ট (সবচেয়ে উপরে)
@@ -672,7 +672,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 },
                 iconColor: _myReaction != null ? AppColors.love : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
               
               // ২. কমেন্ট
               _sideBtn(
@@ -689,11 +689,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   );
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
 
               // ৩. ভিউ
               _sideBtn(Icons.visibility, () {}),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
 
               // ৪. সেভ
               _sideBtn(
@@ -712,9 +712,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 },
                 iconColor: _saved ? AppColors.primaryLight : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
 
-              // ৫. শেয়ার (থ্রি-ডটের ওপরে)
+              // ৫. শেয়ার
               _sideBtn(
                 Icons.share_outlined,
                 () {
@@ -723,11 +723,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   );
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
 
               // ৬. থ্রি-ডট
               _sideBtn(Icons.more_vert, _openMore),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
 
               // ৭. মাইক (একদম নিচে)
               _sideBtn(
@@ -787,7 +787,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
               const SizedBox(height: 2),
               Text(
-                '${v.authorFollowerCount} ${l10n.followers}', // ধরে নিচ্ছি মডেলে authorFollowerCount আছে
+                '${v.authorFollowerCount} ${l10n.followers}',
                 style: const TextStyle(color: Colors.white70, fontSize: 11),
               ),
               const SizedBox(height: 2),
@@ -862,13 +862,13 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 
-  // ✅ শুধু আইকন রাখার জন্য নতুন `_sideBtn` (লেখা ছাড়া)
+  // ✅ শুধু আইকন রাখার জন্য `_sideBtn` (প্যাডিং কমানো হয়েছে যাতে আরও কম্প্যাক্ট হয়)
   Widget _sideBtn(IconData icon, VoidCallback onTap, {Color? iconColor}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6), // ✅ প্যাডিং কমানো হয়েছে
         child: Icon(icon, color: iconColor ?? Colors.white, size: 28),
       ),
     );
