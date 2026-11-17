@@ -1,5 +1,5 @@
 // lib/features/notification/presentation/screens/notification_screen.dart
-// সংশোধিত: localization
+// ইনবক্স হিসেবে ব্যবহৃত হচ্ছে (l10n.inbox)
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +11,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/widgets/empty_view.dart';
+import '../../../../core/widgets/empty_state.dart'; // ✅ EmptyState ইম্পোর্ট
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -179,7 +179,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.notifications),
+        // ✅ এখানে "নোটিফিকেশন"-এর বদলে "ইনবক্স" দেখাবে
+        title: Text(l10n.inbox), 
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -198,7 +199,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _items.isEmpty
-                  ? EmptyView(
+                  ? EmptyState( // ✅ EmptyView থেকে EmptyState
                       icon: Icons.notifications_none,
                       title: l10n.noNotifications,
                       subtitle: l10n.noNotificationsHint,
