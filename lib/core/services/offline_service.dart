@@ -1,5 +1,4 @@
 // lib/core/services/offline_service.dart
-// Service-এ context নেই — message শুধু key string (এখানে নেই)
 
 import 'dart:convert';
 import 'dart:io';
@@ -13,6 +12,7 @@ import '../models/story_model.dart';
 /// অফলাইনে ডাউনলোড করা কনটেন্ট — শুধু অ্যাপে পড়া যাবে
 class OfflineItem {
   final String id; // story id বা ep_<episodeId>
+  final String? novelId; // ✅ নতুন: উপন্যাসের আইডি (পর্বের জন্য)
   final String title;
   final String? subtitle; // উপন্যাসের নাম (episode-এর জন্য)
   final String? authorName;
@@ -26,6 +26,7 @@ class OfflineItem {
 
   OfflineItem({
     required this.id,
+    this.novelId, // ✅ নতুন
     required this.title,
     this.subtitle,
     this.authorName,
@@ -40,6 +41,7 @@ class OfflineItem {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'novel_id': novelId, // ✅ নতুন
         'title': title,
         'subtitle': subtitle,
         'author_name': authorName,
@@ -66,6 +68,7 @@ class OfflineItem {
     }
     return OfflineItem(
       id: json['id'] as String,
+      novelId: json['novel_id'] as String?, // ✅ নতুন
       title: json['title'] as String? ?? '',
       subtitle: json['subtitle'] as String?,
       authorName: json['author_name'] as String?,
@@ -146,11 +149,9 @@ class OfflineService {
     await _write(item);
   }
 
-  /// Episode save
-  /// ⚠️ episodeTitle খালি হলে UI-তে fallback (l10n.episodeLabel + number)
-  /// এখানে fallback বাংলায় নয় — শুধু chapterNumber রাখা হচ্ছে
   Future<void> saveEpisode({
     required String episodeId,
+    String? novelId, // ✅ নতুন
     required String novelTitle,
     required String episodeTitle,
     required int chapterNumber,
@@ -160,6 +161,7 @@ class OfflineService {
   }) async {
     final item = OfflineItem(
       id: 'ep_$episodeId',
+      novelId: novelId, // ✅ নতুন
       title: episodeTitle.isNotEmpty ? episodeTitle : '',
       subtitle: novelTitle,
       authorName: authorName,
@@ -195,7 +197,6 @@ class OfflineService {
     }
   }
 
-  /// পুরনো নামের alias
   Future<OfflineItem?> getStory(String id) => get(id);
 
   Future<List<OfflineItem>> listAll() async {
@@ -218,7 +219,6 @@ class OfflineService {
     await _setIds(ids);
   }
 
-  /// alias
   Future<void> removeStory(String id) => remove(id);
 
   Future<void> clearAll() async {
