@@ -1,27 +1,19 @@
-// lib/core/localization/app_localizations.dart (Part 1)
-// সম্পূর্ণ — getters (নতুন ক্যাটাগরি ও সার্চ গেটার সহ) + appName সবসময় বাংলা
-
+// lib/core/localization/app_localizations.dart
 import 'package:flutter/material.dart';
-
 import 'app_bn.dart';
 import 'app_en.dart';
 
 class AppLocalizations {
   final Locale locale;
-
   AppLocalizations(this.locale);
 
-  static AppLocalizations of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
-  }
+  static AppLocalizations of(BuildContext context) =>
+      Localizations.of<AppLocalizations>(context, AppLocalizations)!;
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  static const List<Locale> supportedLocales = [
-    Locale('bn'),
-    Locale('en'),
-  ];
+  static const List<Locale> supportedLocales = [Locale('bn'), Locale('en')];
 
   static const Map<String, Map<String, String>> _strings = {
     'bn': AppBn.strings,
@@ -36,9 +28,7 @@ class AppLocalizations {
     return key;
   }
 
-  /// Brand — Home AppBar সহ সবসময় বাংলা
   String get appName => 'গল্পঘর';
-
   String get appTagline => t('appTagline');
   String get welcomeFooter => t('welcomeFooter');
 
@@ -49,6 +39,7 @@ class AppLocalizations {
   String get search => t('search');
   String get videos => t('videos');
   String get notifications => t('notifications');
+  String get inbox => t('inbox'); // ইনবক্স গেটার যুক্ত করা হলো
   String get profile => t('profile');
   String get settings => t('settings');
 
@@ -181,7 +172,6 @@ class AppLocalizations {
         catOther,
       ];
 
-  // ---- Category groups (writing) ----
   String get grpLiterature => t('grp_literature');
   String get grpIslamic => t('grp_islamic');
   String get grpHistory => t('grp_history');
@@ -198,7 +188,6 @@ class AppLocalizations {
   String get grpFantasy => t('grp_fantasy');
   String get grpOther => t('grp_other');
 
-  // ---- Writing subs ----
   String get litShort => t('lit_short');
   String get litFlash => t('lit_flash');
   String get litSerial => t('lit_serial');
@@ -255,7 +244,6 @@ class AppLocalizations {
   String get fanMyth => t('fan_myth');
   String get othMisc => t('oth_misc');
 
-  // ---- Video groups & subs ----
   String get vgrpStory => t('vgrp_story');
   String get vgrpIslamic => t('vgrp_islamic');
   String get vgrpHistory => t('vgrp_history');
@@ -285,7 +273,6 @@ class AppLocalizations {
   String get vidAuthor => t('vid_author');
   String get vidReview => t('vid_review');
   String get vidOther => t('vid_other');
-  // lib/core/localization/app_localizations.dart (Part 2)
 
   String get loadFailed => t('loadFailed');
   String get notFound => t('notFound');
@@ -560,18 +547,14 @@ class AppLocalizations {
   String get needAtLeastOneId => t('needAtLeastOneId');
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      ['bn', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => ['bn', 'en'].contains(locale.languageCode);
 
   @override
-  Future<AppLocalizations> load(Locale locale) async {
-    return AppLocalizations(locale);
-  }
+  Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => true;
