@@ -23,9 +23,8 @@ import '../features/home/presentation/screens/category_screen.dart';
 import '../features/home/presentation/screens/home_feed_screen.dart';
 import '../features/home/presentation/screens/popular_screen.dart';
 import '../features/home/presentation/screens/trending_screen.dart';
-import '../features/inbox/presentation/screens/inbox_screen.dart'; // ইনবক্স স্ক্রিন ইমপোর্ট
 import '../features/legal/presentation/screens/legal_screen.dart';
-import '../features/notification/presentation/screens/notification_screen.dart';
+import '../features/notification/presentation/screens/notification_screen.dart'; // ✅ NotificationScreen ইম্পোর্ট করা হলো
 import '../features/novel/presentation/screens/novel_details_screen.dart';
 import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_reader_screen.dart';
@@ -132,8 +131,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const HomeFeedScreen(),
           ),
           GoRoute(
-            path: RouteNames.inbox, // Discover এর বদলে ইনবক্স
-            builder: (_, __) => const InboxScreen(),
+            path: RouteNames.inbox, // ✅ Discover এর বদলে ইনবক্স রাউট
+            builder: (_, __) => const NotificationScreen(), // ✅ NotificationScreen ব্যবহার করা হলো
           ),
           GoRoute(
             path: RouteNames.videos,
