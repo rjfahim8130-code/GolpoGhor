@@ -14,6 +14,7 @@ import 'core/localization/app_localizations.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/session_cache_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/services/push_notification_service.dart'; // ✅ নতুন ইমপোর্ট
 
 Future<void> main() async {
   runZonedGuarded(
@@ -59,8 +60,12 @@ Future<void> main() async {
       try {
         await Supabase.initialize(
           url: SupabaseConstants.supabaseUrl,
-          publishableKey: SupabaseConstants.supabaseAnonKey, // <-- আপডেট করা হলো
+          publishableKey: SupabaseConstants.supabaseAnonKey,
         );
+        
+        // ✅ পুশ নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ
+        await PushNotificationService.instance.init();
+        
         debugPrint('SUPABASE_INIT: success');
       } catch (e, st) {
         initError = e;
