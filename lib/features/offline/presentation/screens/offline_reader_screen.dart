@@ -1,6 +1,4 @@
 // lib/features/offline/presentation/screens/offline_reader_screen.dart
-// Offline Reader: Delete instead of download, Global Theme/Font, Floating Episode Arrows
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/offline_service.dart';
-import '../../../../core/services/episode_service.dart'; // সিকোয়েন্স বা সিবলিং পর্বের জন্য
+import '../../../../core/services/episode_service.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -19,16 +17,13 @@ import '../../../reader/presentation/widgets/reader_bottom_bar.dart';
 import '../../../reader/presentation/widgets/reader_content.dart';
 import '../../../reader/presentation/widgets/reader_watermark.dart';
 
-// রিডার স্ক্রিন থেকে গ্লোবাল থিম এবং ফন্ট কনফিগারেশন শেয়ার করা হচ্ছে
 enum ReaderTheme { light, sepia, dark }
 
-// গ্লোবাল স্টেট ভ্যারিয়েবল (অনলাইন ও অফলাইন উভয় স্ক্রিনের জন্য সিংক্রোনাইজড)
 double _globalFontScale = AppConstants.defaultFontScale;
 ReaderTheme _globalReaderTheme = ReaderTheme.light;
 
 class OfflineReaderScreen extends StatefulWidget {
   final String itemId;
-
   const OfflineReaderScreen({super.key, required this.itemId});
 
   @override
@@ -84,8 +79,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
     if (item == null || item.novelId == null || _siblings.isEmpty) return null;
     final cleanId = widget.itemId.startsWith('ep_') ? widget.itemId.substring(3) : widget.itemId;
     final i = _siblings.indexWhere((e) => e.id == cleanId);
-    if (i > 0) return _siblings[i - 1];
-    return null;
+    return (i > 0) ? _siblings[i - 1] : null;
   }
 
   EpisodeModel? get _next {
@@ -93,8 +87,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
     if (item == null || item.novelId == null || _siblings.isEmpty) return null;
     final cleanId = widget.itemId.startsWith('ep_') ? widget.itemId.substring(3) : widget.itemId;
     final i = _siblings.indexWhere((e) => e.id == cleanId);
-    if (i >= 0 && i < _siblings.length - 1) return _siblings[i + 1];
-    return null;
+    return (i >= 0 && i < _siblings.length - 1) ? _siblings[i + 1] : null;
   }
 
   void _showFontSheet() {
@@ -112,10 +105,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      l10n.fontSize,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                    Text(l10n.fontSize, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -138,11 +128,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           ),
                           child: Text(
                             '${(_globalFontScale * 100).round()}%',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
                           ),
                         ),
                         IconButton(
@@ -158,10 +144,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                       ],
                     ),
                     const Divider(height: 24),
-                    Text(
-                      l10n.theme,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                    Text(l10n.theme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -196,21 +179,14 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 80,
-        height: 60,
+        width: 80, height: 60,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? AppColors.primary : Colors.grey,
-            width: selected ? 2.5 : 1,
-          ),
+          border: Border.all(color: selected ? AppColors.primary : Colors.grey, width: selected ? 2.5 : 1),
         ),
         alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(color: fg, fontSize: 12, fontWeight: selected ? FontWeight.bold : FontWeight.normal),
-        ),
+        child: Text(label, style: TextStyle(color: fg, fontSize: 12, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
       ),
     );
   }
@@ -254,9 +230,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
 
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.copied)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.copied)));
   }
 
   Color get _bgColor {
@@ -327,8 +301,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                             Expanded(
                               child: Text(
                                 item.subtitle ?? item.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                               ),
                             ),
@@ -339,12 +312,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           ],
                         ),
                       ),
-                      LinearProgressIndicator(
-                        value: _progress,
-                        minHeight: 2,
-                        backgroundColor: Colors.white24,
-                        color: Colors.white,
-                      ),
+                      LinearProgressIndicator(value: _progress, minHeight: 2, backgroundColor: Colors.white24, color: Colors.white),
                     ],
                   ),
                 ),
@@ -411,17 +379,13 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                         ],
                         const SizedBox(height: 20),
                         SelectionContainer.disabled(
-                          child: ReaderContent(
-                            blocks: item.contentBlocks,
-                            fontScale: _globalFontScale,
-                          ),
+                          child: ReaderContent(blocks: item.contentBlocks, fontScale: _globalFontScale),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              // অফলাইন বটম বার (ডাউনলোডের বদলে ডিলিট বাটন এবং অন্যান্য আইকন)
               ReaderBottomBar(
                 items: [
                   ReaderBottomBarItem(
@@ -453,41 +417,32 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
               ),
             ],
           ),
-          // আগের/পরের পর্বের ফ্লোটিং তীর চিহ্ন
           if (_prev != null || _next != null)
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: 70,
+              left: 16, right: 16, bottom: 70,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (_prev != null)
                     FloatingActionButton.small(
-                      heroTag: 'offline_prev',
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      heroTag: 'offline_prev', backgroundColor: AppColors.primary, foregroundColor: Colors.white,
                       onPressed: () {
                         final targetId = _prev!.id;
                         context.pushReplacement('${RouteNames.offlineReader}/ep_$targetId');
                       },
                       child: const Icon(Icons.chevron_left),
                     )
-                  else
-                    const SizedBox.shrink(),
+                  else const SizedBox.shrink(),
                   if (_next != null)
                     FloatingActionButton.small(
-                      heroTag: 'offline_next',
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      heroTag: 'offline_next', backgroundColor: AppColors.primary, foregroundColor: Colors.white,
                       onPressed: () {
                         final targetId = _next!.id;
                         context.pushReplacement('${RouteNames.offlineReader}/ep_$targetId');
                       },
                       child: const Icon(Icons.chevron_right),
                     )
-                  else
-                    const SizedBox.shrink(),
+                  else const SizedBox.shrink(),
                 ],
               ),
             ),
