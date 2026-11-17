@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/home_feed_screen.dart
-// নতুন ডিজাইন হেডার (লোগো + গল্পঘর + For you, popular, trending, following + Search)
+// নতুন ডিজাইন হেডার (For you, popular, trending, following + Search)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -157,67 +157,47 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+      // ✅ নতুন ট্রান্সপারেন্ট হেডার (লোগো/নাম ছাড়া, শুধু ফিল্টার ও সার্চ)
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent, // কোনো কালার থাকবে না
         elevation: 0,
-        titleSpacing: 12,
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/logo.png', // আপনার দেওয়া লোগো পিএনজি
-              height: 32,
-              width: 32,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.book, color: Colors.white),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'গল্পঘর',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        toolbarHeight: 60,
+        titleSpacing: 16,
+        title: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: List.generate(tabs.length, (index) {
+              final isSelected = _selectedTab == index;
+              return Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedTab = index),
+                  child: Text(
+                    tabs[index],
+                    style: TextStyle(
+                      color: isSelected
+                          ? (isDark ? Colors.white : Colors.black)
+                          : (isDark ? Colors.white54 : Colors.black54),
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, size: 26),
+            icon: Icon(
+              Icons.search,
+              size: 26,
+              color: isDark ? Colors.white : Colors.black,
+            ),
             onPressed: () => context.push(RouteNames.search),
           ),
           const SizedBox(width: 8),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(46),
-          child: Container(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(tabs.length, (index) {
-                  final isSelected = _selectedTab == index;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = index),
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: isSelected ? 16 : 14,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ),
-        ),
       ),
       body: _buildBody(context.l10n, tabs),
     );
