@@ -4,10 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/home/presentation/screens/home_feed_screen.dart';
-import '../../features/inbox/presentation/screens/inbox_screen.dart'; // নিশ্চিত করুন এই স্ক্রিনটি আপনার প্রজেক্টে আছে
-import '../../features/profile/presentation/screens/profile_screen.dart';
-import '../../features/video/presentation/screens/video_feed_screen.dart';
 import '../../routing/route_names.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -100,7 +96,8 @@ class _MainScaffoldState extends State<MainScaffold> {
                 _NavItem(
                   icon: Icons.inbox_outlined,
                   activeIcon: Icons.inbox,
-                  label: l10n.inbox ?? 'ইনবক্স',
+                  // ✅ l10n.inbox ব্যবহার করা হলো, ?? 'ইনবক্স' বাদ দেওয়া হলো
+                  label: l10n.inbox, 
                   selected: idx == 1,
                   onTap: () => _onTap(1),
                 ),
