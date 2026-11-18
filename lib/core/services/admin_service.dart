@@ -1,6 +1,5 @@
 // lib/core/services/admin_service.dart
-// email-ভিত্তিক এডমিন চেক (app_admins টেবিল)
-
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -10,15 +9,11 @@ import '../models/user_model.dart';
 class AdminService {
   final SupabaseClient _client = Supabase.instance.client;
 
-  /// এডমিন চেক
-  /// ১) app_admins টেবিলে email চেক করে
-  /// ২) না পেলে profiles.is_admin ফ্যালব্যাক
   Future<bool> isAdmin() async {
     try {
       final email = _client.auth.currentUser?.email;
       if (email == null || email.isEmpty) return false;
 
-      // ১) app_admins টেবিল চেক
       final row = await _client
           .from('app_admins')
           .select('email')
@@ -27,7 +22,6 @@ class AdminService {
 
       if (row != null) return true;
 
-      // ২) Fallback: profiles.is_admin
       final uid = _client.auth.currentUser?.id;
       if (uid == null) return false;
       final profile = await _client
@@ -36,23 +30,18 @@ class AdminService {
           .eq('id', uid)
           .maybeSingle();
       return profile?['is_admin'] as bool? ?? false;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ADMIN_CHECK_FAILED: $e');
       return false;
     }
   }
-
-  // ---------- Stories ----------
 
   Future<List<StoryModel>> recentStories({int limit = 30}) async {
     final data = await _client
         .from(SupabaseConstants.stories)
         .select('''
           *,
-          profiles:author_id (
-            full_name,
-            nickname,
-            avatar_url
-          )
+          profiles:author_id (full_name, nickname, avatar_url)
         ''')
         .order('created_at', ascending: false)
         .limit(limit);
@@ -89,8 +78,6 @@ class AdminService {
     await _client.from(SupabaseConstants.stories).delete().eq('id', storyId);
   }
 
-  // ---------- Users ----------
-
   Future<List<UserModel>> recentUsers({int limit = 30}) async {
     final data = await _client
         .from(SupabaseConstants.profiles)
@@ -103,14 +90,12 @@ class AdminService {
         .toList();
   }
 
-  // ---------- Stats ----------
-
   Future<Map<String, int>> stats() async {
     Future<int> count(String table) async {
       try {
-        // শুধু COUNT — সব row আনে না
         return await _client.from(table).count(CountOption.exact);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('COUNT_FAILED ($table): $e');
         return 0;
       }
     }
@@ -138,7 +123,9 @@ class AdminService {
           .count(CountOption.exact)
           .gte('created_at', prevMonthStart.toIso8601String())
           .lt('created_at', monthStart.toIso8601String());
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('MONTHLY_STATS_FAILED: $e');
+    }
 
     return {
       'stories': s,
