@@ -1,5 +1,4 @@
 // lib/core/models/video_model.dart
-// সংশোধিত: category ফিল্ড সহ
 
 class VideoModel {
   final String id;
@@ -23,7 +22,6 @@ class VideoModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  // join
   final String? authorName;
   final String? authorNickname;
   final String? authorAvatar;
@@ -57,14 +55,10 @@ class VideoModel {
   bool get isSeries => seriesId != null && seriesId!.isNotEmpty;
 
   String get displayNickname =>
-      (authorNickname != null && authorNickname!.trim().isNotEmpty)
-          ? authorNickname!.trim()
-          : '';
+      (authorNickname != null && authorNickname!.trim().isNotEmpty) ? authorNickname!.trim() : '';
 
   bool get hasNickname => displayNickname.isNotEmpty;
 
-  /// টাইটেল — fallback ছাড়া
-  /// ⚠️ UI-তে `displayTitleOr(l10n.video)` ব্যবহার করুন
   String get displayTitle {
     if (title.trim().isNotEmpty) return title.trim();
     if (description.trim().isNotEmpty) {
@@ -74,8 +68,6 @@ class VideoModel {
     return '';
   }
 
-  /// UI-তে ব্যবহারের জন্য — fallback সহ
-  /// ব্যবহার: video.displayTitleOr(l10n.video)
   String displayTitleOr(String fallback) {
     final t = displayTitle;
     return t.isNotEmpty ? t : fallback;
@@ -89,7 +81,7 @@ class VideoModel {
     }
 
     return VideoModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       authorId: json['author_id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
@@ -107,11 +99,8 @@ class VideoModel {
       saveCount: (json['save_count'] as num?)?.toInt() ?? 0,
       isPublished: json['is_published'] as bool? ?? true,
       isDraft: json['is_draft'] as bool? ?? false,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'].toString())
-          : null,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
       authorName: json['author_name'] as String?,
       authorNickname: json['author_nickname'] as String?,
       authorAvatar: json['author_avatar'] as String?,
