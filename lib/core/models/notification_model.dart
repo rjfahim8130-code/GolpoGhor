@@ -1,21 +1,16 @@
 // lib/core/models/notification_model.dart
-// সংশোধিত: nickname যোগ, mention type সাপোর্ট
-// actorDisplayName এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
-/// In-app notification মডেল
-/// type: like | comment | reply | follow | mention
 class NotificationModel {
   final String id;
-  final String userId; // যাকে notification পাঠানো হয়েছে
-  final String actorId; // যে কাজ করেছে
+  final String userId;
+  final String actorId;
   final String type;
-  final String? targetType; // story | novel | episode | video | profile
+  final String? targetType;
   final String? targetId;
   final String? message;
   final bool isRead;
   final DateTime createdAt;
 
-  // join — actor-এর তথ্য
   final String? actorName;
   final String? actorNickname;
   final String? actorAvatar;
@@ -48,7 +43,7 @@ class NotificationModel {
     }
 
     return NotificationModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       userId: json['user_id'] as String? ?? '',
       actorId: json['actor_id'] as String? ?? '',
       type: json['type'] as String? ?? 'system',
@@ -56,8 +51,7 @@ class NotificationModel {
       targetId: json['target_id'] as String?,
       message: json['message'] as String?,
       isRead: json['is_read'] as bool? ?? false,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
       actorName: name ?? json['actor_name'] as String?,
       actorNickname: nickname ?? json['actor_nickname'] as String?,
       actorAvatar: avatar ?? json['actor_avatar'] as String?,
@@ -107,15 +101,9 @@ class NotificationModel {
     );
   }
 
-  /// নাম দেখানোর জন্য
-  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
   String get actorDisplayName =>
-      (actorName != null && actorName!.trim().isNotEmpty)
-          ? actorName!.trim()
-          : '';
+      (actorName != null && actorName!.trim().isNotEmpty) ? actorName!.trim() : '';
 
-  /// UI-তে ব্যবহারের জন্য — fallback সহ
-  /// ব্যবহার: notif.actorDisplayNameOr(l10n.user)
   String actorDisplayNameOr(String fallback) {
     final n = actorDisplayName;
     return n.isNotEmpty ? n : fallback;
