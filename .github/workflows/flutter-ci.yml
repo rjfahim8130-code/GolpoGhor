@@ -53,10 +53,8 @@ jobs:
       - name: Update Gradle Wrapper and Disable Lint
         run: |
           cd android
-          # Gradle ভার্সন 9.5.0 এ আপডেট করা হচ্ছে
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-all.zip|' gradle/wrapper/gradle-wrapper.properties
           
-          # অ্যাপের build.gradle ফাইলে Lint চেক ডিজেবল করা হচ্ছে (যাতে Gradle ক্র্যাশ না করে)
           if [ -f app/build.gradle ]; then
             echo -e "\nandroid {\n    lintOptions {\n        checkReleaseBuilds false\n        abortOnError false\n    }\n}" >> app/build.gradle
           elif [ -f app/build.gradle.kts ]; then
@@ -77,6 +75,21 @@ jobs:
             exit 1
           fi
 
+      # ✅ নতুন স্টেপ: flutter_local_notifications এর জন্য Desugaring এনাবল করা
+      - name: Enable Core Library Desugaring
+        run: |
+          if [ -f android/app/build.gradle ]; then
+            # Groovy DSL
+            echo "Enabling desugaring in Groovy DSL..."
+            sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/' android/app/build.gradle
+            sed -i 's/dependencies {/dependencies {\n    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"/' android/app/build.gradle
+          elif [ -f android/app/build.gradle.kts ]; then
+            # Kotlin DSL
+            echo "Enabling desugaring in Kotlin DSL..."
+            sed -i 's/compileOptions {/compileOptions {\n        isCoreLibraryDesugaringEnabled = true/' android/app/build.gradle.kts
+            sed -i 's/dependencies {/dependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")/' android/app/build.gradle.kts
+          fi
+
       - name: Pub get
         run: flutter pub get
 
@@ -89,7 +102,6 @@ jobs:
       - name: Test (Info only)
         run: flutter test || true
 
-      # ✅ এবার `--no-lint` ছাড়াই বিল্ড হবে, কারণ Gradle ফাইলে Lint ডিজেবল করা হয়েছে
       - name: Build release APK
         run: |
           flutter build apk --release \
