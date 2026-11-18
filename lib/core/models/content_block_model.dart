@@ -1,16 +1,18 @@
 /// কনটেন্ট ব্লক — টেক্সট বা ছবি
-/// গল্প, উপন্যাস, পর্ব সবখানে একই মডেল
 class ContentBlockModel {
   final String type; // text | image
   final String? text;
   final String? imageUrl;
-  final String style; // heading1 | heading2 | body | emphasis | quote
-  final String font; // modern | classic | comfort
+  final String style;
+  final String font;
   final double? size;
-  final String weight; // normal | bold
+  final String weight;
   final bool italic;
-  final String align; // left | center
+  final String align;
   final String? color;
+  
+  // ভবিষ্যতের জন্য স্কিমা ভার্সন
+  final int schemaVersion;
 
   const ContentBlockModel({
     required this.type,
@@ -23,6 +25,7 @@ class ContentBlockModel {
     this.italic = false,
     this.align = 'left',
     this.color,
+    this.schemaVersion = 1,
   });
 
   bool get isText => type == 'text';
@@ -40,6 +43,7 @@ class ContentBlockModel {
       italic: json['italic'] as bool? ?? false,
       align: json['align'] as String? ?? 'left',
       color: json['color'] as String?,
+      schemaVersion: (json['schema_version'] as num?)?.toInt() ?? 1,
     );
   }
 
@@ -55,6 +59,7 @@ class ContentBlockModel {
       'italic': italic,
       'align': align,
       if (color != null) 'color': color,
+      'schema_version': schemaVersion,
     };
   }
 
@@ -69,6 +74,7 @@ class ContentBlockModel {
     bool? italic,
     String? align,
     String? color,
+    int? schemaVersion,
   }) {
     return ContentBlockModel(
       type: type ?? this.type,
@@ -81,71 +87,28 @@ class ContentBlockModel {
       italic: italic ?? this.italic,
       align: align ?? this.align,
       color: color ?? this.color,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
     );
   }
 
-  // ---- Factory helpers ----
-
-  static ContentBlockModel textBlock(
-    String text, {
-    String style = 'body',
-    String font = 'modern',
-    double? size,
-    String weight = 'normal',
-    bool italic = false,
-    String align = 'left',
-  }) {
-    return ContentBlockModel(
-      type: 'text',
-      text: text,
-      style: style,
-      font: font,
-      size: size,
-      weight: weight,
-      italic: italic,
-      align: align,
-    );
+  static ContentBlockModel textBlock(String text, {String style = 'body', String font = 'modern', double? size, String weight = 'normal', bool italic = false, String align = 'left'}) {
+    return ContentBlockModel(type: 'text', text: text, style: style, font: font, size: size, weight: weight, italic: italic, align: align);
   }
 
   static ContentBlockModel heading(String text, {int level = 1}) {
-    return ContentBlockModel(
-      type: 'text',
-      text: text,
-      style: level == 1 ? 'heading1' : 'heading2',
-      font: 'classic',
-      weight: 'bold',
-      align: 'center',
-      size: level == 1 ? 26 : 20,
-    );
+    return ContentBlockModel(type: 'text', text: text, style: level == 1 ? 'heading1' : 'heading2', font: 'classic', weight: 'bold', align: 'center', size: level == 1 ? 26 : 20);
   }
 
   static ContentBlockModel body(String text) {
-    return ContentBlockModel.textBlock(
-      text,
-      style: 'body',
-      font: 'modern',
-      size: 16,
-    );
+    return ContentBlockModel.textBlock(text, style: 'body', font: 'modern', size: 16);
   }
 
   static ContentBlockModel emphasis(String text) {
-    return ContentBlockModel.textBlock(
-      text,
-      style: 'emphasis',
-      font: 'modern',
-      weight: 'bold',
-      size: 17,
-    );
+    return ContentBlockModel.textBlock(text, style: 'emphasis', font: 'modern', weight: 'bold', size: 17);
   }
 
   static ContentBlockModel quote(String text) {
-    return ContentBlockModel.textBlock(
-      text,
-      style: 'quote',
-      font: 'classic',
-      italic: true,
-      size: 16,
-    );
+    return ContentBlockModel.textBlock(text, style: 'quote', font: 'classic', italic: true, size: 16);
   }
 
   static ContentBlockModel imageBlock(String url) {
