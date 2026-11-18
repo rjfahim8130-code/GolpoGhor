@@ -22,7 +22,6 @@ class SessionCacheNotifier extends StateNotifier<UserModel?> {
   static const _keyIsAdmin = 'cache_user_is_admin';
   static const _keySetupDone = 'cache_user_setup_done';
 
-  /// app startup-এ কল হবে — preload
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -36,7 +35,9 @@ class SessionCacheNotifier extends StateNotifier<UserModel?> {
         isAdmin: prefs.getBool(_keyIsAdmin) ?? false,
         profileSetupDone: prefs.getBool(_keySetupDone) ?? false,
       );
-    } catch (_) {}
+    } catch (_) {
+      state = null; // fail হলে কিছুই ক্যাশ হবে না
+    }
   }
 
   Future<void> save(UserModel user) async {
@@ -52,7 +53,6 @@ class SessionCacheNotifier extends StateNotifier<UserModel?> {
     } catch (_) {}
   }
 
-  /// Avatar দ্রুত update — পূর্ণ profile load না করেই
   Future<void> updateAvatar(String? url) async {
     final cur = state;
     if (cur == null) return;
