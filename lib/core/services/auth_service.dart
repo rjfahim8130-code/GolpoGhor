@@ -1,12 +1,18 @@
 // lib/core/services/auth_service.dart
-// সংশোধিত: username বাদ, nickname যোগ, avatar_url দিয়ে পুরনো ছবি সংরক্ষণ
-// Service-এ context নেই — Exception-এ key string পাঠানো হবে (UI-তে translate)
-
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
 import '../models/user_model.dart';
+
+/// কাস্টম এক্সসেপশন (UI-তে l10n key দিয়ে translate হবে)
+class AppException implements Exception {
+  final String key;
+  AppException(this.key);
+  @override
+  String toString() => key;
+}
 
 class AuthService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -16,6 +22,12 @@ class AuthService {
   bool get isLoggedIn => currentUser != null;
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+
+  /// GoRouter-এর redirect-এ ব্যবহারের জন্য সিনক্রোনাস চেক
+  bool get isAdminSync {
+    // (ভবিষ্যতে: SharedPreferences থেকে isAdmin বুলিয়ান রিড করে সেভ রাখা হবে)
+    return true; // আপাতত টেস্টের জন্য true, পরে ০৭-এর শেষে ঠিক করব
+  }
 
   // ---------------- Auth ----------------
 
@@ -63,8 +75,7 @@ class AuthService {
       type: OtpType.recovery,
     );
     if (res.user == null && res.session == null) {
-      // UI-তে l10n.t(key) দিয়ে translate হবে
-      throw Exception('invalidOtp');
+      throw AppException('invalidOtp');
     }
     await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
@@ -91,10 +102,6 @@ class AuthService {
     return UserModel.fromJson(Map<String, dynamic>.from(data));
   }
 
-  /// প্রোফাইল আপডেট
-  /// - username সরানো হয়েছে
-  /// - nickname যোগ করা হয়েছে
-  /// - আগের avatarUrl ফেরত দেয় যাতে কলার পুরনো ছবি ডিলিট করতে পারে
   Future<UserModel> updateProfile({
     String? fullName,
     String? nickname,
@@ -103,7 +110,7 @@ class AuthService {
     bool? profileSetupDone,
   }) async {
     final uid = currentUser?.id;
-    if (uid == null) throw Exception('notLoggedIn');
+    if (uid == null) throw AppException('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -112,9 +119,7 @@ class AuthService {
     if (nickname != null) map['nickname'] = nickname.trim();
     if (bio != null) map['bio'] = bio.trim();
     if (avatarUrl != null) map['avatar_url'] = avatarUrl;
-    if (profileSetupDone != null) {
-      map['profile_setup_done'] = profileSetupDone;
-    }
+    if (profileSetupDone != null) map['profile_setup_done'] = profileSetupDone;
 
     final data = await _client
         .from(SupabaseConstants.profiles)
@@ -150,10 +155,9 @@ class AuthService {
   }
 
   /// অ্যাকাউন্ট ডিলিট — ৭ দিনের grace period-এ schedule করে
-  /// (প্রকৃত ডিলিট Supabase-এ scheduled function/RPC দিয়ে হবে)
   Future<void> scheduleAccountDeletion() async {
     final uid = currentUser?.id;
-    if (uid == null) throw Exception('notLoggedIn');
+    if (uid == null) throw AppException('notLoggedIn');
     final deleteAt = DateTime.now().add(const Duration(days: 7)).toUtc();
     await _client.from(SupabaseConstants.profiles).update({
       'deletion_scheduled_at': deleteAt.toIso8601String(),
@@ -161,7 +165,6 @@ class AuthService {
     }).eq('id', uid);
   }
 
-  /// ডিলিট বাতিল — ইউজার আবার লগইন করলে কল হবে
   Future<void> cancelAccountDeletion() async {
     final uid = currentUser?.id;
     if (uid == null) return;
@@ -170,6 +173,8 @@ class AuthService {
         'deletion_scheduled_at': null,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', uid);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('CANCEL_DELETION_FAILED: $e');
+    }
   }
 }
