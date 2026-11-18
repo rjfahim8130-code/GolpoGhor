@@ -1,8 +1,6 @@
 // lib/core/models/comment_model.dart
 // সংশোধিত: mentionedUserIds যোগ
-// displayAuthor এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
-/// কমেন্ট মডেল — গল্প, পর্ব, উপন্যাস, ভিডিও সবখানে একই মডেল
 class CommentModel {
   final String id;
   final String userId;
@@ -11,8 +9,8 @@ class CommentModel {
   final String? novelId;
   final String? videoId;
   final String? parentId;
-  final String? replyToName; // reply-এর ক্ষেত্রে যাকে reply দেওয়া হচ্ছে
-  final List<String> mentionedUserIds; // @mention করা users
+  final String? replyToName;
+  final List<String> mentionedUserIds;
   final String body;
   final int likeCount;
   final bool isDeleted;
@@ -54,7 +52,6 @@ class CommentModel {
       avatar = profiles['avatar_url'] as String?;
     }
 
-    // mentioned_user_ids — list অথবা null
     List<String> mentions = [];
     final mu = json['mentioned_user_ids'];
     if (mu is List) {
@@ -62,7 +59,7 @@ class CommentModel {
     }
 
     return CommentModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       userId: json['user_id'] as String? ?? '',
       storyId: json['story_id'] as String?,
       episodeId: json['episode_id'] as String?,
@@ -74,8 +71,8 @@ class CommentModel {
       body: json['body'] as String? ?? '',
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
       isDeleted: json['is_deleted'] as bool? ?? false,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
+      // ডেট প্যার্স ফেইল করলে ১৯৭০ সাল দেখাবে, ভুল টাইমলাইন এড়াতে
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
       authorName: name ?? json['author_name'] as String?,
       authorNickname: nickname ?? json['author_nickname'] as String?,
       authorAvatar: avatar ?? json['author_avatar'] as String?,
@@ -136,22 +133,15 @@ class CommentModel {
     );
   }
 
-  /// নাম দেখানোর জন্য
-  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
   String get displayAuthor =>
-      (authorName != null && authorName!.trim().isNotEmpty)
-          ? authorName!.trim()
-          : '';
+      (authorName != null && authorName!.trim().isNotEmpty) ? authorName!.trim() : '';
 
-  /// UI-তে ব্যবহারের জন্য — fallback সহ
-  /// ব্যবহার: comment.displayAuthorOr(l10n.user)
   String displayAuthorOr(String fallback) {
     final n = displayAuthor;
     return n.isNotEmpty ? n : fallback;
   }
 
-  bool get hasNickname =>
-      authorNickname != null && authorNickname!.trim().isNotEmpty;
+  bool get hasNickname => authorNickname != null && authorNickname!.trim().isNotEmpty;
 
   String get initial {
     final n = displayAuthor.trim();
