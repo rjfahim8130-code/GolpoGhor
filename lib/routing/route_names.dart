@@ -1,9 +1,7 @@
 // lib/routing/route_names.dart
 // discover রুট অক্ষুণ্ণ রেখে নতুন inbox রুট যুক্ত করা হয়েছে
 
-class RouteNames {
-  RouteNames._();
-
+abstract final class RouteNames {
   // ---------- Splash / Auth ----------
   static const splash = '/splash';
   static const onboarding = '/onboarding';
@@ -15,8 +13,8 @@ class RouteNames {
 
   // ---------- Main ----------
   static const home = '/home';
-  static const discover = '/discover'; // অক্ষুণ্ণ রাখা হলো
-  static const inbox = '/inbox';       // নতুন ইনবক্স রুট
+  static const discover = '/discover'; 
+  static const inbox = '/inbox';       
   static const popular = '/popular';
   static const trending = '/trending';
   static const category = '/category';
