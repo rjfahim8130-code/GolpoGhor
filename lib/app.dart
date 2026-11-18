@@ -27,7 +27,6 @@ class GolpoGhorApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
 
-      // null = system locale, non-null = user selected
       locale: locale,
 
       supportedLocales: AppLocalizations.supportedLocales,
@@ -38,7 +37,7 @@ class GolpoGhorApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // বাংলা না হলে English
+      // বাংলা না হলে English ফলব্যাক
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         if (deviceLocale == null) return const Locale('en');
         for (final l in supportedLocales) {
