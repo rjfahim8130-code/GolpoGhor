@@ -1,5 +1,4 @@
 // lib/core/models/novel_model.dart
-// authorUsername বাদ, authorNickname যোগ
 
 class NovelModel {
   final String id;
@@ -19,7 +18,6 @@ class NovelModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  // join
   final String? authorName;
   final String? authorNickname;
   final String? authorAvatar;
@@ -56,7 +54,7 @@ class NovelModel {
     }
 
     return NovelModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       authorId: json['author_id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
@@ -70,18 +68,12 @@ class NovelModel {
       viewCount: (json['view_count'] as num?)?.toInt() ?? 0,
       reactionCount: (json['reaction_count'] as num?)?.toInt() ?? 0,
       commentCount: (json['comment_count'] as num?)?.toInt() ?? 0,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'].toString())
-          : null,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
       authorName: json['author_name'] as String?,
       authorNickname: json['author_nickname'] as String?,
       authorAvatar: json['author_avatar'] as String?,
-      authorFollowerCount:
-          (json['author_follower_count'] as num?)?.toInt() ??
-              (json['follower_count'] as num?)?.toInt() ??
-              0,
+      authorFollowerCount: (json['author_follower_count'] as num?)?.toInt() ?? (json['follower_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -151,9 +143,7 @@ class NovelModel {
   }
 
   String get displayNickname =>
-      (authorNickname != null && authorNickname!.trim().isNotEmpty)
-          ? authorNickname!.trim()
-          : '';
+      (authorNickname != null && authorNickname!.trim().isNotEmpty) ? authorNickname!.trim() : '';
 
   bool get hasNickname => displayNickname.isNotEmpty;
 }
