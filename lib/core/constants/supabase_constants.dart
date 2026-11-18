@@ -1,9 +1,15 @@
 class SupabaseConstants {
   SupabaseConstants._();
 
-  static const String supabaseUrl = 'https://tvfaclrmmkxbukawcziu.supabase.co';
-  static const String supabaseAnonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2ZmFjbHJtbWt4YnVrYXdjeml1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMjgwMDQsImV4cCI6MjEwNjYwNDAwNH0.-4Gzjv_soFqUzp913gNAsbgcqxMuhxlC1LhbiM-XT54';
+  // GitHub Secrets থেকে ডেটা নেবে
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
 
   // Tables
   static const String profiles = 'profiles';
