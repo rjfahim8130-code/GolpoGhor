@@ -1,7 +1,7 @@
 name: golpoghor
 description: গল্পঘর — বাংলা গল্প, উপন্যাস ও ভিডিও প্ল্যাটফর্ম
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -26,11 +26,12 @@ dependencies:
   image_picker: ^1.1.2
   image: ^4.3.0
   video_player: ^2.9.2
-  
-  # Updates for Kotlin & Notifications
   video_compress: ^3.1.4
   shimmer: ^3.0.0
-  flutter_local_notifications: ^18.0.1 # ✅ পুশ নোটিফিকেশনের জন্য নতুন যোগ করা হলো
+  flutter_local_notifications: ^18.0.1
+
+  # Crash reporting
+  sentry_flutter: ^8.10.1
 
   # Local
   shared_preferences: ^2.3.3
