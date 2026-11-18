@@ -3,11 +3,9 @@ class AppConstants {
 
   static const String appName = 'গল্পঘর';
   static const String appNameEn = 'GolpoGhor';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
 
-  // ক্যাটাগরি — locale-ভিত্তিক দেখাতে হবে
-  // UI-তে l10n.categoryList ব্যবহার করুন
-  // এই list শুধু DB-তে save করার জন্য (backend value)
+  // ক্যাটাগরি (UI-তে l10n.categoryList ব্যবহার করুন)
   static const List<String> categoryKeys = [
     'catRomance',
     'catMystery',
@@ -19,7 +17,7 @@ class AppConstants {
     'catOther',
   ];
 
-  // রিঅ্যাকশন টাইপ (locale-নিরপেক্ষ — emoji mapping)
+  // রিঅ্যাকশন টাইপ
   static const List<String> reactionTypes = [
     'like',
     'love',
@@ -50,4 +48,9 @@ class AppConstants {
   // Comment
   static const int commentMaxLength = 1000;
   static const int reportReasonMaxLength = 500;
+
+  // ✅ আপলোড ও নেটওয়ার্ক লিমিট (নতুন যোগ করা হলো)
+  static const int maxUploadImageMb = 5;
+  static const int maxUploadVideoMb = 50;
+  static const int apiTimeoutSeconds = 30;
 }
