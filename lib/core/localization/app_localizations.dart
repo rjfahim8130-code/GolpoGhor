@@ -1,4 +1,5 @@
 // lib/core/localization/app_localizations.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'app_bn.dart';
 import 'app_en.dart';
@@ -22,10 +23,16 @@ class AppLocalizations {
 
   String t(String key) {
     final lang = _strings[locale.languageCode];
+    
+    // Debug মোডে key না থাকলে error দেখাবে
+    if (kDebugMode && (lang == null || !lang.containsKey(key))) {
+      debugPrint('MISSING L10N KEY: $key (locale: ${locale.languageCode})');
+    }
+
     if (lang != null && lang.containsKey(key)) return lang[key]!;
     if (AppEn.strings.containsKey(key)) return AppEn.strings[key]!;
     if (AppBn.strings.containsKey(key)) return AppBn.strings[key]!;
-    return key;
+    return key; // fallback
   }
 
   String get appName => 'গল্পঘর';
@@ -39,7 +46,7 @@ class AppLocalizations {
   String get search => t('search');
   String get videos => t('videos');
   String get notifications => t('notifications');
-  String get inbox => t('inbox'); // ইনবক্স গেটার যুক্ত করা হলো
+  String get inbox => t('inbox'); 
   String get profile => t('profile');
   String get settings => t('settings');
 
