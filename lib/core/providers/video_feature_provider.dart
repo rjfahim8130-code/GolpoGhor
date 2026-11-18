@@ -1,11 +1,9 @@
+// lib/core/providers/video_feature_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../constants/supabase_constants.dart';
 import '../constants/video_constants.dart';
 
-/// অ্যাডমিন ভিডিও টগল — একবার load হলেই cache।
-/// পুরো অ্যাপে এই provider-ই একমাত্র সত্য।
 final videoFeatureProvider =
     StateNotifierProvider<VideoFeatureNotifier, bool>((ref) {
   return VideoFeatureNotifier();
@@ -41,20 +39,22 @@ class VideoFeatureNotifier extends StateNotifier<bool> {
     }
   }
 
-  /// ম্যানুয়াল refresh — অ্যাডমিন টগল বদলালে
   Future<void> refresh() => _load();
 
-  /// অ্যাডমিন সেট করবে
   Future<void> setEnabled(bool enabled) async {
-    await _client.from(SupabaseConstants.appSettings).upsert({
-      'key': VideoConstants.settingsKeyFeature,
-      'value': {'enabled': enabled},
-    });
-    state = enabled;
+    try {
+      await _client.from(SupabaseConstants.appSettings).upsert({
+        'key': VideoConstants.settingsKeyFeature,
+        'value': {'enabled': enabled},
+      });
+      state = enabled;
+    } catch (e) {
+      // Admin panel এ এরর দেখানোর জন্য
+      throw Exception('Failed to update setting: $e');
+    }
   }
 }
 
-/// ভিডিও সর্বোচ্চ দৈর্ঘ্য — cache করা
 final videoMaxDurationProvider = FutureProvider<int>((ref) async {
   try {
     final client = Supabase.instance.client;
