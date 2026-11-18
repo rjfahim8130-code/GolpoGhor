@@ -1,6 +1,4 @@
 // lib/core/models/user_model.dart
-// সংশোধিত: username বাদ, nickname যোগ, coverUrl যোগ
-// displayName এখন UI-তে fallback (l10n.user) ব্যবহার করবে
 
 class UserModel {
   final String id;
@@ -37,7 +35,7 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       email: json['email'] as String?,
       fullName: json['full_name'] as String?,
       nickname: json['nickname'] as String?,
@@ -49,12 +47,8 @@ class UserModel {
       profileSetupDone: json['profile_setup_done'] as bool? ?? false,
       followerCount: (json['follower_count'] as num?)?.toInt() ?? 0,
       followingCount: (json['following_count'] as num?)?.toInt() ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString())
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'].toString())
-          : null,
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
     );
   }
 
@@ -109,9 +103,6 @@ class UserModel {
     );
   }
 
-  /// নাম দেখানোর জন্য
-  /// ⚠️ Fallback 'ইউজার' এখানে নেই — UI-তে l10n.user ব্যবহার করুন
-  /// অথবা `displayNameOr(l10n.user)` ব্যবহার করুন
   String get displayName {
     if (fullName != null && fullName!.trim().isNotEmpty) {
       return fullName!.trim();
@@ -119,25 +110,18 @@ class UserModel {
     return '';
   }
 
-  /// UI-তে ব্যবহারের জন্য — fallback সহ
-  /// ব্যবহার: user.displayNameOr(l10n.user)
   String displayNameOr(String fallback) {
     final n = displayName;
     return n.isNotEmpty ? n : fallback;
   }
 
-  /// ডাক নাম (ঐচ্ছিক)
   String get displayNickname =>
-      (nickname != null && nickname!.trim().isNotEmpty)
-          ? nickname!.trim()
-          : '';
+      (nickname != null && nickname!.trim().isNotEmpty) ? nickname!.trim() : '';
 
   bool get hasNickname => displayNickname.isNotEmpty;
 
-  /// Cover image আছে কিনা
   bool get hasCover => coverUrl != null && coverUrl!.trim().isNotEmpty;
 
-  /// Avatar না থাকলে প্রথম অক্ষর
   String get initial {
     final n = displayName.trim();
     if (n.isEmpty) return '?';
