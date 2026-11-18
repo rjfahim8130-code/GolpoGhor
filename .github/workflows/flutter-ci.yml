@@ -108,9 +108,11 @@ jobs:
             --split-debug-info=build/debug-info \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=R2_ACCOUNT_ID=${{ secrets.R2_ACCOUNT_ID }} \
             --dart-define=R2_PUBLIC_BASE_URL=${{ secrets.R2_PUBLIC_BASE_URL }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+            --dart-define=R2_ACCESS_KEY=${{ secrets.R2_ACCESS_KEY }} \
+            --dart-define=R2_SECRET_KEY=${{ secrets.R2_SECRET_KEY }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
