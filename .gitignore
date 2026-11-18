@@ -10,9 +10,15 @@ build/
 
 # Secrets — কমিট করো না
 .env
+dart_defines/
 **/r2_secrets.dart
+**/secrets.dart
+*.keystore
 *.jks
 key.properties
+
+# Debug info (obfuscate)
+build/debug-info/
 
 # Misc
 .DS_Store
