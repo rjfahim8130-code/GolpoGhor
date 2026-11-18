@@ -1,15 +1,11 @@
 // lib/core/providers/locale_provider.dart
-// সংশোধিত: default = system (ফোনের ভাষা), manual change সাপোর্ট
+// সংশোধিত: default = system (ফোনের ভাষা)
 
 import 'dart:ui';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// null = system locale (ফোনের ভাষা)
-/// non-null = user-selected locale
-final localeProvider =
-    StateNotifierProvider<LocaleNotifier, Locale?>((ref) {
+final localeProvider = StateNotifierProvider<LocaleNotifier, Locale?>((ref) {
   return LocaleNotifier();
 });
 
@@ -19,7 +15,6 @@ class LocaleNotifier extends StateNotifier<Locale?> {
   static const _key = 'app_locale';
   static const _systemTag = 'system';
 
-  /// main.dart থেকে কল হবে
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -30,17 +25,14 @@ class LocaleNotifier extends StateNotifier<Locale?> {
         state = Locale(v);
       }
     } catch (_) {
-      state = null;
+      state = null; // default system locale
     }
   }
 
-  /// code = 'bn' / 'en' / 'system' / null
   Future<void> setLocale(String? code) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (code == null ||
-          code.isEmpty ||
-          code == _systemTag) {
+      if (code == null || code.isEmpty || code == _systemTag) {
         state = null;
         await prefs.setString(_key, _systemTag);
       } else {
