@@ -17,7 +17,6 @@ class EpisodeModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  // অতিরিক্ত ফিল্ডস (হোম ফিড ও EpisodeCard এর জন্য)
   final String? authorName;
   final String? authorNickname;
   final String? authorAvatar;
@@ -53,15 +52,13 @@ class EpisodeModel {
         if (item is Map<String, dynamic>) {
           blocks.add(ContentBlockModel.fromJson(item));
         } else if (item is Map) {
-          blocks.add(
-            ContentBlockModel.fromJson(Map<String, dynamic>.from(item)),
-          );
+          blocks.add(ContentBlockModel.fromJson(Map<String, dynamic>.from(item)));
         }
       }
     }
 
     return EpisodeModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       novelId: json['novel_id'] as String? ?? '',
       authorId: json['author_id'] as String? ?? '',
       chapterNumber: (json['chapter_number'] as num?)?.toInt() ?? 1,
@@ -72,11 +69,8 @@ class EpisodeModel {
       viewCount: (json['view_count'] as num?)?.toInt() ?? 0,
       reactionCount: (json['reaction_count'] as num?)?.toInt() ?? 0,
       commentCount: (json['comment_count'] as num?)?.toInt() ?? 0,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'].toString())
-          : null,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
       authorName: json['author_name'] as String?,
       authorNickname: json['author_nickname'] as String?,
       authorAvatar: json['author_avatar'] as String?,
