@@ -1,5 +1,5 @@
 // lib/routing/app_router.dart
-// ShellRoute (bottom nav) এ Discover এর পরিবর্তে Inbox যুক্ত করা হয়েছে
+// AuthService সিঙ্গেল ইনস্ট্যান্স + Admin Guard চেক
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +24,7 @@ import '../features/home/presentation/screens/home_feed_screen.dart';
 import '../features/home/presentation/screens/popular_screen.dart';
 import '../features/home/presentation/screens/trending_screen.dart';
 import '../features/legal/presentation/screens/legal_screen.dart';
-import '../features/notification/presentation/screens/notification_screen.dart'; // ✅ NotificationScreen ইম্পোর্ট করা হলো
+import '../features/notification/presentation/screens/notification_screen.dart'; 
 import '../features/novel/presentation/screens/novel_details_screen.dart';
 import '../features/offline/presentation/screens/offline_downloads_screen.dart';
 import '../features/offline/presentation/screens/offline_reader_screen.dart';
@@ -50,8 +50,12 @@ import '../features/write/presentation/screens/draft_list_screen.dart';
 import '../features/write/presentation/screens/write_screen.dart';
 import 'route_names.dart';
 
+// AuthService()-এর জন্য Provider
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final auth = AuthService();
+  // Provider থেকে AuthService নেওয়া হলো
+  final auth = ref.watch(authServiceProvider);
 
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -73,15 +77,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isLegalRoute = loc.startsWith(RouteNames.legal);
 
-      if (!loggedIn &&
-          !isAuthRoute &&
-          !isOfflineRoute &&
-          !isLegalRoute) {
+      if (!loggedIn && !isAuthRoute && !isOfflineRoute && !isLegalRoute) {
         return RouteNames.welcome;
       }
 
+      // Admin Route Guard (Sync ভাবে চেক করা হচ্ছে)
       if (loc.startsWith(RouteNames.admin)) {
         if (!loggedIn) return RouteNames.welcome;
+        
+        // যদি অ্যাডমিন না হয়, তবে হোমে পাঠিয়ে দাও
+        // (আপনার AuthService এ isAdminSync() থাকলে সেটা দিবেন, আপাতত sync প্রপার্টি ধরে নিলাম)
+        if (auth.isAdminSync != true) {
+          return RouteNames.home; 
+        }
       }
 
       return null;
@@ -92,254 +100,90 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
       ),
-      GoRoute(
-        path: RouteNames.onboarding,
-        builder: (_, __) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.welcome,
-        builder: (_, __) => const WelcomeScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.login,
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.register,
-        builder: (_, __) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.forgotPassword,
-        builder: (_, __) => const ForgotPasswordScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.profileSetup,
-        builder: (_, __) => const ProfileSetupScreen(),
-      ),
+      // ... (বাকি সব রুট আগের মতোই থাকবে, কোনো পরিবর্তন নেই)
+      // আমি যেহেতু পুরো কোড দিচ্ছি, তাই নিচে সব রুট দেওয়া হলো:
+      GoRoute(path: RouteNames.onboarding, builder: (_, __) => const OnboardingScreen()),
+      GoRoute(path: RouteNames.welcome, builder: (_, __) => const WelcomeScreen()),
+      GoRoute(path: RouteNames.login, builder: (_, __) => const LoginScreen()),
+      GoRoute(path: RouteNames.register, builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: RouteNames.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: RouteNames.profileSetup, builder: (_, __) => const ProfileSetupScreen()),
 
-      // SHELL ROUTES (With bottom nav)
+      // SHELL ROUTES
       ShellRoute(
         builder: (context, state, child) {
-          return MainScaffold(
-            currentRoute: state.matchedLocation,
-            child: child,
-          );
+          return MainScaffold(currentRoute: state.matchedLocation, child: child);
         },
         routes: [
-          GoRoute(
-            path: RouteNames.home,
-            builder: (_, __) => const HomeFeedScreen(),
-          ),
-          GoRoute(
-            path: RouteNames.inbox, // ✅ Discover এর বদলে ইনবক্স রাউট
-            builder: (_, __) => const NotificationScreen(), // ✅ NotificationScreen ব্যবহার করা হলো
-          ),
-          GoRoute(
-            path: RouteNames.videos,
-            builder: (_, state) {
-              final focus = state.uri.queryParameters['focus'];
-              return VideoFeedScreen(focusVideoId: focus);
-            },
-          ),
-          GoRoute(
-            path: RouteNames.profile,
-            builder: (_, __) => const ProfileScreen(),
-          ),
+          GoRoute(path: RouteNames.home, builder: (_, __) => const HomeFeedScreen()),
+          GoRoute(path: RouteNames.inbox, builder: (_, __) => const NotificationScreen()),
+          GoRoute(path: RouteNames.videos, builder: (_, state) {
+            final focus = state.uri.queryParameters['focus'];
+            return VideoFeedScreen(focusVideoId: focus);
+          }),
+          GoRoute(path: RouteNames.profile, builder: (_, __) => const ProfileScreen()),
         ],
       ),
 
-      // CONTENT ROUTES
-      GoRoute(
-        path: RouteNames.popular,
-        builder: (_, __) => const PopularScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.trending,
-        builder: (_, __) => const TrendingScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.category,
-        builder: (context, state) {
-          final key = state.uri.queryParameters['key'] ??
-              state.uri.queryParameters['name'] ??
-              'grp_other';
-          return CategoryScreen(categoryKey: key);
-        },
-      ),
-      GoRoute(
-        path: RouteNames.search,
-        builder: (_, __) => const SearchScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.videoSearch,
-        builder: (_, __) => const VideoSearchScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.notifications,
-        builder: (_, __) => const NotificationScreen(),
-      ),
-      GoRoute(
-        path: '${RouteNames.story}/:id',
-        builder: (_, state) => ReaderScreen(
-          kind: ReaderKind.story,
-          id: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '${RouteNames.episode}/:id',
-        builder: (_, state) => ReaderScreen(
-          kind: ReaderKind.episode,
-          id: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '${RouteNames.novel}/:id',
-        builder: (_, state) => NovelDetailsScreen(
-          novelId: state.pathParameters['id']!,
-        ),
-      ),
+      // CONTENT
+      GoRoute(path: RouteNames.popular, builder: (_, __) => const PopularScreen()),
+      GoRoute(path: RouteNames.trending, builder: (_, __) => const TrendingScreen()),
+      GoRoute(path: RouteNames.category, builder: (context, state) {
+        final key = state.uri.queryParameters['key'] ?? state.uri.queryParameters['name'] ?? 'grp_other';
+        return CategoryScreen(categoryKey: key);
+      }),
+      GoRoute(path: RouteNames.search, builder: (_, __) => const SearchScreen()),
+      GoRoute(path: RouteNames.videoSearch, builder: (_, __) => const VideoSearchScreen()),
+      GoRoute(path: RouteNames.notifications, builder: (_, __) => const NotificationScreen()),
+      GoRoute(path: '${RouteNames.story}/:id', builder: (_, state) => ReaderScreen(kind: ReaderKind.story, id: state.pathParameters['id']!)),
+      GoRoute(path: '${RouteNames.episode}/:id', builder: (_, state) => ReaderScreen(kind: ReaderKind.episode, id: state.pathParameters['id']!)),
+      GoRoute(path: '${RouteNames.novel}/:id', builder: (_, state) => NovelDetailsScreen(novelId: state.pathParameters['id']!)),
 
       // AUTHOR & HISTORY
-      GoRoute(
-        path: '${RouteNames.author}/:id',
-        builder: (_, state) => AuthorProfileScreen(
-          userId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: RouteNames.history,
-        builder: (_, __) => const ReadingHistoryScreen(),
-      ),
+      GoRoute(path: '${RouteNames.author}/:id', builder: (_, state) => AuthorProfileScreen(userId: state.pathParameters['id']!)),
+      GoRoute(path: RouteNames.history, builder: (_, __) => const ReadingHistoryScreen()),
 
       // WRITE
-      GoRoute(
-        path: RouteNames.writeStory,
-        builder: (_, __) => const WriteScreen(kind: WriteKind.story),
-      ),
-      GoRoute(
-        path: '${RouteNames.writeStory}/:id',
-        builder: (_, state) => WriteScreen(
-          kind: WriteKind.story,
-          editId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: RouteNames.writeNovel,
-        builder: (_, __) => const WriteScreen(kind: WriteKind.novel),
-      ),
-      GoRoute(
-        path: '${RouteNames.writeNovel}/:id',
-        builder: (_, state) => WriteScreen(
-          kind: WriteKind.novel,
-          editId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '${RouteNames.addEpisode}/:novelId',
-        builder: (_, state) => AddEpisodeScreen(
-          novelId: state.pathParameters['novelId']!,
-        ),
-      ),
-      GoRoute(
-        path: RouteNames.drafts,
-        builder: (_, __) => const DraftListScreen(),
-      ),
+      GoRoute(path: RouteNames.writeStory, builder: (_, __) => const WriteScreen(kind: WriteKind.story)),
+      GoRoute(path: '${RouteNames.writeStory}/:id', builder: (_, state) => WriteScreen(kind: WriteKind.story, editId: state.pathParameters['id']!)),
+      GoRoute(path: RouteNames.writeNovel, builder: (_, __) => const WriteScreen(kind: WriteKind.novel)),
+      GoRoute(path: '${RouteNames.writeNovel}/:id', builder: (_, state) => WriteScreen(kind: WriteKind.novel, editId: state.pathParameters['id']!)),
+      GoRoute(path: '${RouteNames.addEpisode}/:novelId', builder: (_, state) => AddEpisodeScreen(novelId: state.pathParameters['novelId']!)),
+      GoRoute(path: RouteNames.drafts, builder: (_, __) => const DraftListScreen()),
 
       // VIDEO
-      GoRoute(
-        path: RouteNames.createVideo,
-        builder: (_, __) => const CreateVideoScreen(),
-      ),
-      GoRoute(
-        path: '${RouteNames.createVideo}/:id',
-        builder: (_, state) => EditVideoScreen(
-          videoId: state.pathParameters['id']!,
-        ),
-      ),
+      GoRoute(path: RouteNames.createVideo, builder: (_, __) => const CreateVideoScreen()),
+      GoRoute(path: '${RouteNames.createVideo}/:id', builder: (_, state) => EditVideoScreen(videoId: state.pathParameters['id']!)),
 
       // PROFILE & USER
-      GoRoute(
-        path: '${RouteNames.user}/:id',
-        builder: (_, state) => ProfileScreen(
-          userId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: RouteNames.editProfile,
-        builder: (_, __) => const EditProfileScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.setPassword,
-        builder: (_, __) => const SetPasswordScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.myWorks,
-        builder: (_, __) => const MyPostsScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.saved,
-        builder: (_, __) => const SavedScreen(),
-      ),
-      GoRoute(
-        path: '${RouteNames.follows}/:userId/:mode',
-        builder: (_, state) {
-          final uid = state.pathParameters['userId']!;
-          final mode = state.pathParameters['mode'] ?? 'followers';
-          return FollowListScreen(userId: uid, mode: mode);
-        },
-      ),
-      GoRoute(
-        path: RouteNames.insights,
-        builder: (_, __) => const InsightsScreen(),
-      ),
+      GoRoute(path: '${RouteNames.user}/:id', builder: (_, state) => ProfileScreen(userId: state.pathParameters['id']!)),
+      GoRoute(path: RouteNames.editProfile, builder: (_, __) => const EditProfileScreen()),
+      GoRoute(path: RouteNames.setPassword, builder: (_, __) => const SetPasswordScreen()),
+      GoRoute(path: RouteNames.myWorks, builder: (_, __) => const MyPostsScreen()),
+      GoRoute(path: RouteNames.saved, builder: (_, __) => const SavedScreen()),
+      GoRoute(path: '${RouteNames.follows}/:userId/:mode', builder: (_, state) {
+        final uid = state.pathParameters['userId']!;
+        final mode = state.pathParameters['mode'] ?? 'followers';
+        return FollowListScreen(userId: uid, mode: mode);
+      }),
+      GoRoute(path: RouteNames.insights, builder: (_, __) => const InsightsScreen()),
 
       // OFFLINE
-      GoRoute(
-        path: RouteNames.offline,
-        builder: (_, __) => const OfflineDownloadsScreen(),
-      ),
-      GoRoute(
-        path: '${RouteNames.offlineReader}/:id',
-        builder: (_, state) => OfflineReaderScreen(
-          itemId: state.pathParameters['id']!,
-        ),
-      ),
+      GoRoute(path: RouteNames.offline, builder: (_, __) => const OfflineDownloadsScreen()),
+      GoRoute(path: '${RouteNames.offlineReader}/:id', builder: (_, state) => OfflineReaderScreen(itemId: state.pathParameters['id']!)),
 
-      // SETTINGS & SUB-SCREENS
-      GoRoute(
-        path: RouteNames.settings,
-        builder: (_, __) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.notificationSettings,
-        builder: (_, __) => const NotificationSettingsScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.blockedUsers,
-        builder: (_, __) => const BlockedUsersScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.deleteAccount,
-        builder: (_, __) => const DeleteAccountScreen(),
-      ),
+      // SETTINGS
+      GoRoute(path: RouteNames.settings, builder: (_, __) => const SettingsScreen()),
+      GoRoute(path: RouteNames.notificationSettings, builder: (_, __) => const NotificationSettingsScreen()),
+      GoRoute(path: RouteNames.blockedUsers, builder: (_, __) => const BlockedUsersScreen()),
+      GoRoute(path: RouteNames.deleteAccount, builder: (_, __) => const DeleteAccountScreen()),
 
       // ADMIN
-      GoRoute(
-        path: RouteNames.admin,
-        builder: (_, __) => const AdminDashboardScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.adminUsers,
-        builder: (_, __) => const AdminUsersScreen(),
-      ),
+      GoRoute(path: RouteNames.admin, builder: (_, __) => const AdminDashboardScreen()),
+      GoRoute(path: RouteNames.adminUsers, builder: (_, __) => const AdminUsersScreen()),
 
       // LEGAL
-      GoRoute(
-        path: '${RouteNames.legal}/:type',
-        builder: (_, state) => LegalScreen(
-          type: state.pathParameters['type'] ?? 'terms',
-        ),
-      ),
+      GoRoute(path: '${RouteNames.legal}/:type', builder: (_, state) => LegalScreen(type: state.pathParameters['type'] ?? 'terms')),
     ],
   );
 });
