@@ -1,6 +1,4 @@
 // lib/core/widgets/main_scaffold.dart
-// Bottom Navigation Bar সহ main shell (Discover এর পরিবর্তে Inbox যুক্ত)
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,11 +11,7 @@ class MainScaffold extends StatefulWidget {
   final Widget child;
   final String currentRoute;
 
-  const MainScaffold({
-    super.key,
-    required this.child,
-    required this.currentRoute,
-  });
+  const MainScaffold({super.key, required this.child, required this.currentRoute});
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
@@ -27,37 +21,26 @@ class _MainScaffoldState extends State<MainScaffold> {
   int _getIndex() {
     if (widget.currentRoute.startsWith(RouteNames.inbox)) return 1;
     if (widget.currentRoute.startsWith(RouteNames.videos)) return 3;
-    if (widget.currentRoute.startsWith(RouteNames.profile) ||
-        widget.currentRoute.startsWith(RouteNames.user)) {
-      return 4;
-    }
+    if (widget.currentRoute.startsWith(RouteNames.profile) || widget.currentRoute.startsWith(RouteNames.user)) return 4;
     return 0;
   }
 
   void _onTap(int index) {
     switch (index) {
       case 0:
-        if (widget.currentRoute != RouteNames.home) {
-          context.go(RouteNames.home);
-        }
+        if (widget.currentRoute != RouteNames.home) context.go(RouteNames.home);
         break;
       case 1:
-        if (widget.currentRoute != RouteNames.inbox) {
-          context.go(RouteNames.inbox);
-        }
+        if (widget.currentRoute != RouteNames.inbox) context.go(RouteNames.inbox);
         break;
       case 2:
         CreateSheet.show(context);
         break;
       case 3:
-        if (widget.currentRoute != RouteNames.videos) {
-          context.go(RouteNames.videos);
-        }
+        if (widget.currentRoute != RouteNames.videos) context.go(RouteNames.videos);
         break;
       case 4:
-        if (widget.currentRoute != RouteNames.profile) {
-          context.go(RouteNames.profile);
-        }
+        if (widget.currentRoute != RouteNames.profile) context.go(RouteNames.profile);
         break;
     }
   }
@@ -73,12 +56,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          border: Border(
-            top: BorderSide(
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: isDark ? AppColors.darkDivider : AppColors.lightDivider, width: 1)),
         ),
         child: SafeArea(
           top: false,
@@ -86,36 +64,11 @@ class _MainScaffoldState extends State<MainScaffold> {
             height: 64,
             child: Row(
               children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: l10n.home,
-                  selected: idx == 0,
-                  onTap: () => _onTap(0),
-                ),
-                _NavItem(
-                  icon: Icons.inbox_outlined,
-                  activeIcon: Icons.inbox,
-                  // ✅ l10n.inbox ব্যবহার করা হলো, ?? 'ইনবক্স' বাদ দেওয়া হলো
-                  label: l10n.inbox, 
-                  selected: idx == 1,
-                  onTap: () => _onTap(1),
-                ),
+                _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: l10n.home, selected: idx == 0, onTap: () => _onTap(0)),
+                _NavItem(icon: Icons.inbox_outlined, activeIcon: Icons.inbox, label: l10n.inbox, selected: idx == 1, onTap: () => _onTap(1)),
                 _CreateButton(onTap: () => _onTap(2), label: l10n.create),
-                _NavItem(
-                  icon: Icons.videocam_outlined,
-                  activeIcon: Icons.videocam,
-                  label: l10n.videos,
-                  selected: idx == 3,
-                  onTap: () => _onTap(3),
-                ),
-                _NavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: l10n.profile,
-                  selected: idx == 4,
-                  onTap: () => _onTap(4),
-                ),
+                _NavItem(icon: Icons.videocam_outlined, activeIcon: Icons.videocam, label: l10n.videos, selected: idx == 3, onTap: () => _onTap(3)),
+                _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: l10n.profile, selected: idx == 4, onTap: () => _onTap(4)),
               ],
             ),
           ),
@@ -132,20 +85,12 @@ class _NavItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _NavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = selected
-        ? AppColors.primary
-        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
+    final color = selected ? AppColors.primary : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary);
 
     return Expanded(
       child: InkWell(
@@ -155,14 +100,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(selected ? activeIcon : icon, color: color, size: 24),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),
       ),
@@ -184,28 +122,9 @@ class _CreateButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
+            Container(width: 40, height: 40, decoration: const BoxDecoration(gradient: AppColors.primaryGradient, shape: BoxShape.circle), child: const Icon(Icons.add, color: Colors.white, size: 24)),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
