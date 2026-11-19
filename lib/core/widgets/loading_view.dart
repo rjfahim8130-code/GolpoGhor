@@ -1,8 +1,8 @@
+// lib/core/widgets/loading_view.dart
 import 'package:flutter/material.dart';
 
 class LoadingView extends StatelessWidget {
   final String? message;
-
   const LoadingView({super.key, this.message});
 
   @override
@@ -14,10 +14,7 @@ class LoadingView extends StatelessWidget {
           const CircularProgressIndicator(),
           if (message != null) ...[
             const SizedBox(height: 16),
-            Text(
-              message!,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
+            Text(message!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
           ],
         ],
       ),
