@@ -1,9 +1,5 @@
 // lib/core/utils/validators.dart
-// username validator বাদ (username feature নেই)
-// সব message এখন l10n key string — UI-তে translate হবে
-
 import 'package:flutter/material.dart';
-
 import '../localization/app_localizations.dart';
 
 class Validators {
@@ -13,9 +9,7 @@ class Validators {
     final l10n = context.l10n;
     if (v == null || v.trim().isEmpty) return l10n.valEnterEmail;
     final t = v.trim();
-    if (!RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\.\-]+$').hasMatch(t)) {
-      return l10n.valValidEmail;
-    }
+    if (!RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\.\-]+$').hasMatch(t)) return l10n.valValidEmail;
     return null;
   }
 
@@ -33,7 +27,6 @@ class Validators {
     return null;
   }
 
-  /// ডাক নাম — ঐচ্ছিক (খালি থাকলে valid)
   static String? nickname(BuildContext context, String? v) {
     final l10n = context.l10n;
     if (v == null || v.trim().isEmpty) return null;
