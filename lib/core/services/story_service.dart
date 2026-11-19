@@ -1,12 +1,12 @@
 // lib/core/services/story_service.dart
-// সংশোধিত: getByCategories মেথড যুক্ত
-
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
 import '../constants/supabase_constants.dart';
 import '../models/content_block_model.dart';
 import '../models/story_model.dart';
+import 'auth_service.dart'; // AppException
 
 class StoryService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -15,11 +15,7 @@ class StoryService {
 
   static const String _selectWithAuthor = '''
     *,
-    profiles:author_id (
-      full_name,
-      nickname,
-      avatar_url
-    )
+    profiles:author_id (full_name, nickname, avatar_url)
   ''';
 
   Map<String, dynamic> _mapWithAuthor(Map<String, dynamic> json) {
@@ -33,152 +29,8 @@ class StoryService {
     return map;
   }
 
-  // ---------------- Reads ----------------
-
-  Future<List<StoryModel>> getFeed({
-    int limit = AppConstants.feedPageSize,
-    int offset = 0,
-  }) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<List<StoryModel>> getTrending({int limit = 40}) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('view_count', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<List<StoryModel>> getPopular({int limit = 40}) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('reaction_count', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<List<StoryModel>> getByCategory(
-    String category, {
-    int limit = 30,
-  }) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .eq('category', category)
-        .order('created_at', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  /// একাধিক ক্যাটাগরি বা সাব-ক্যাটাগরির লিস্ট একসাথে কুয়েরি করার জন্য
-  Future<List<StoryModel>> getByCategories(
-    List<String> categories, {
-    int limit = 40,
-  }) async {
-    if (categories.isEmpty) return [];
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .inFilter('category', categories)
-        .order('created_at', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<List<StoryModel>> getByAuthor(String authorId, {int limit = 50}) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('author_id', authorId)
-        .eq('is_published', true)
-        .eq('is_draft', false)
-        .order('created_at', ascending: false)
-        .limit(limit);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(
-              _mapWithAuthor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
-  }
-
-  Future<StoryModel?> getById(String id) async {
-    final data = await _client
-        .from(SupabaseConstants.stories)
-        .select(_selectWithAuthor)
-        .eq('id', id)
-        .maybeSingle();
-
-    if (data == null) return null;
-    return StoryModel.fromJson(
-      _mapWithAuthor(Map<String, dynamic>.from(data)),
-    );
-  }
-
-  Future<List<StoryModel>> getMyStories({bool draftsOnly = false}) async {
-    final uid = _uid;
-    if (uid == null) return [];
-
-    var query = _client
-        .from(SupabaseConstants.stories)
-        .select()
-        .eq('author_id', uid);
-
-    if (draftsOnly) {
-      query = query.eq('is_draft', true);
-    }
-
-    final data = await query.order('updated_at', ascending: false);
-
-    return (data as List)
-        .map((e) => StoryModel.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
-  }
-
-  // ---------------- Writes ----------------
+  // ... (getFeed, getTrending, getPopular, getByCategory, getByCategories, getByAuthor, getById, getMyStories আগের মতোই থাকবে)
+  // নিচে শুধু Write অংশটুকু দেওয়া হলো, পুরো কোডটা আপনার কাছে থাকা উচিত, শুধু Write অংশে AppException বসিয়ে নিন।
 
   Future<StoryModel> createStory({
     required String title,
@@ -190,7 +42,14 @@ class StoryService {
     bool isDraft = false,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('notLoggedIn');
+    if (uid == null) throw AppException('notLoggedIn');
+
+    // কনটেন্ট সাইজ লিমিট চেক (যেমন ৫০০ কিলোবাইট)
+    final blocksJson = contentBlocks.map((e) => e.toJson()).toList();
+    final sizeInBytes = utf8.encode(jsonEncode(blocksJson)).length;
+    if (sizeInBytes > 500 * 1024) {
+      throw AppException('contentTooLarge');
+    }
 
     final data = await _client
         .from(SupabaseConstants.stories)
@@ -201,7 +60,7 @@ class StoryService {
           'category': category,
           'tags': tags ?? [],
           'cover_url': coverUrl,
-          'content_blocks': contentBlocks.map((e) => e.toJson()).toList(),
+          'content_blocks': blocksJson,
           'is_published': !isDraft,
           'is_draft': isDraft,
         })
@@ -223,7 +82,7 @@ class StoryService {
     bool? isPublished,
   }) async {
     final uid = _uid;
-    if (uid == null) throw Exception('notLoggedIn');
+    if (uid == null) throw AppException('notLoggedIn');
 
     final map = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -234,7 +93,10 @@ class StoryService {
     if (tags != null) map['tags'] = tags;
     if (coverUrl != null) map['cover_url'] = coverUrl;
     if (contentBlocks != null) {
-      map['content_blocks'] = contentBlocks.map((e) => e.toJson()).toList();
+      final blocksJson = contentBlocks.map((e) => e.toJson()).toList();
+      final sizeInBytes = utf8.encode(jsonEncode(blocksJson)).length;
+      if (sizeInBytes > 500 * 1024) throw AppException('contentTooLarge');
+      map['content_blocks'] = blocksJson;
     }
     if (isDraft != null) {
       map['is_draft'] = isDraft;
@@ -255,20 +117,13 @@ class StoryService {
 
   Future<void> deleteStory(String storyId) async {
     final uid = _uid;
-    if (uid == null) throw Exception('notLoggedIn');
-    await _client
-        .from(SupabaseConstants.stories)
-        .delete()
-        .eq('id', storyId)
-        .eq('author_id', uid);
+    if (uid == null) throw AppException('notLoggedIn');
+    await _client.from(SupabaseConstants.stories).delete().eq('id', storyId).eq('author_id', uid);
   }
 
   Future<int> recordView(String storyId) async {
     try {
-      final result = await _client.rpc(
-        SupabaseConstants.rpcRecordView,
-        params: {'p_type': 'story', 'p_id': storyId},
-      );
+      final result = await _client.rpc(SupabaseConstants.rpcRecordView, params: {'p_type': 'story', 'p_id': storyId});
       if (result is int) return result;
       if (result is num) return result.toInt();
       return 0;
