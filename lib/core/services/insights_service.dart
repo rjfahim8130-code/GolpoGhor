@@ -1,3 +1,4 @@
+// lib/core/services/insights_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -58,61 +59,32 @@ class InsightsService {
     final nextWeek = week0.add(const Duration(days: 7));
     final nextMonth = DateTime.utc(month0.year, month0.month + 1, 1);
 
-    // লেখা (গল্প + উপন্যাস + পর্ব)
     final writingRows = <Map<String, dynamic>>[];
     try {
-      final s = await _client
-          .from(SupabaseConstants.stories)
-          .select('id, view_count, reaction_count, comment_count, created_at')
-          .eq('author_id', uid);
-      writingRows.addAll(
-        (s as List).map((e) => Map<String, dynamic>.from(e as Map)),
-      );
+      final s = await _client.from(SupabaseConstants.stories).select('id, view_count, reaction_count, comment_count, created_at').eq('author_id', uid);
+      writingRows.addAll((s as List).map((e) => Map<String, dynamic>.from(e as Map)));
     } catch (_) {}
 
     try {
-      final n = await _client
-          .from(SupabaseConstants.novels)
-          .select('id, view_count, reaction_count, comment_count, created_at')
-          .eq('author_id', uid);
-      writingRows.addAll(
-        (n as List).map((e) => Map<String, dynamic>.from(e as Map)),
-      );
+      final n = await _client.from(SupabaseConstants.novels).select('id, view_count, reaction_count, comment_count, created_at').eq('author_id', uid);
+      writingRows.addAll((n as List).map((e) => Map<String, dynamic>.from(e as Map)));
     } catch (_) {}
 
     try {
-      final ep = await _client
-          .from(SupabaseConstants.episodes)
-          .select('id, view_count, reaction_count, comment_count, created_at')
-          .eq('author_id', uid);
-      writingRows.addAll(
-        (ep as List).map((e) => Map<String, dynamic>.from(e as Map)),
-      );
+      final ep = await _client.from(SupabaseConstants.episodes).select('id, view_count, reaction_count, comment_count, created_at').eq('author_id', uid);
+      writingRows.addAll((ep as List).map((e) => Map<String, dynamic>.from(e as Map)));
     } catch (_) {}
 
-    // ভিডিও
     final videoRows = <Map<String, dynamic>>[];
     try {
-      final v = await _client
-          .from(SupabaseConstants.videoPosts)
-          .select(
-            'id, view_count, reaction_count, comment_count, save_count, created_at',
-          )
-          .eq('author_id', uid);
-      videoRows.addAll(
-        (v as List).map((e) => Map<String, dynamic>.from(e as Map)),
-      );
+      final v = await _client.from(SupabaseConstants.videoPosts).select('id, view_count, reaction_count, comment_count, save_count, created_at').eq('author_id', uid);
+      videoRows.addAll((v as List).map((e) => Map<String, dynamic>.from(e as Map)));
     } catch (_) {}
 
-    InsightsPeriodStats sum(
-      List<Map<String, dynamic>> rows,
-      DateTime from,
-      DateTime to,
-    ) {
+    InsightsPeriodStats sum(List<Map<String, dynamic>> rows, DateTime from, DateTime to) {
       var views = 0, reactions = 0, comments = 0, saves = 0;
       for (final r in rows) {
-        final created =
-            DateTime.tryParse(r['created_at']?.toString() ?? '')?.toUtc();
+        final created = DateTime.tryParse(r['created_at']?.toString() ?? '')?.toUtc();
         if (created == null) continue;
         if (created.isBefore(from) || !created.isBefore(to)) continue;
         views += (r['view_count'] as num?)?.toInt() ?? 0;
@@ -120,12 +92,7 @@ class InsightsService {
         comments += (r['comment_count'] as num?)?.toInt() ?? 0;
         saves += (r['save_count'] as num?)?.toInt() ?? 0;
       }
-      return InsightsPeriodStats(
-        views: views,
-        reactions: reactions,
-        comments: comments,
-        saves: saves,
-      );
+      return InsightsPeriodStats(views: views, reactions: reactions, comments: comments, saves: saves);
     }
 
     return InsightsBundle(
