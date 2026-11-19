@@ -1,0 +1,5 @@
+[functions.create-upload-url]
+verify_jwt = true
+
+[functions.delete-object]
+verify_jwt = true
