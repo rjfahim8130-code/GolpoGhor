@@ -1,6 +1,4 @@
 // lib/core/services/search_service.dart
-// সংশোধিত: username বাদ, full_name + nickname দিয়ে সার্চ + ভিডিও সার্চ আলাদা করা হয়েছে
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/supabase_constants.dart';
@@ -49,7 +47,6 @@ class SearchService {
     return map;
   }
 
-  /// সাধারণ সার্চ (গল্প, উপন্যাস, লেখক ও কোড) - ভিডিও বাদ দেওয়া হয়েছে
   Future<SearchResult> search(String raw) async {
     final q = raw.trim();
     if (q.isEmpty) return const SearchResult();
@@ -61,104 +58,43 @@ class SearchService {
     final code = q.toUpperCase();
     final pattern = '%$q%';
 
-    // ---- Exact codes ----
     try {
-      final s = await _client
-          .from(SupabaseConstants.stories)
-          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
-          .or('public_code.eq.$code,public_code.ilike.$q')
-          .eq('is_published', true)
-          .limit(1)
-          .maybeSingle();
+      final s = await _client.from(SupabaseConstants.stories).select('*, profiles:author_id (full_name, nickname, avatar_url)').or('public_code.eq.$code,public_code.ilike.$q').eq('is_published', true).limit(1).maybeSingle();
       if (s != null) {
-        exactStory = StoryModel.fromJson(
-          _withAuthor(Map<String, dynamic>.from(s)),
-        );
+        exactStory = StoryModel.fromJson(_withAuthor(Map<String, dynamic>.from(s)));
       }
     } catch (_) {}
 
     try {
-      final n = await _client
-          .from(SupabaseConstants.novels)
-          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
-          .or('public_code.eq.$code,public_code.ilike.$q')
-          .eq('is_published', true)
-          .limit(1)
-          .maybeSingle();
+      final n = await _client.from(SupabaseConstants.novels).select('*, profiles:author_id (full_name, nickname, avatar_url)').or('public_code.eq.$code,public_code.ilike.$q').eq('is_published', true).limit(1).maybeSingle();
       if (n != null) {
-        exactNovel = NovelModel.fromJson(
-          _withAuthor(Map<String, dynamic>.from(n)),
-        );
+        exactNovel = NovelModel.fromJson(_withAuthor(Map<String, dynamic>.from(n)));
       }
     } catch (_) {}
 
-    // Exact user — invite code দিয়ে
     try {
-      final u = await _client
-          .from(SupabaseConstants.profiles)
-          .select()
-          .or('invite_code.ilike.$code')
-          .limit(1)
-          .maybeSingle();
+      final u = await _client.from(SupabaseConstants.profiles).select().or('invite_code.ilike.$code').limit(1).maybeSingle();
       if (u != null) {
         exactUser = UserModel.fromJson(Map<String, dynamic>.from(u));
       }
     } catch (_) {}
 
-    // ---- Partial — stories ----
     List<StoryModel> stories = [];
     try {
-      final data = await _client
-          .from(SupabaseConstants.stories)
-          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
-          .eq('is_published', true)
-          .eq('is_draft', false)
-          .or(
-            'title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern',
-          )
-          .order('view_count', ascending: false)
-          .limit(20);
-      stories = (data as List)
-          .map((e) => StoryModel.fromJson(
-                _withAuthor(Map<String, dynamic>.from(e as Map)),
-              ))
-          .where((s) => exactStory == null || s.id != exactStory!.id)
-          .toList();
+      final data = await _client.from(SupabaseConstants.stories).select('*, profiles:author_id (full_name, nickname, avatar_url)').eq('is_published', true).eq('is_draft', false).or('title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern').order('view_count', ascending: false).limit(20);
+      stories = (data as List).map((e) => StoryModel.fromJson(_withAuthor(Map<String, dynamic>.from(e as Map)))).where((s) => exactStory == null || s.id != exactStory!.id).toList();
     } catch (_) {}
 
-    // ---- Partial — novels ----
     List<NovelModel> novels = [];
     try {
-      final data = await _client
-          .from(SupabaseConstants.novels)
-          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
-          .eq('is_published', true)
-          .eq('is_draft', false)
-          .or(
-            'title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern',
-          )
-          .order('view_count', ascending: false)
-          .limit(15);
-      novels = (data as List)
-          .map((e) => NovelModel.fromJson(
-                _withAuthor(Map<String, dynamic>.from(e as Map)),
-              ))
-          .where((n) => exactNovel == null || n.id != exactNovel!.id)
-          .toList();
+      final data = await _client.from(SupabaseConstants.novels).select('*, profiles:author_id (full_name, nickname, avatar_url)').eq('is_published', true).eq('is_draft', false).or('title.ilike.$pattern,description.ilike.$pattern,category.ilike.$pattern').order('view_count', ascending: false).limit(15);
+      novels = (data as List).map((e) => NovelModel.fromJson(_withAuthor(Map<String, dynamic>.from(e as Map)))).where((n) => exactNovel == null || n.id != exactNovel!.id).toList();
     } catch (_) {}
 
-    // ---- Partial — authors (full_name + nickname) ----
     List<UserModel> authors = [];
     try {
-      final data = await _client
-          .from(SupabaseConstants.profiles)
-          .select()
-          .or('full_name.ilike.$pattern,nickname.ilike.$pattern')
-          .limit(12);
-      authors = (data as List)
-          .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map)))
-          .where((u) => exactUser == null || u.id != exactUser!.id)
-          .toList();
+      final data = await _client.from(SupabaseConstants.profiles).select().or('full_name.ilike.$pattern,nickname.ilike.$pattern').limit(12);
+      authors = (data as List).map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map))).where((u) => exactUser == null || u.id != exactUser!.id).toList();
     } catch (_) {}
 
     return SearchResult(
@@ -171,29 +107,14 @@ class SearchService {
     );
   }
 
-  /// আলাদা ভিডিও সার্চ মেথড
   Future<List<VideoModel>> searchVideos(String raw) async {
     final q = raw.trim();
     if (q.isEmpty) return [];
 
     final pattern = '%$q%';
     try {
-      final data = await _client
-          .from(SupabaseConstants.videoPosts)
-          .select('*, profiles:author_id (full_name, nickname, avatar_url)')
-          .eq('is_published', true)
-          .eq('is_draft', false)
-          .or(
-            'title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern',
-          )
-          .order('view_count', ascending: false)
-          .limit(20);
-
-      return (data as List)
-          .map((e) => VideoModel.fromJson(
-                _withAuthor(Map<String, dynamic>.from(e as Map)),
-              ))
-          .toList();
+      final data = await _client.from(SupabaseConstants.videoPosts).select('*, profiles:author_id (full_name, nickname, avatar_url)').eq('is_published', true).eq('is_draft', false).or('title.ilike.$pattern,description.ilike.$pattern,series_title.ilike.$pattern').order('view_count', ascending: false).limit(20);
+      return (data as List).map((e) => VideoModel.fromJson(_withAuthor(Map<String, dynamic>.from(e as Map)))).toList();
     } catch (_) {
       return [];
     }
