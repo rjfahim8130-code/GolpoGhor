@@ -1,0 +1,33 @@
+গল্পঘর — ZIP থেকে GitHub আপলোড নির্দেশনা
+=====================================
+
+১) এই ZIP আনজিপ করো। ভিতরে GolpoGhor/ ফোল্ডার পাবে।
+
+২) GitHub রিপোতে (মোবাইল/কম্পিউটার):
+   - পুরনো ফাইলগুলো আপডেট করতে চাইলে: আনজিপ করা ফোল্ডারের কনটেন্ট
+     রিপোর root এ কপি/আপলোড করো (lib/, supabase/, .github/, pubspec.yaml ইত্যাদি)।
+   - অথবা নতুন commit: সব ফাইল replace করে push।
+
+৩) GitHub Secrets (Settings → Secrets → Actions):
+   - SUPABASE_URL
+   - SUPABASE_ANON_KEY
+   - SENTRY_DSN (ঐচ্ছিক)
+   - R2_ACCOUNT_ID
+   - R2_PUBLIC_BASE_URL
+   - R2_BUCKET
+   - R2_ACCESS_KEY ও R2_SECRET_KEY এখান থেকে সরিয়ে দাও (শুধু Supabase Function এ রাখো)
+
+৪) Supabase Dashboard:
+   a) SQL Editor → supabase/sql/01_rls_policies.sql পুরো রান করো
+   b) (ঐচ্ছিক) 02_notification_cleanup.sql
+   c) Edge Functions:
+      - create-upload-url (supabase/functions/create-upload-url/index.ts)
+      - delete-object (supabase/functions/delete-object/index.ts)
+   d) Function Secrets: R2_ACCESS_KEY, R2_SECRET_KEY, R2_ACCOUNT_ID, R2_BUCKET, R2_PUBLIC_BASE_URL
+
+৫) Actions দিয়ে APK বিল্ড যাচাই করো।
+
+৬) লগইনের পর AdminService.isAdmin() কল হলে isAdminSync ক্যাশ আপডেট হবে।
+   Splash/Home এ একবার isAdmin() কল নিশ্চিত করো (আগে থেকেই থাকতে পারে)।
+
+মনে রাখো: Inbox = নোটিফিকেশন স্ক্রিন — আলাদা নোটিফ বাটন নেই।
