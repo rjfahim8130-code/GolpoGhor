@@ -1,16 +1,14 @@
 // lib/core/services/reading_history_service.dart
-
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReadingHistoryItem {
-  final String id;        // story id বা ep_<episodeId>
+  final String id;
   final String title;
   final String? author;
   final String? coverUrl;
-  final String kind;      // story | episode
-  final double progress;  // 0.0 - 1.0
+  final String kind;
+  final double progress;
   final DateTime lastReadAt;
 
   ReadingHistoryItem({
@@ -41,8 +39,7 @@ class ReadingHistoryItem {
       coverUrl: json['cover_url'] as String?,
       kind: json['kind'] as String? ?? 'story',
       progress: (json['progress'] as num?)?.toDouble() ?? 0,
-      lastReadAt: DateTime.tryParse(json['last_read_at']?.toString() ?? '') ??
-          DateTime.now(),
+      lastReadAt: DateTime.tryParse(json['last_read_at']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -57,42 +54,17 @@ class ReadingHistoryService {
     if (raw == null || raw.isEmpty) return [];
     try {
       final list = jsonDecode(raw) as List;
-      return list
-          .map((e) => ReadingHistoryItem.fromJson(
-                Map<String, dynamic>.from(e as Map),
-              ))
-          .toList()
-        ..sort((a, b) => b.lastReadAt.compareTo(a.lastReadAt));
+      return list.map((e) => ReadingHistoryItem.fromJson(Map<String, dynamic>.from(e as Map))).toList()..sort((a, b) => b.lastReadAt.compareTo(a.lastReadAt));
     } catch (_) {
       return [];
     }
   }
 
-  Future<void> record({
-    required String id,
-    required String title,
-    String? author,
-    String? coverUrl,
-    required String kind,
-    double progress = 0,
-  }) async {
+  Future<void> record({required String id, required String title, String? author, String? coverUrl, required String kind, double progress = 0}) async {
     final items = await getAll();
     items.removeWhere((e) => e.id == id);
-    items.insert(
-      0,
-      ReadingHistoryItem(
-        id: id,
-        title: title,
-        author: author,
-        coverUrl: coverUrl,
-        kind: kind,
-        progress: progress,
-        lastReadAt: DateTime.now(),
-      ),
-    );
-    if (items.length > _maxItems) {
-      items.removeRange(_maxItems, items.length);
-    }
+    items.insert(0, ReadingHistoryItem(id: id, title: title, author: author, coverUrl: coverUrl, kind: kind, progress: progress, lastReadAt: DateTime.now()));
+    if (items.length > _maxItems) items.removeRange(_maxItems, items.length);
     await _save(items);
   }
 
@@ -101,15 +73,7 @@ class ReadingHistoryService {
     final idx = items.indexWhere((e) => e.id == id);
     if (idx < 0) return;
     final item = items[idx];
-    items[idx] = ReadingHistoryItem(
-      id: item.id,
-      title: item.title,
-      author: item.author,
-      coverUrl: item.coverUrl,
-      kind: item.kind,
-      progress: progress,
-      lastReadAt: DateTime.now(),
-    );
+    items[idx] = ReadingHistoryItem(id: item.id, title: item.title, author: item.author, coverUrl: item.coverUrl, kind: item.kind, progress: progress, lastReadAt: DateTime.now());
     await _save(items);
   }
 
@@ -126,9 +90,6 @@ class ReadingHistoryService {
 
   Future<void> _save(List<ReadingHistoryItem> items) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode(items.map((e) => e.toJson()).toList()),
-    );
+    await prefs.setString(_key, jsonEncode(items.map((e) => e.toJson()).toList()));
   }
 }
