@@ -1,61 +1,33 @@
 // lib/core/utils/time_ago.dart
-// বাংলা + ইংরেজি + locale-aware helper
-
 import 'package:flutter/material.dart';
-
 import '../localization/app_localizations.dart';
 
 class TimeAgo {
   TimeAgo._();
 
-  /// locale-aware helper — BuildContext দিয়ে স্বয়ংক্রিয় ভাষা
-  /// ব্যবহার: TimeAgo.of(context, someDateTime)
   static String of(BuildContext context, DateTime dt) {
     final l10n = context.l10n;
     final diff = DateTime.now().difference(dt);
 
     if (diff.inSeconds < 30) return l10n.timeJustNow;
-    if (diff.inMinutes < 1) {
-      return '${diff.inSeconds} ${l10n.timeSecondsAgo}';
-    }
-    if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} ${l10n.timeMinutesAgo}';
-    }
-    if (diff.inHours < 24) {
-      return '${diff.inHours} ${l10n.timeHoursAgo}';
-    }
-    if (diff.inDays < 7) {
-      return '${diff.inDays} ${l10n.timeDaysAgo}';
-    }
-    if (diff.inDays < 30) {
-      return '${(diff.inDays / 7).floor()} ${l10n.timeWeeksAgo}';
-    }
-    if (diff.inDays < 365) {
-      return '${(diff.inDays / 30).floor()} ${l10n.timeMonthsAgo}';
-    }
+    if (diff.inMinutes < 1) return '${diff.inSeconds} ${l10n.timeSecondsAgo}';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} ${l10n.timeMinutesAgo}';
+    if (diff.inHours < 24) return '${diff.inHours} ${l10n.timeHoursAgo}';
+    if (diff.inDays < 7) return '${diff.inDays} ${l10n.timeDaysAgo}';
+    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} ${l10n.timeWeeksAgo}';
+    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} ${l10n.timeMonthsAgo}';
     return '${(diff.inDays / 365).floor()} ${l10n.timeYearsAgo}';
   }
 
-  /// locale-aware number compact
-  /// ব্যবহার: TimeAgo.compactOf(context, someInt)
   static String compactOf(BuildContext context, int n) {
     final l10n = context.l10n;
     if (n < 1000) return '$n';
-    if (n < 100000) {
-      return '${(n / 1000).toStringAsFixed(1)} ${l10n.compactThousand}';
-    }
-    if (n < 10000000) {
-      return '${(n / 100000).toStringAsFixed(1)} ${l10n.compactLakh}';
-    }
+    if (n < 100000) return '${(n / 1000).toStringAsFixed(1)} ${l10n.compactThousand}';
+    if (n < 10000000) return '${(n / 100000).toStringAsFixed(1)} ${l10n.compactLakh}';
     return '${(n / 10000000).toStringAsFixed(1)} ${l10n.compactCrore}';
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // পুরনো bn() / en() — backward compatibility
-  // যেখানে locale নেই, শুধু এই দুটো ব্যবহার হবে
-  // ═══════════════════════════════════════════════════════════
-
-  /// বাংলা version (hardcoded)
+  // পুরনো ভার্সন (ব্যাকওয়ার্ড কম্প্যাটিবিলিটির জন্য)
   static String bn(DateTime dt) {
     final diff = DateTime.now().difference(dt);
     if (diff.inSeconds < 30) return 'এইমাত্র';
@@ -66,33 +38,5 @@ class TimeAgo {
     if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} সপ্তাহ আগে';
     if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} মাস আগে';
     return '${(diff.inDays / 365).floor()} বছর আগে';
-  }
-
-  /// ইংরেজি version (hardcoded)
-  static String en(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inSeconds < 30) return 'just now';
-    if (diff.inMinutes < 1) return '${diff.inSeconds}s ago';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
-    return '${(diff.inDays / 365).floor()}y ago';
-  }
-
-  /// সংখ্যা সংক্ষেপে — backward compatible
-  static String compact(int n, {bool bn = true}) {
-    if (bn) {
-      if (n < 1000) return '$n';
-      if (n < 100000) return '${(n / 1000).toStringAsFixed(1)} হাজার';
-      if (n < 10000000) return '${(n / 100000).toStringAsFixed(1)} লক্ষ';
-      return '${(n / 10000000).toStringAsFixed(1)} কোটি';
-    } else {
-      if (n < 1000) return '$n';
-      if (n < 1000000) return '${(n / 1000).toStringAsFixed(1)}K';
-      if (n < 1000000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-      return '${(n / 1000000000).toStringAsFixed(1)}B';
-    }
   }
 }
