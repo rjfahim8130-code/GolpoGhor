@@ -1,7 +1,5 @@
 // lib/core/services/notification_service.dart
-// সংশোধিত: সব event trigger সাপোর্ট, mention সহ
-// Service-এ context নেই — message শুধু key string
-
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/app_constants.dart';
@@ -15,11 +13,7 @@ class NotificationService {
 
   static const String _selectWithActor = '''
     *,
-    actor:actor_id (
-      full_name,
-      nickname,
-      avatar_url
-    )
+    actor:actor_id (full_name, nickname, avatar_url)
   ''';
 
   Map<String, dynamic> _mapActor(Map<String, dynamic> json) {
@@ -33,8 +27,6 @@ class NotificationService {
     return map;
   }
 
-  // ---------------- Fetch ----------------
-
   Future<List<NotificationModel>> getMine({int limit = 50}) async {
     final uid = _uid;
     if (uid == null) return [];
@@ -46,11 +38,7 @@ class NotificationService {
         .order('created_at', ascending: false)
         .limit(limit);
 
-    return (data as List)
-        .map((e) => NotificationModel.fromJson(
-              _mapActor(Map<String, dynamic>.from(e as Map)),
-            ))
-        .toList();
+    return (data as List).map((e) => NotificationModel.fromJson(_mapActor(Map<String, dynamic>.from(e as Map)))).toList();
   }
 
   Future<int> unreadCount() async {
@@ -64,67 +52,38 @@ class NotificationService {
     return (data as List).length;
   }
 
-  // ---------------- Mark / Clear ----------------
-
   Future<void> markRead(String notificationId) async {
-    await _client
-        .from(SupabaseConstants.notifications)
-        .update({'is_read': true}).eq('id', notificationId);
+    await _client.from(SupabaseConstants.notifications).update({'is_read': true}).eq('id', notificationId);
   }
 
   Future<void> markAllRead() async {
     final uid = _uid;
     if (uid == null) return;
-    await _client
-        .from(SupabaseConstants.notifications)
-        .update({'is_read': true}).eq('user_id', uid);
+    await _client.from(SupabaseConstants.notifications).update({'is_read': true}).eq('user_id', uid);
   }
 
   Future<void> delete(String notificationId) async {
-    await _client
-        .from(SupabaseConstants.notifications)
-        .delete()
-        .eq('id', notificationId);
+    await _client.from(SupabaseConstants.notifications).delete().eq('id', notificationId);
   }
 
-  /// ২ দিনের পুরনো সব নোটিফিকেশন ডিলিট
   Future<void> clearOld() async {
     final uid = _uid;
     if (uid == null) return;
     try {
-      final cutoff = DateTime.now()
-          .subtract(
-            const Duration(days: AppConstants.notificationRetentionDays),
-          )
-          .toUtc()
-          .toIso8601String();
-
-      await _client
-          .from(SupabaseConstants.notifications)
-          .delete()
-          .eq('user_id', uid)
-          .lt('created_at', cutoff);
-    } catch (_) {}
+      final cutoff = DateTime.now().subtract(const Duration(days: AppConstants.notificationRetentionDays)).toUtc().toIso8601String();
+      await _client.from(SupabaseConstants.notifications).delete().eq('user_id', uid).lt('created_at', cutoff);
+    } catch (e) {
+      debugPrint('CLEAR_OLD_NOTIF_FAILED: $e');
+    }
   }
 
-  /// ইউজার এক ক্লিকে সব ক্লিয়ার
   Future<void> clearAll() async {
     final uid = _uid;
     if (uid == null) return;
-    await _client
-        .from(SupabaseConstants.notifications)
-        .delete()
-        .eq('user_id', uid);
+    await _client.from(SupabaseConstants.notifications).delete().eq('user_id', uid);
   }
 
-  // ---------------- Create ----------------
-
-  /// ইভেন্ট ঘটালে এটা কল হবে
-  /// - Like → story/episode/novel/video owner
-  /// - Comment → post owner
-  /// - Reply → parent comment owner
-  /// - Mention → যাকে mention করা হলো
-  /// - Follow → target user
+  /// একটি নোটিফিকেশন তৈরি করা
   Future<void> create({
     required String targetUserId,
     required String actorId,
@@ -133,9 +92,7 @@ class NotificationService {
     String? targetId,
     String? message,
   }) async {
-    // নিজেকে নোটিফিকেশন দেব না
-    if (targetUserId == actorId) return;
-    if (targetUserId.isEmpty) return;
+    if (targetUserId == actorId || targetUserId.isEmpty) return;
 
     try {
       await _client.from(SupabaseConstants.notifications).insert({
@@ -146,17 +103,17 @@ class NotificationService {
         if (targetId != null) 'target_id': targetId,
         if (message != null) 'message': message,
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('NOTIF_CREATE_FAILED: $e');
+    }
   }
 
-  /// একবারে একাধিক mention-এর জন্য
-  /// comment-এ একাধিক @mention থাকলে প্রত্যেকের জন্য একটা notification
   Future<void> createMentions({
     required List<String> mentionedUserIds,
     required String actorId,
     required String commentId,
-    required String targetType, // story | episode | video
-    required String targetId, // post id
+    required String targetType,
+    required String targetId,
   }) async {
     for (final uid in mentionedUserIds) {
       if (uid == actorId) continue;
@@ -166,8 +123,6 @@ class NotificationService {
         type: 'mention',
         targetType: targetType,
         targetId: targetId,
-        // message না পাঠিয়ে UI-তে key থেকে translate হবে
-        // key: 'mentionNotificationBody'
       );
     }
   }
