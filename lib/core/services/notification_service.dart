@@ -13,7 +13,11 @@ class NotificationService {
 
   static const String _selectWithActor = '''
     *,
-    actor:actor_id (full_name, nickname, avatar_url)
+    actor:actor_id (
+      full_name,
+      nickname,
+      avatar_url
+    )
   ''';
 
   Map<String, dynamic> _mapActor(Map<String, dynamic> json) {
@@ -38,7 +42,11 @@ class NotificationService {
         .order('created_at', ascending: false)
         .limit(limit);
 
-    return (data as List).map((e) => NotificationModel.fromJson(_mapActor(Map<String, dynamic>.from(e as Map)))).toList();
+    return (data as List)
+        .map((e) => NotificationModel.fromJson(
+              _mapActor(Map<String, dynamic>.from(e as Map)),
+            ))
+        .toList();
   }
 
   Future<int> unreadCount() async {
@@ -53,25 +61,40 @@ class NotificationService {
   }
 
   Future<void> markRead(String notificationId) async {
-    await _client.from(SupabaseConstants.notifications).update({'is_read': true}).eq('id', notificationId);
+    await _client
+        .from(SupabaseConstants.notifications)
+        .update({'is_read': true}).eq('id', notificationId);
   }
 
   Future<void> markAllRead() async {
     final uid = _uid;
     if (uid == null) return;
-    await _client.from(SupabaseConstants.notifications).update({'is_read': true}).eq('user_id', uid);
+    await _client
+        .from(SupabaseConstants.notifications)
+        .update({'is_read': true}).eq('user_id', uid);
   }
 
   Future<void> delete(String notificationId) async {
-    await _client.from(SupabaseConstants.notifications).delete().eq('id', notificationId);
+    await _client
+        .from(SupabaseConstants.notifications)
+        .delete()
+        .eq('id', notificationId);
   }
 
   Future<void> clearOld() async {
     final uid = _uid;
     if (uid == null) return;
     try {
-      final cutoff = DateTime.now().subtract(const Duration(days: AppConstants.notificationRetentionDays)).toUtc().toIso8601String();
-      await _client.from(SupabaseConstants.notifications).delete().eq('user_id', uid).lt('created_at', cutoff);
+      final cutoff = DateTime.now()
+          .subtract(const Duration(days: AppConstants.notificationRetentionDays))
+          .toUtc()
+          .toIso8601String();
+
+      await _client
+          .from(SupabaseConstants.notifications)
+          .delete()
+          .eq('user_id', uid)
+          .lt('created_at', cutoff);
     } catch (e) {
       debugPrint('CLEAR_OLD_NOTIF_FAILED: $e');
     }
@@ -80,10 +103,12 @@ class NotificationService {
   Future<void> clearAll() async {
     final uid = _uid;
     if (uid == null) return;
-    await _client.from(SupabaseConstants.notifications).delete().eq('user_id', uid);
+    await _client
+        .from(SupabaseConstants.notifications)
+        .delete()
+        .eq('user_id', uid);
   }
 
-  /// একটি নোটিফিকেশন তৈরি করা
   Future<void> create({
     required String targetUserId,
     required String actorId,
@@ -92,7 +117,8 @@ class NotificationService {
     String? targetId,
     String? message,
   }) async {
-    if (targetUserId == actorId || targetUserId.isEmpty) return;
+    if (targetUserId == actorId) return;
+    if (targetUserId.isEmpty) return;
 
     try {
       await _client.from(SupabaseConstants.notifications).insert({
