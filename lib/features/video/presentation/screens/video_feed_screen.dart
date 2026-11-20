@@ -1,0 +1,876 @@
+// lib/features/video/presentation/screens/video_feed_screen.dart
+// New Reels Design: Transparent TopBar, Double Tap Like, Redesigned Sidebar
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
+
+import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/models/video_model.dart';
+import '../../../../core/providers/video_feature_provider.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/follow_service.dart';
+import '../../../../core/services/reaction_service.dart';
+import '../../../../core/services/video_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/time_ago.dart';
+import '../../../../core/widgets/cached_avatar.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
+import '../../../../routing/route_names.dart';
+import '../../../social/presentation/widgets/comment_section.dart';
+import '../../../social/presentation/widgets/reaction_picker.dart';
+import '../../../social/presentation/widgets/report_sheet.dart';
+
+class VideoFeedScreen extends ConsumerStatefulWidget {
+  final String? focusVideoId;
+
+  const VideoFeedScreen({super.key, this.focusVideoId});
+
+  @override
+  ConsumerState<VideoFeedScreen> createState() => _VideoFeedScreenState();
+}
+
+class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
+  final _service = VideoService();
+  final _pageController = PageController();
+  List<VideoModel> _items = [];
+  bool _loading = true;
+  String? _error;
+  int _currentIndex = 0;
+
+  // Top Bar Tabs
+  int _selectedTab = 0;
+  final List<String> _tabs = ['For You', 'Popular', 'Trending', 'Following'];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final list = await _service.getFeed(limit: 40);
+      if (!mounted) return;
+      if (widget.focusVideoId != null) {
+        final i = list.indexWhere((v) => v.id == widget.focusVideoId);
+        if (i > 0) {
+          final focused = list.removeAt(i);
+          list.insert(0, focused);
+        }
+      }
+      setState(() {
+        _items = list;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'loadFailed';
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final videoOn = ref.watch(videoFeatureProvider);
+
+    if (!videoOn) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            l10n.videoFeatureDisabled,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: LoadingView(),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: ErrorView(
+          message: l10n.t(_error!),
+          onRetry: _load,
+          retryLabel: l10n.retry,
+        ),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: EmptyState(
+          icon: Icons.videocam_outlined,
+          title: l10n.noVideosYet,
+          subtitle: l10n.uploadFirstVideo,
+        ),
+      );
+    }
+
+    final topPad = MediaQuery.of(context).padding.top;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            itemCount: _items.length,
+            onPageChanged: (i) => setState(() => _currentIndex = i),
+            itemBuilder: (context, index) {
+              return _VideoFeedItem(
+                key: ValueKey(_items[index].id),
+                video: _items[index],
+                isActive: index == _currentIndex,
+                topPad: topPad,
+                onDeleted: () {
+                  setState(() => _items.removeAt(index));
+                },
+                onJumpToSeriesPart: (next) {
+                  final i = _items.indexWhere((e) => e.id == next.id);
+                  if (i >= 0) {
+                    _pageController.animateToPage(
+                      i,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOut,
+                    );
+                  } else {
+                    setState(() {
+                      _items.insert(_currentIndex + 1, next);
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_pageController.hasClients) {
+                        _pageController.animateToPage(
+                          _currentIndex + 1,
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    });
+                  }
+                },
+              );
+            },
+          ),
+          // ✅ নতুন ট্রান্সপারেন্ট টপ বার
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(_tabs.length, (index) {
+                            final isSelected = _selectedTab == index;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 20),
+                              child: GestureDetector(
+                                onTap: () => setState(() => _selectedTab = index),
+                                child: Text(
+                                  _tabs[index],
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.white60,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white, size: 28),
+                      onPressed: () => context.push(RouteNames.videoSearch),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _VideoFeedItem extends ConsumerStatefulWidget {
+  final VideoModel video;
+  final bool isActive;
+  final double topPad;
+  final VoidCallback? onDeleted;
+  final void Function(VideoModel next)? onJumpToSeriesPart;
+
+  const _VideoFeedItem({
+    super.key,
+    required this.video,
+    required this.isActive,
+    required this.topPad,
+    this.onDeleted,
+    this.onJumpToSeriesPart,
+  });
+
+  @override
+  ConsumerState<_VideoFeedItem> createState() => _VideoFeedItemState();
+}
+
+class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
+  final _service = VideoService();
+  final _follow = FollowService();
+  final _auth = AuthService();
+  final _reaction = ReactionService();
+
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+  bool _muted = false;
+  bool _saved = false;
+  bool _descExpanded = false;
+  bool _dragging = false;
+  double _dragValue = 0;
+  bool _viewRecorded = false;
+  bool _autoLoop = false;
+  bool _isFollowing = false;
+
+  // ডাবল ট্যাপ লাভ অ্যানিমেশনের জন্য
+  bool _showHeartAnim = false;
+
+  VideoModel? _nextPart;
+  bool _showNextPart = false;
+
+  String? _myReaction;
+  int _reactionCount = 0;
+  int _commentCount = 0;
+  int _viewCount = 0;
+
+  bool get _isOwner {
+    final uid = _auth.currentUser?.id;
+    return uid != null && uid == widget.video.authorId;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_tick);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initPlayer() async {
+    try {
+      final ctrl = VideoPlayerController.networkUrl(
+        Uri.parse(widget.video.videoUrl),
+      );
+      await ctrl.initialize();
+      ctrl.setLooping(_autoLoop);
+      ctrl.setVolume(_muted ? 0 : 1);
+      ctrl.addListener(_tick);
+      _controller = ctrl;
+
+      if (widget.isActive) {
+        await ctrl.play();
+        _recordViewOnce();
+      }
+
+      final saved = await _service.isSaved(widget.video.id);
+      final mine = await _reaction.getMyVideoReaction(widget.video.id);
+      final count = await _reaction.countVideoReactions(widget.video.id);
+      final following = await _follow.isFollowing(widget.video.authorId);
+
+      if (widget.video.isSeries) {
+        final next = await _service.getNextPart(widget.video);
+        if (mounted) setState(() => _nextPart = next);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _initialized = true;
+        _saved = saved;
+        _myReaction = mine;
+        _reactionCount = count;
+        _commentCount = widget.video.commentCount;
+        _viewCount = widget.video.viewCount;
+        _isFollowing = following;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _initialized = false);
+    }
+  }
+
+  void _tick() {
+    if (!mounted || _dragging) return;
+    final c = _controller;
+    if (c != null && c.value.isInitialized && !_autoLoop) {
+      final pos = c.value.position;
+      final dur = c.value.duration;
+      if (dur.inMilliseconds > 0) {
+        final nearEnd = pos >= dur - const Duration(seconds: 8);
+        if (nearEnd && _nextPart != null && !_showNextPart) {
+          setState(() => _showNextPart = true);
+          return;
+        }
+      }
+    }
+    setState(() {});
+  }
+
+  void _recordViewOnce() {
+    if (_viewRecorded) return;
+    _viewRecorded = true;
+    _service.recordView(widget.video.id);
+    if (mounted) {
+      setState(() => _viewCount = _viewCount + 1);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoFeedItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final c = _controller;
+    if (c == null || !_initialized) return;
+    if (widget.isActive && !oldWidget.isActive) {
+      c.play();
+      _recordViewOnce();
+    } else if (!widget.isActive && oldWidget.isActive) {
+      c.pause();
+    }
+  }
+
+  // ✅ ওয়ান ক্লিকে প্লে/পজ
+  void _togglePlay() {
+    final c = _controller;
+    if (c == null || !_initialized) return;
+    if (c.value.isPlaying) {
+      c.pause();
+    } else {
+      c.play();
+    }
+    setState(() {});
+  }
+
+  // ✅ ডাবল ক্লিকে লাভ রিয়েক্ট
+  Future<void> _handleDoubleTap() async {
+    setState(() => _showHeartAnim = true);
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) setState(() => _showHeartAnim = false);
+    });
+
+    try {
+      if (_myReaction == null) {
+        final res = await _reaction.toggleVideoReaction(
+          videoId: widget.video.id,
+          reactionType: 'love',
+          ownerId: widget.video.authorId,
+        );
+        final count = await _reaction.countVideoReactions(widget.video.id);
+        if (mounted) {
+          setState(() {
+            _myReaction = res;
+            _reactionCount = count;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    return context.l10n.t(key);
+  }
+
+  Future<void> _toggleFollow() async {
+    try {
+      final isFollowing = await _follow.toggleFollow(widget.video.authorId);
+      if (mounted) setState(() => _isFollowing = isFollowing);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_translateError(context, e))),
+        );
+      }
+    }
+  }
+  void _openMore() {
+  final l10n = context.l10n;
+  final v = widget.video;
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.grey.shade900,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ✅ শেয়ার অপশনটি এখান থেকে বাদ দেওয়া হয়েছে
+          ListTile(
+            leading: const Icon(Icons.flag_outlined, color: Colors.white),
+            title: Text(
+              l10n.report,
+              style: const TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              ReportSheet.show(
+                context,
+                targetType: 'video',
+                targetId: v.id,
+                title: l10n.reportVideo,
+              );
+            },
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.loop, color: Colors.white),
+            title: Text(
+              l10n.autoLoop,
+              style: const TextStyle(color: Colors.white),
+            ),
+            value: _autoLoop,
+            activeColor: AppColors.primaryLight,
+            onChanged: (val) {
+              setState(() => _autoLoop = val);
+              _controller?.setLooping(val);
+              Navigator.pop(ctx);
+            },
+          ),
+          if (_isOwner) ...[
+            const Divider(color: Colors.white24),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: Colors.white),
+              title: Text(
+                l10n.edit,
+                style: const TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('${RouteNames.createVideo}/${v.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_outline,
+                color: AppColors.danger,
+              ),
+              title: Text(
+                l10n.delete,
+                style: const TextStyle(color: AppColors.danger),
+              ),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (d) => AlertDialog(
+                    title: Text(l10n.deleteVideoConfirm),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(d, false),
+                        child: Text(l10n.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(d, true),
+                        child: Text(
+                          l10n.delete,
+                          style: const TextStyle(color: AppColors.danger),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  await _service.deleteVideo(v.id);
+                  widget.onDeleted?.call();
+                }
+              },
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+  }
+    @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final v = widget.video;
+    final c = _controller;
+    final ok = _initialized && c != null && c.value.isInitialized;
+    final pos = ok ? c.value.position : Duration.zero;
+    final dur = ok ? c.value.duration : Duration.zero;
+    final progress = (!ok || dur.inMilliseconds == 0)
+        ? 0.0
+        : (_dragging ? _dragValue : pos.inMilliseconds / dur.inMilliseconds);
+
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final topSpace = widget.topPad + 60;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ভিডিও প্লেয়ার (ওয়ান ট্যাপ ও ডাবল ট্যাপ লজিক)
+        Positioned(
+          top: topSpace,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: GestureDetector(
+            onTap: _togglePlay,
+            onDoubleTap: _handleDoubleTap,
+            child: ok
+                ? Center(
+                    child: AspectRatio(
+                      aspectRatio: c.value.aspectRatio == 0
+                          ? 9 / 16
+                          : c.value.aspectRatio,
+                      child: VideoPlayer(c),
+                    ),
+                  )
+                : const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+          ),
+        ),
+        
+        // ডাবল ট্যাপে হার্ট অ্যানিমেশন
+        if (_showHeartAnim)
+          const Center(
+            child: Icon(
+              Icons.favorite,
+              size: 100,
+              color: Colors.white,
+            ),
+          ),
+
+        if (ok && !c.value.isPlaying && !_showHeartAnim)
+          Center(
+            child: IgnorePointer(
+              child: Icon(
+                Icons.play_circle_outline,
+                size: 72,
+                color: Colors.white70.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+
+        if (_showNextPart && _nextPart != null)
+          Positioned(
+            left: 16,
+            right: 80,
+            bottom: bottomPad + 90,
+            child: Material(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+              child: ListTile(
+                title: Text(
+                  l10n.watchNextPart,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  _nextPart!.title.isEmpty
+                      ? '${l10n.episodeLabel} ${_nextPart!.partNumber}'
+                      : _nextPart!.title,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                trailing: TextButton(
+                  onPressed: () {
+                    final n = _nextPart;
+                    if (n == null) return;
+                    setState(() => _showNextPart = false);
+                    widget.onJumpToSeriesPart?.call(n);
+                  },
+                  child: Text(l10n.watch),
+                ),
+                onTap: () {
+                  final n = _nextPart;
+                  if (n == null) return;
+                  setState(() => _showNextPart = false);
+                  widget.onJumpToSeriesPart?.call(n);
+                },
+              ),
+            ),
+          ),
+
+        // ✅ ডান পাশের কলাম (খুব বেশি কম্প্যাক্ট/চেপে চেপে রাখা হয়েছে)
+        Positioned(
+          right: 8,
+          bottom: bottomPad + 65, // প্রোগ্রেস বারের ঠিক ওপরে
+          child: Column(
+            children: [
+              // ১. রিঅ্যাক্ট (সবচেয়ে উপরে)
+              _sideBtn(
+                _myReaction != null ? Icons.favorite : Icons.favorite_border,
+                () async {
+                  final type = await ReactionPicker.show(context) ?? 'like';
+                  try {
+                    final res = await _reaction.toggleVideoReaction(
+                      videoId: widget.video.id,
+                      reactionType: type,
+                      ownerId: v.authorId,
+                    );
+                    final count = await _reaction.countVideoReactions(widget.video.id);
+                    if (mounted) {
+                      setState(() {
+                        _myReaction = res;
+                        _reactionCount = count;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(_translateError(context, e))),
+                      );
+                    }
+                  }
+                },
+                iconColor: _myReaction != null ? AppColors.love : null,
+              ),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+              
+              // ২. কমেন্ট
+              _sideBtn(
+                Icons.chat_bubble_outline,
+                () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => CommentSection(
+                      videoId: v.id,
+                      ownerId: v.authorId,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+
+              // ৩. ভিউ
+              _sideBtn(Icons.visibility, () {}),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+
+              // ৪. সেভ
+              _sideBtn(
+                _saved ? Icons.bookmark : Icons.bookmark_border,
+                () async {
+                  try {
+                    final r = await _service.toggleSave(v.id);
+                    if (mounted) setState(() => _saved = r);
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(_translateError(context, e))),
+                      );
+                    }
+                  }
+                },
+                iconColor: _saved ? AppColors.primaryLight : null,
+              ),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+
+              // ৫. শেয়ার
+              _sideBtn(
+                Icons.share_outlined,
+                () {
+                  Share.share(
+                    '${v.authorName ?? ""} · ${l10n.appName} ${l10n.video}',
+                  );
+                },
+              ),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+
+              // ৬. থ্রি-ডট
+              _sideBtn(Icons.more_vert, _openMore),
+              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
+
+              // ৭. মাইক (একদম নিচে)
+              _sideBtn(
+                _muted ? Icons.volume_off : Icons.volume_up,
+                () {
+                  setState(() => _muted = !_muted);
+                  _controller?.setVolume(_muted ? 0 : 1);
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // ✅ নিচের বাম দিক (অ্যাভাটার, নাম, ফলোয়ার, ডেসক্রিপশন)
+        Positioned(
+          left: 12,
+          right: 72,
+          bottom: bottomPad + 8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CachedAvatar(
+                    userId: v.authorId,
+                    imageUrl: v.authorAvatar,
+                    name: v.authorName ?? l10n.author,
+                    radius: 16,
+                    tappable: true,
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      if (v.authorId.isNotEmpty) {
+                        context.push('${RouteNames.user}/${v.authorId}');
+                      }
+                    },
+                    child: Text(
+                      v.authorName ?? l10n.author,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _toggleFollow,
+                    child: Icon(
+                      _isFollowing ? Icons.check_circle : Icons.add_circle,
+                      color: _isFollowing ? Colors.white : AppColors.primaryLight,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${v.authorFollowerCount} ${l10n.followers}',
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                TimeAgo.of(context, v.createdAt),
+                style: const TextStyle(color: Colors.white54, fontSize: 10),
+              ),
+              if (v.description.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => setState(() => _descExpanded = !_descExpanded),
+                  child: Text(
+                    v.description,
+                    maxLines: _descExpanded ? 20 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      height: 1.3,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 6),
+              
+              // প্রোগ্রেস বার
+              if (ok)
+                Row(
+                  children: [
+                    Text(
+                      _fmt(pos),
+                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                        ),
+                        child: Slider(
+                          value: progress.clamp(0.0, 1.0),
+                          activeColor: AppColors.primaryLight,
+                          inactiveColor: Colors.white24,
+                          onChangeStart: (_) {
+                            _dragging = true;
+                            _dragValue = progress;
+                          },
+                          onChanged: (val) => setState(() => _dragValue = val),
+                          onChangeEnd: (val) {
+                            _dragging = false;
+                            if (dur.inMilliseconds > 0) {
+                              c.seekTo(Duration(
+                                milliseconds: (val * dur.inMilliseconds).round(),
+                              ));
+                            }
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _fmt(dur),
+                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ✅ শুধু আইকন রাখার জন্য `_sideBtn` (প্যাডিং কমানো হয়েছে যাতে আরও কম্প্যাক্ট হয়)
+  Widget _sideBtn(IconData icon, VoidCallback onTap, {Color? iconColor}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(6), // ✅ প্যাডিং কমানো হয়েছে
+        child: Icon(icon, color: iconColor ?? Colors.white, size: 28),
+      ),
+    );
+  }
+}
