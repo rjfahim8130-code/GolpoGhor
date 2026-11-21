@@ -42,58 +42,17 @@ jobs:
           fi
           ls -la android/app/ || true
 
-      - name: Force Kotlin language 1.9 for plugins
+      - name: Pin Kotlin language via gradle.properties
         run: |
-          python3 << 'PY'
-          from pathlib import Path
-
-          block = '''
-          subprojects {
-              afterEvaluate { project ->
-                  project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                      kotlinOptions {
-                          languageVersion = "1.9"
-                          apiVersion = "1.9"
-                      }
-                  }
-              }
-          }
-          '''
-
-          root = Path("android/build.gradle")
-          root_kts = Path("android/build.gradle.kts")
-
-          if root.exists():
-              text = root.read_text(encoding="utf-8")
-              if "languageVersion" not in text:
-                  root.write_text(text.rstrip() + "\n" + block + "\n", encoding="utf-8")
-                  print("Patched android/build.gradle")
-              else:
-                  print("Already patched")
-          elif root_kts.exists():
-              # Kotlin DSL variant
-              kblock = '''
-          subprojects {
-              afterEvaluate {
-                  tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-                      compilerOptions {
-                          languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
-                          apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
-                      }
-                  }
-              }
-          }
-          '''
-              text = root_kts.read_text(encoding="utf-8")
-              if "languageVersion" not in text and "KOTLIN_1_9" not in text:
-                  root_kts.write_text(text.rstrip() + "\n" + kblock + "\n", encoding="utf-8")
-                  print("Patched android/build.gradle.kts")
-              else:
-                  print("Already patched")
-          else:
-              print("No android root build.gradle found")
-              raise SystemExit(1)
-          PY
+          mkdir -p android
+          if [ -f android/gradle.properties ]; then
+            grep -q 'kotlin.compiler.languageVersion' android/gradle.properties || \
+              printf '\nkotlin.compiler.languageVersion=1.9\nkotlin.compiler.apiVersion=1.9\n' >> android/gradle.properties
+          else
+            printf 'org.gradle.jvmargs=-Xmx4G\nkotlin.compiler.languageVersion=1.9\nkotlin.compiler.apiVersion=1.9\n' > android/gradle.properties
+          fi
+          echo "---- android/gradle.properties ----"
+          cat android/gradle.properties
 
       - name: Update Kotlin Version in Gradle
         run: |
