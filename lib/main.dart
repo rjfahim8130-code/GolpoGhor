@@ -6,7 +6,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sentry_flutter/sentry_flutter.dart'; // ✅ Sentry যোগ করা হলো
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
@@ -16,91 +15,78 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/session_cache_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/auth_service.dart';
-import 'core/services/push_notification_service.dart'; 
+import 'core/services/push_notification_service.dart';
 
 Future<void> main() async {
-  // Sentry Initialization
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = const String.fromEnvironment('SENTRY_DSN');
-      // options.tracesSampleRate = 1.0;
-    },
-    appRunner: () async {
-      runZonedGuarded(
-        () async {
-          WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-          FlutterError.onError = (details) {
-            FlutterError.presentError(details);
-            debugPrint('FLUTTER_ERROR: ${details.exception}');
-            debugPrint('${details.stack}');
-          };
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        debugPrint('FLUTTER_ERROR: ${details.exception}');
+        debugPrint('${details.stack}');
+      };
 
-          SystemChrome.setSystemUIOverlayStyle(
-            const SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-            ),
-          );
-
-          await SystemChrome.setPreferredOrientations([
-            DeviceOrientation.portraitUp,
-            DeviceOrientation.portraitDown,
-          ]);
-
-          // Theme + Locale + Session Cache prefs আগে load করি
-          final container = ProviderContainer();
-          try {
-            await container.read(themeModeProvider.notifier).load();
-          } catch (e) {
-            debugPrint('THEME_LOAD_FAILED: $e');
-          }
-          try {
-            await container.read(localeProvider.notifier).load();
-          } catch (e) {
-            debugPrint('LOCALE_LOAD_FAILED: $e');
-          }
-          try {
-            await container.read(sessionCacheProvider.notifier).load();
-            await AuthService.loadAdminFlag();
-          } catch (e) {
-            debugPrint('SESSION_CACHE_LOAD_FAILED: $e');
-          }
-
-          Object? initError;
-          try {
-            await Supabase.initialize(
-              url: SupabaseConstants.supabaseUrl,
-              anonKey: SupabaseConstants.supabaseAnonKey, // publishableKey থেকে anonKey-তে নামানো হলো
-            );
-            
-            // ✅ পুশ নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ
-            await PushNotificationService.instance.init();
-            
-            debugPrint('SUPABASE_INIT: success');
-          } catch (e, st) {
-            initError = e;
-            debugPrint('SUPABASE_INIT_FAILED: $e');
-            debugPrint('$st');
-            // Sentry তে এরর পাঠানো
-            await Sentry.captureException(e, stackTrace: st);
-          }
-
-          runApp(
-            UncontrolledProviderScope(
-              container: container,
-              child: initError == null
-                  ? const GolpoGhorApp()
-                  : _BootErrorApp(message: initError.toString()),
-            ),
-          );
-        },
-        (error, stack) {
-          debugPrint('ZONE_ERROR: $error');
-          debugPrint('$stack');
-          // fire-and-forget; zone handler cannot be async
-          unawaited(Sentry.captureException(error, stackTrace: stack));
-        },
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+        ),
       );
+
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+
+      // Theme + Locale + Session Cache prefs আগে load করি
+      final container = ProviderContainer();
+      try {
+        await container.read(themeModeProvider.notifier).load();
+      } catch (e) {
+        debugPrint('THEME_LOAD_FAILED: $e');
+      }
+      try {
+        await container.read(localeProvider.notifier).load();
+      } catch (e) {
+        debugPrint('LOCALE_LOAD_FAILED: $e');
+      }
+      try {
+        await container.read(sessionCacheProvider.notifier).load();
+        await AuthService.loadAdminFlag();
+      } catch (e) {
+        debugPrint('SESSION_CACHE_LOAD_FAILED: $e');
+      }
+
+      Object? initError;
+      try {
+        await Supabase.initialize(
+          url: SupabaseConstants.supabaseUrl,
+          anonKey: SupabaseConstants.supabaseAnonKey, // publishableKey থেকে anonKey-তে নামানো হলো
+        );
+
+        // ✅ পুশ নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ
+        await PushNotificationService.instance.init();
+
+        debugPrint('SUPABASE_INIT: success');
+      } catch (e, st) {
+        initError = e;
+        debugPrint('SUPABASE_INIT_FAILED: $e');
+        debugPrint('$st');
+      }
+
+      runApp(
+        UncontrolledProviderScope(
+          container: container,
+          child: initError == null
+              ? const GolpoGhorApp()
+              : _BootErrorApp(message: initError.toString()),
+        ),
+      );
+    },
+    (error, stack) {
+      debugPrint('ZONE_ERROR: $error');
+      debugPrint('$stack');
     },
   );
 }
