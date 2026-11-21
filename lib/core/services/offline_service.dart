@@ -74,6 +74,23 @@ class OfflineItem {
         'content_blocks': contentBlocks.map((e) => e.toJson()).toList(),
         'saved_at': savedAt.toIso8601String(),
       };
+
+  /// Offline fallback -> StoryModel (reader_screen)
+  StoryModel toStoryModel() {
+    return StoryModel(
+      id: id.startsWith('ep_') ? id.substring(3) : id,
+      authorId: '',
+      title: title,
+      description: subtitle ?? '',
+      contentBlocks: contentBlocks,
+      publicCode: publicCode,
+      isPublished: true,
+      isDraft: false,
+      createdAt: savedAt,
+      updatedAt: savedAt,
+      authorName: authorName,
+    );
+  }
 }
 
 class OfflineService {
@@ -200,7 +217,7 @@ class OfflineService {
 
   Future<void> remove(String id) async {
     final f = await _file(id);
-    if (await f.exists()) await f.delete();
+    if (!await f.exists()) await f.delete();
     final ids = await _ids();
     ids.remove(id);
     await _setIds(ids);
