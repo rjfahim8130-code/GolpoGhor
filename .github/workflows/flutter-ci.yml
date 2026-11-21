@@ -42,17 +42,22 @@ jobs:
           fi
           ls -la android/app/ || true
 
-      - name: Pin Kotlin language via gradle.properties
+      - name: Pin Kotlin plugin to 1.9.24
         run: |
-          mkdir -p android
-          if [ -f android/gradle.properties ]; then
-            grep -q 'kotlin.compiler.languageVersion' android/gradle.properties || \
-              printf '\nkotlin.compiler.languageVersion=1.9\nkotlin.compiler.apiVersion=1.9\n' >> android/gradle.properties
-          else
-            printf 'org.gradle.jvmargs=-Xmx4G\nkotlin.compiler.languageVersion=1.9\nkotlin.compiler.apiVersion=1.9\n' > android/gradle.properties
+          set -e
+          # settings.gradle.kts
+          if [ -f android/settings.gradle.kts ]; then
+            sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[^"]+"/id("org.jetbrains.kotlin.android") version "1.9.24"/' android/settings.gradle.kts
+            echo "---- settings.gradle.kts (kotlin lines) ----"
+            grep -n "kotlin" android/settings.gradle.kts || true
           fi
-          echo "---- android/gradle.properties ----"
-          cat android/gradle.properties
+          # settings.gradle (groovy)
+          if [ -f android/settings.gradle ]; then
+            sed -i -E "s/id 'org\.jetbrains\.kotlin\.android' version '[^']+'/id 'org.jetbrains.kotlin.android' version '1.9.24'/" android/settings.gradle
+            sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[^"]+"/id("org.jetbrains.kotlin.android") version "1.9.24"/' android/settings.gradle
+            echo "---- settings.gradle (kotlin lines) ----"
+            grep -n "kotlin" android/settings.gradle || true
+          fi
 
       - name: Update Kotlin Version in Gradle
         run: |
