@@ -32,7 +32,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   bool _allowed = false;
   String? _error;
   Map<String, int> _stats = {};
-  List> _reports = [];
+  
+  // ✅ টাইপ এরর ফিক্স করা হয়েছে
+  List<Map<String, dynamic>> _reports = [];
 
   @override
   void initState() {
@@ -59,14 +61,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
       final results = await Future.wait([
         _admin.stats(),
-        _reportService.listOpen().catchError((_) => >[]),
+        _reportService.listOpen().catchError((_) => <Map<String, dynamic>>[]),
       ]);
 
       if (!mounted) return;
       setState(() {
         _allowed = true;
         _stats = results[0] as Map<String, int>;
-        _reports = results[1] as List>;
+        _reports = results[1] as List<Map<String, dynamic>>;
         _loading = false;
       });
     } catch (_) {
@@ -86,8 +88,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     if (_loading) {
       return Scaffold(
@@ -260,9 +261,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 value: videoOn,
                 onChanged: (v) async {
                   try {
-                    await ref
-                        .read(videoFeatureProvider.notifier)
-                        .setEnabled(v);
+                    await ref.read(videoFeatureProvider.notifier).setEnabled(v);
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -299,8 +298,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 final id = '${r['target_id'] ?? ''}';
                 final reason = '${r['reason'] ?? ''}';
                 final createdAtRaw = r['created_at']?.toString();
-                final createdAt =
-                    createdAtRaw != null ? DateTime.tryParse(createdAtRaw) : null;
+                final createdAt = createdAtRaw != null ? DateTime.tryParse(createdAtRaw) : null;
 
                 return Card(
                   elevation: 0,
