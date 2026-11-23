@@ -1,6 +1,4 @@
-// lib/features/video/presentation/screens/create_video_screen.dart (Part 1)
-// video_compress ^3.1.3 — subscribe API + ভিডিও ক্যাটাগরি সিস্টেম যুক্ত
-
+// lib/features/video/presentation/screens/create_video_screen.dart
 import 'dart:async';
 import 'dart:io';
 
@@ -49,8 +47,8 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   bool _asSeries = false;
   String? _seriesId;
 
-  String? _category;      // সাব key — DB তে যাবে
-  String? _categoryGroup; // শুধু UI এর জন্য মেইন গ্রুপ
+  String? _category;
+  String? _categoryGroup;
 
   double _compressProgress = 0;
   Subscription? _progressSub;
@@ -72,18 +70,14 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
-    final l10n = context.l10n;
-    return l10n.t(key);
+    return context.l10n.t(key);
   }
 
   Future<void> _pick() async {
     final l10n = context.l10n;
     setState(() => _checking = true);
     try {
-      final x = await _picker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: const Duration(minutes: 15),
-      );
+      final x = await _picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 15));
       if (x == null) {
         if (mounted) setState(() => _checking = false);
         return;
@@ -95,17 +89,12 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       await ctrl.initialize();
       final sec = ctrl.value.duration.inSeconds;
 
-      final max = ref.read(videoMaxDurationProvider).maybeWhen(
-            data: (v) => v,
-            orElse: () => VideoConstants.maxDurationSeconds,
-          );
+      final max = ref.read(videoMaxDurationProvider).maybeWhen(data: (v) => v, orElse: () => VideoConstants.maxDurationSeconds);
 
       if (sec > max) {
         await ctrl.dispose();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.videoTooLong)),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.videoTooLong)));
         setState(() {
           _file = null;
           _durationSec = 0;
@@ -128,26 +117,18 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _checking = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_translateError(context, e))),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_translateError(context, e))));
     }
   }
 
   List<String> _parseTags(String raw) {
-    return raw
-        .split(RegExp(r'[\s,，#]+'))
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    return raw.split(RegExp(r'[\s,，#]+')).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
   }
 
   Future<void> _publish({bool asDraft = false}) async {
     final l10n = context.l10n;
     if (_file == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pickVideoFirst)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pickVideoFirst)));
       return;
     }
 
@@ -158,9 +139,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     });
 
     try {
-      // ---------- Step 1: Video Compress ----------
       setState(() => _compressing = true);
-
       _progressSub?.unsubscribe();
       _progressSub = _compress.subscribeProgress((p) {
         if (mounted) setState(() => _compressProgress = p);
@@ -171,18 +150,11 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
 
       _progressSub?.unsubscribe();
       _progressSub = null;
-
       if (mounted) setState(() => _compressing = false);
 
-      // ---------- Step 2: Upload ----------
       final bytes = await finalFile.readAsBytes();
-      final url = await _storage.uploadVideoBytes(
-        bytes: bytes,
-        contentType: 'video/mp4',
-        folder: 'videos',
-      );
+      final url = await _storage.uploadVideoBytes(bytes: bytes, contentType: 'video/mp4', folder: 'videos');
 
-      // ---------- Step 3: Save to DB ----------
       String? seriesId = _seriesId;
       String? seriesTitle;
       int part = 1;
@@ -198,7 +170,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         durationSeconds: _durationSec,
         title: _titleCtrl.text.trim(),
         description: _descCtrl.text.trim(),
-        category: _category, // ক্যাটাগরি সাব কি
+        category: _category,
         tags: _parseTags(_tagsCtrl.text),
         seriesId: seriesId,
         seriesTitle: seriesTitle,
@@ -209,11 +181,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       await _compress.deleteAllCache();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(asDraft ? l10n.draft : l10n.publish),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(asDraft ? l10n.draft : l10n.publish)));
       if (asDraft) {
         context.pop();
       } else {
@@ -221,9 +189,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_translateError(context, e))),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_translateError(context, e))));
     } finally {
       _progressSub?.unsubscribe();
       _progressSub = null;
@@ -235,17 +201,21 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       }
     }
   }
-  // lib/features/video/presentation/screens/create_video_screen.dart (Part 2)
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
         title: Text(l10n.newVideo),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -253,42 +223,28 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _uploading || _checking
-                ? null
-                : () => _publish(asDraft: true),
-            child: Text(l10n.draft),
+            onPressed: _uploading || _checking ? null : () => _publish(asDraft: true),
+            child: Text(l10n.draft, style: TextStyle(color: secondary)),
           ),
           TextButton(
-            onPressed: _uploading || _checking
-                ? null
-                : () => _publish(asDraft: false),
+            onPressed: _uploading || _checking ? null : () => _publish(asDraft: false),
             child: _uploading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    l10n.publish,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(l10n.publish, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ---------- প্রিভিউ / পিকার ----------
           GestureDetector(
             onTap: _checking || _uploading ? null : _pick,
             child: Container(
               height: 220,
               decoration: BoxDecoration(
-                color: Colors.black87,
+                color: isDark ? AppColors.darkSurface : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: borderColor),
               ),
               clipBehavior: Clip.antiAlias,
               child: _preview != null && _preview!.value.isInitialized
@@ -297,9 +253,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       children: [
                         Center(
                           child: AspectRatio(
-                            aspectRatio: _preview!.value.aspectRatio == 0
-                                ? 9 / 16
-                                : _preview!.value.aspectRatio,
+                            aspectRatio: _preview!.value.aspectRatio == 0 ? 9 / 16 : _preview!.value.aspectRatio,
                             child: VideoPlayer(_preview!),
                           ),
                         ),
@@ -307,91 +261,49 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                           top: 8,
                           right: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '$_durationSec ${l10n.durationOfMax}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                              ),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                            child: Text('$_durationSec ${l10n.durationOfMax}', style: const TextStyle(color: Colors.white, fontSize: 11)),
                           ),
                         ),
                       ],
                     )
                   : Center(
                       child: _checking
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
+                          ? const CircularProgressIndicator(color: AppColors.primary)
                           : Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
-                                  Icons.video_library_outlined,
-                                  size: 48,
-                                  color: Colors.white70,
-                                ),
+                                Icon(Icons.video_library_outlined, size: 48, color: secondary),
                                 const SizedBox(height: 8),
-                                Text(
-                                  l10n.pickFromGallery,
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
+                                Text(l10n.pickFromGallery, style: TextStyle(color: secondary)),
                               ],
                             ),
                     ),
             ),
           ),
           const SizedBox(height: 16),
-
-          // ---------- Compress Progress ----------
           if (_compressing) ...[
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                       const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '${l10n.compressingVideo} ${(_compressProgress * 100).toStringAsFixed(0)}%',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
+                      Expanded(child: Text('${l10n.compressingVideo} ${(_compressProgress * 100).toStringAsFixed(0)}%', style: const TextStyle(fontSize: 13))),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: _compressProgress.clamp(0.0, 1.0),
-                    minHeight: 6,
-                    backgroundColor:
-                        AppColors.primary.withValues(alpha: 0.15),
-                    color: AppColors.primary,
-                  ),
+                  LinearProgressIndicator(value: _compressProgress.clamp(0.0, 1.0), minHeight: 6, backgroundColor: AppColors.primary.withValues(alpha: 0.15), color: AppColors.primary),
                 ],
               ),
             ),
             const SizedBox(height: 12),
           ],
-
-          // ---------- Title ----------
           TextField(
             controller: _titleCtrl,
             decoration: InputDecoration(
@@ -401,68 +313,34 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // ---------- Description ----------
           TextField(
             controller: _descCtrl,
             maxLines: 3,
-            decoration: InputDecoration(
-              labelText: l10n.description,
-              border: const OutlineInputBorder(),
-            ),
+            decoration: InputDecoration(labelText: l10n.description, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
-
-          // ---------- ক্যাটাগরি (মেইন গ্রুপ → সাব) ----------
-          Text(
-            l10n.optionalCategory,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          ),
+          Text(l10n.optionalCategory, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
             value: _categoryGroup,
-            decoration: InputDecoration(
-              labelText: l10n.selectGroup,
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
+            decoration: InputDecoration(labelText: l10n.selectGroup, border: const OutlineInputBorder(), isDense: true),
             items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text(l10n.noCategory),
-              ),
-              ...CategoryCatalog.videoGroups.map(
-                (g) => DropdownMenuItem(
-                  value: g,
-                  child: Text(l10n.t(g)),
-                ),
-              ),
+              DropdownMenuItem<String?>(value: null, child: Text(l10n.noCategory)),
+              ...CategoryCatalog.videoGroups.map((g) => DropdownMenuItem(value: g, child: Text(l10n.t(g)))),
             ],
             onChanged: (v) => setState(() {
               _categoryGroup = v;
-              _category = null; // গ্রুপ বদলালে সাব রিসেট
+              _category = null;
             }),
           ),
           if (_categoryGroup != null) ...[
             const SizedBox(height: 10),
             DropdownButtonFormField<String?>(
               value: _category,
-              decoration: InputDecoration(
-                labelText: l10n.selectSubcategory,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
+              decoration: InputDecoration(labelText: l10n.selectSubcategory, border: const OutlineInputBorder(), isDense: true),
               items: [
-                DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text(l10n.noCategory),
-                ),
-                ...CategoryCatalog.videoSubsOf(_categoryGroup!).map(
-                  (e) => DropdownMenuItem(
-                    value: e.key,
-                    child: Text(l10n.t(e.key)),
-                  ),
-                ),
+                DropdownMenuItem<String?>(value: null, child: Text(l10n.noCategory)),
+                ...CategoryCatalog.videoSubsOf(_categoryGroup!).map((e) => DropdownMenuItem(value: e.key, child: Text(l10n.t(e.key)))),
               ],
               onChanged: (v) => setState(() => _category = v),
             ),
@@ -476,70 +354,40 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
               child: Text(l10n.clearCategory),
             ),
           const SizedBox(height: 12),
-
-          // ---------- Tags ----------
           TextField(
             controller: _tagsCtrl,
-            decoration: InputDecoration(
-              labelText: l10n.tagsHint,
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
+            decoration: InputDecoration(labelText: l10n.tagsHint, border: const OutlineInputBorder(), isDense: true),
           ),
           const SizedBox(height: 8),
-
-          // ---------- Series ----------
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             activeColor: AppColors.primary,
             title: Text(l10n.seriesMode),
-            subtitle: Text(
-              l10n.seriesModeDesc,
-              style: TextStyle(fontSize: 12, color: secondary),
-            ),
+            subtitle: Text(l10n.seriesModeDesc, style: TextStyle(fontSize: 12, color: secondary)),
             value: _asSeries,
-            onChanged: _uploading
-                ? null
-                : (v) => setState(() {
-                      _asSeries = v;
-                      if (v && _seriesId == null) {
-                        _seriesId = const Uuid().v4();
-                      }
-                    }),
+            onChanged: _uploading ? null : (v) => setState(() {
+              _asSeries = v;
+              if (v && _seriesId == null) _seriesId = const Uuid().v4();
+            }),
           ),
-
           if (_asSeries) ...[
             const SizedBox(height: 8),
             TextField(
               controller: _seriesTitleCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.seriesName,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
+              decoration: InputDecoration(labelText: l10n.seriesName, border: const OutlineInputBorder(), isDense: true),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _partCtrl,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.partNumber,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
+              decoration: InputDecoration(labelText: l10n.partNumber, border: const OutlineInputBorder(), isDense: true),
             ),
           ],
-
-          // ---------- Upload Progress ----------
           if (_uploading && !_compressing) ...[
             const SizedBox(height: 24),
             const LinearProgressIndicator(),
             const SizedBox(height: 8),
-            Text(
-              l10n.uploadingPleaseWait,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: secondary),
-            ),
+            Text(l10n.uploadingPleaseWait, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: secondary)),
           ],
         ],
       ),
