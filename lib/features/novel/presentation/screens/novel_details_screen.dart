@@ -1,9 +1,10 @@
-// lib/features/novel/presentation/screens/novel_details_screen.dart (Part 1)
+// lib/features/novel/presentation/screens/novel_details_screen.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -18,7 +19,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/services/follow_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -215,6 +215,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -225,7 +226,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.fontSize, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(l10n.fontSize, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -238,7 +239,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_decrease),
+                          icon: const Icon(Icons.text_decrease, color: Colors.black87),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -259,12 +260,12 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_increase),
+                          icon: const Icon(Icons.text_increase, color: Colors.black87),
                         ),
                       ],
                     ),
                     const Divider(height: 24),
-                    Text(l10n.theme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(l10n.theme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -277,7 +278,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           setState(() => _globalReaderTheme = ReaderTheme.sepia);
                           setModal(() {});
                         }),
-                        _themeChip(l10n.dark, ReaderTheme.dark, Colors.black87, Colors.white, () {
+                        _themeChip(l10n.dark, ReaderTheme.dark, const Color(0xFF1A1A1A), const Color(0xFFE8E8E8), () {
                           setState(() => _globalReaderTheme = ReaderTheme.dark);
                           setModal(() {});
                         }),
@@ -317,16 +318,19 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
-  // lib/features/novel/presentation/screens/novel_details_screen.dart (Part 2)
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
     final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
-    if (_loading) return Scaffold(backgroundColor: bg, body: const LoadingView());
+    if (_loading) {
+      return Scaffold(backgroundColor: bg, body: const LoadingView());
+    }
 
     if (_error != null || _novel == null) {
       return Scaffold(
@@ -348,6 +352,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         children: [
           Column(
             children: [
+              // ✅ সবুজ উপরের বার (#159447)
               Material(
                 color: AppColors.primary,
                 child: SafeArea(
@@ -373,6 +378,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                     children: [
+                      // Author Info
                       Center(
                         child: Column(
                           children: [
@@ -402,29 +408,20 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                     },
                                     child: Text(
                                       n.authorName ?? l10n.author,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
-                                if (Supabase.instance.client.auth.currentUser?.id !=
-                                        null &&
-                                    Supabase.instance.client.auth.currentUser?.id !=
-                                        n.authorId &&
+                                if (Supabase.instance.client.auth.currentUser?.id != null &&
+                                    Supabase.instance.client.auth.currentUser?.id != n.authorId &&
                                     n.authorId.isNotEmpty) ...[
                                   const SizedBox(width: 6),
                                   GestureDetector(
-                                    onTap: _followBusy
-                                        ? null
-                                        : () => _toggleFollowAuthor(n.authorId),
+                                    onTap: _followBusy ? null : () => _toggleFollowAuthor(n.authorId),
                                     child: Icon(
-                                      _isFollowingAuthor
-                                          ? Icons.check_circle
-                                          : Icons.add_circle_outline,
+                                      _isFollowingAuthor ? Icons.check_circle : Icons.add_circle_outline,
                                       size: 20,
                                       color: AppColors.primary,
                                     ),
@@ -435,17 +432,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '${n.authorFollowerCount} ${l10n.followers}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white70
-                                    : Colors.black54,
-                              ),
+                              style: TextStyle(fontSize: 12, color: secondary),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
+                      
+                      // Cover & Title
                       if (n.coverUrl != null && n.coverUrl!.isNotEmpty)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(14),
@@ -482,6 +476,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                         Text(n.description, style: const TextStyle(height: 1.5, fontSize: 14)),
                       ],
                       const SizedBox(height: 16),
+                      
+                      // Stats
                       Wrap(
                         spacing: 16, runSpacing: 8,
                         children: [
@@ -493,6 +489,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       const SizedBox(height: 24),
                       const Divider(),
                       const SizedBox(height: 8),
+                      
+                      // Episodes Grid
                       Text('${l10n.viewAll} ${l10n.episode}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
                       if (_episodes.isEmpty)
@@ -511,43 +509,51 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           itemBuilder: (context, i) {
                             final e = _episodes[i];
                             final cover = _episodeCover(e);
-                            return Material(
-                              color: cardColor, elevation: 0, borderRadius: BorderRadius.circular(12), clipBehavior: Clip.antiAlias,
-                              child: InkWell(
-                                onTap: () => context.push('${RouteNames.episode}/${e.id}'),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: cover != null
-                                          ? CachedNetworkImage(imageUrl: cover, fit: BoxFit.cover, memCacheWidth: 400, errorWidget: (_, __, ___) => _epPlaceholder(e.chapterNumber))
-                                          : _epPlaceholder(e.chapterNumber),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                                      child: Text(
-                                        e.title.isNotEmpty ? e.title : '${l10n.episodeLabel} ${e.chapterNumber}',
-                                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: borderColor),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => context.push('${RouteNames.episode}/${e.id}'),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: cover != null
+                                            ? CachedNetworkImage(imageUrl: cover, fit: BoxFit.cover, memCacheWidth: 400, errorWidget: (_, __, ___) => _epPlaceholder(e.chapterNumber))
+                                            : _epPlaceholder(e.chapterNumber),
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.remove_red_eye_outlined, size: 12, color: secondary),
-                                          const SizedBox(width: 2),
-                                          Text(TimeAgo.compactOf(context, e.viewCount), style: TextStyle(fontSize: 11, color: secondary)),
-                                          const SizedBox(width: 6),
-                                          Icon(Icons.favorite_border, size: 12, color: secondary),
-                                          const SizedBox(width: 2),
-                                          Text(TimeAgo.compactOf(context, e.reactionCount), style: TextStyle(fontSize: 11, color: secondary)),
-                                          const Spacer(),
-                                          Text(l10n.read, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                                        ],
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                                        child: Text(
+                                          e.title.isNotEmpty ? e.title : '${l10n.episodeLabel} ${e.chapterNumber}',
+                                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.remove_red_eye_outlined, size: 12, color: secondary),
+                                            const SizedBox(width: 2),
+                                            Text(TimeAgo.compactOf(context, e.viewCount), style: TextStyle(fontSize: 11, color: secondary)),
+                                            const SizedBox(width: 6),
+                                            Icon(Icons.favorite_border, size: 12, color: secondary),
+                                            const SizedBox(width: 2),
+                                            Text(TimeAgo.compactOf(context, e.reactionCount), style: TextStyle(fontSize: 11, color: secondary)),
+                                            const Spacer(),
+                                            Text(l10n.read, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -557,7 +563,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   ),
                 ),
               ),
-              // সুন্দরভাবে সাজানো বটম বার (৫টি আইকন সমানভাবে স্পেস করা)
+              // ✅ সবুজ বটম বার (#159447)
               Material(
                 color: AppColors.primary,
                 elevation: 8,
@@ -607,14 +613,13 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               ),
             ],
           ),
-          // লেখক হলে "পর্ব যোগ করুন" বাটনটি বটম বারের ঠিক ওপরে ডান কোণে ভেসে থাকবে
           if (_isAuthor)
             Positioned(
               right: 16,
               bottom: 70,
               child: FloatingActionButton.extended(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
                 elevation: 4,
                 onPressed: () => context.push('${RouteNames.addEpisode}/${n.id}'),
                 icon: const Icon(Icons.add, size: 18),
@@ -657,3 +662,4 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     );
   }
 }
+                 
