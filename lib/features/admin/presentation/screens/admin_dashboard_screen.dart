@@ -1,6 +1,4 @@
 // lib/features/admin/presentation/screens/admin_dashboard_screen.dart
-// Deep Forest Green + User Management entry + localization
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +9,7 @@ import '../../../../core/services/admin_service.dart';
 import '../../../../core/services/report_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
-import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -26,8 +24,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
       _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState
-    extends ConsumerState<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   final _admin = AdminService();
   final _reportService = ReportService();
 
@@ -35,7 +32,7 @@ class _AdminDashboardScreenState
   bool _allowed = false;
   String? _error;
   Map<String, int> _stats = {};
-  List<Map<String, dynamic>> _reports = [];
+  List> _reports = [];
 
   @override
   void initState() {
@@ -62,14 +59,14 @@ class _AdminDashboardScreenState
 
       final results = await Future.wait([
         _admin.stats(),
-        _reportService.listOpen().catchError((_) => <Map<String, dynamic>>[]),
+        _reportService.listOpen().catchError((_) => >[]),
       ]);
 
       if (!mounted) return;
       setState(() {
         _allowed = true;
         _stats = results[0] as Map<String, int>;
-        _reports = results[1] as List<Map<String, dynamic>>;
+        _reports = results[1] as List>;
         _loading = false;
       });
     } catch (_) {
@@ -85,10 +82,19 @@ class _AdminDashboardScreenState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final secondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     if (_loading) {
       return Scaffold(
+        backgroundColor: bg,
         appBar: AppBar(
+          backgroundColor: bg,
+          elevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -101,14 +107,17 @@ class _AdminDashboardScreenState
 
     if (!_allowed) {
       return Scaffold(
+        backgroundColor: bg,
         appBar: AppBar(
+          backgroundColor: bg,
+          elevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
         ),
-        body: EmptyState(
+        body: EmptyView(
           icon: Icons.lock_outline,
           title: l10n.accessDenied,
           subtitle: l10n.adminOnlyScreen,
@@ -118,7 +127,10 @@ class _AdminDashboardScreenState
 
     if (_error != null) {
       return Scaffold(
+        backgroundColor: bg,
         appBar: AppBar(
+          backgroundColor: bg,
+          elevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -129,13 +141,12 @@ class _AdminDashboardScreenState
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.adminDashboard),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -153,7 +164,6 @@ class _AdminDashboardScreenState
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ---------------- Stats ----------------
             _sectionHeader(l10n.statistics),
             Wrap(
               spacing: 12,
@@ -195,21 +205,15 @@ class _AdminDashboardScreenState
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
 
-            // ---------------- User Management ----------------
             _sectionHeader(l10n.users),
             Card(
               elevation: 0,
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
-                ),
+                side: BorderSide(color: borderColor),
               ),
               child: ListTile(
                 leading: const CircleAvatar(
@@ -225,118 +229,22 @@ class _AdminDashboardScreenState
                   style: const TextStyle(fontSize: 12),
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const AdminUsersScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ---------------- Monthly Users ----------------
-            _sectionHeader(l10n.monthlyUsers),
-            Card(
-              elevation: 0,
-              color: cardColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.people_alt_outlined,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.totalUsers,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${_stats['users'] ?? 0}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 24),
-                    _monthRow(
-                      l10n.thisMonthNew,
-                      '${_stats['this_month_new'] ?? 0}',
-                      AppColors.success,
-                    ),
-                    const SizedBox(height: 8),
-                    _monthRow(
-                      l10n.lastMonthNew,
-                      '${_stats['last_month_new'] ?? 0}',
-                      AppColors.info,
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: AppColors.warning,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.mauLimitNote,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: secondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AdminUsersScreen(),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
 
-            // ---------------- Feature toggle ----------------
             _sectionHeader(l10n.featureControl),
             Card(
               elevation: 0,
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
-                ),
+                side: BorderSide(color: borderColor),
               ),
               child: SwitchListTile(
                 activeColor: AppColors.primary,
@@ -372,10 +280,8 @@ class _AdminDashboardScreenState
                 },
               ),
             ),
-
             const SizedBox(height: 24),
 
-            // ---------------- Reports ----------------
             _sectionHeader(l10n.openReports),
             if (_reports.isEmpty)
               Padding(
@@ -393,9 +299,8 @@ class _AdminDashboardScreenState
                 final id = '${r['target_id'] ?? ''}';
                 final reason = '${r['reason'] ?? ''}';
                 final createdAtRaw = r['created_at']?.toString();
-                final createdAt = createdAtRaw != null
-                    ? DateTime.tryParse(createdAtRaw)
-                    : null;
+                final createdAt =
+                    createdAtRaw != null ? DateTime.tryParse(createdAtRaw) : null;
 
                 return Card(
                   elevation: 0,
@@ -403,11 +308,7 @@ class _AdminDashboardScreenState
                   margin: const EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: isDark
-                          ? AppColors.darkDivider
-                          : AppColors.lightDivider,
-                    ),
+                    side: BorderSide(color: borderColor),
                   ),
                   child: ListTile(
                     leading: const CircleAvatar(
@@ -432,8 +333,7 @@ class _AdminDashboardScreenState
                           style: const TextStyle(fontSize: 12),
                         ),
                         Text(
-                          'ID: $id'
-                          '${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
+                          'ID: $id${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
@@ -442,6 +342,7 @@ class _AdminDashboardScreenState
                       ],
                     ),
                     trailing: PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: secondary),
                       onSelected: (v) async {
                         final rid = r['id']?.toString();
                         if (rid == null) return;
@@ -459,103 +360,32 @@ class _AdminDashboardScreenState
                       itemBuilder: (_) => [
                         PopupMenuItem(value: 'open', child: Text(l10n.open)),
                         PopupMenuItem(
-                            value: 'reviewed', child: Text(l10n.reviewed)),
+                          value: 'reviewed',
+                          child: Text(l10n.reviewed),
+                        ),
                         PopupMenuItem(
-                            value: 'dismiss', child: Text(l10n.cancel)),
+                          value: 'dismiss',
+                          child: Text(l10n.cancel),
+                        ),
                       ],
                     ),
                     onTap: () => _openTarget(type, id),
                   ),
                 );
               }),
-
-            const SizedBox(height: 24),
-
-            // ---------------- Moderation hint ----------------
-            _sectionHeader(l10n.moderation),
-            Card(
-              elevation: 0,
-              color: cardColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.moderationHint,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: secondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  // ---------------- Helpers ----------------
-
   Widget _sectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-    );
-  }
-
-  Widget _monthRow(String label, String value, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 13),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
@@ -572,10 +402,7 @@ class _AdminDashboardScreenState
         break;
       case 'video':
         context.push(
-          Uri(
-            path: RouteNames.videos,
-            queryParameters: {'focus': id},
-          ).toString(),
+          Uri(path: RouteNames.videos, queryParameters: {'focus': id}).toString(),
         );
         break;
       case 'profile':
