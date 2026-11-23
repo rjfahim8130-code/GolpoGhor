@@ -193,3 +193,100 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
           ),
         ],
       ),
+      body: _buildBody(context.l10n, tabs),
+    );
+  }
+
+  Widget _buildBody(AppLocalizations l10n, List<String> tabs) {
+    if (_loading) {
+      return const SkeletonList(count: 3);
+    }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(l10n.t(_error!)),
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: _load, child: Text(l10n.retry)),
+          ],
+        ),
+      );
+    }
+
+    final filtered = _filteredItems;
+
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.builder(
+        controller: _scroll,
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
+        itemCount: (filtered.isEmpty && _selectedTab == 0)
+            ? 2
+            : (_selectedTab == 0 && _history.isNotEmpty ? 1 : 0) +
+                filtered.length +
+                (_loadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          int adjustedIndex = index;
+
+          if (_selectedTab == 0 && _history.isNotEmpty) {
+            if (index == 0) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(l10n.recent, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        GestureDetector(
+                          onTap: () => context.push(RouteNames.history),
+                          child: Text(
+                            l10n.seeMore,
+                            style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ..._history.map((h) => ContinueReadingCard(item: h)),
+                  const SizedBox(height: 12),
+                ],
+              );
+            }
+            adjustedIndex = index - 1;
+          }
+
+          if (adjustedIndex >= filtered.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            );
+          }
+
+          final item = filtered[adjustedIndex];
+          if (item is StoryModel) {
+            return StoryCard(
+              story: item,
+              onTap: () => context.push('${RouteNames.story}/${item.id}'),
+            );
+          }
+          if (item is NovelModel) {
+            return NovelCard(
+              novel: item,
+              onTap: () => context.push('${RouteNames.novel}/${item.id}'),
+            );
+          }
+          if (item is EpisodeModel) {
+            return EpisodeCard(
+              episode: item,
+              onTap: () => context.push('${RouteNames.episode}/${item.id}'),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+}
