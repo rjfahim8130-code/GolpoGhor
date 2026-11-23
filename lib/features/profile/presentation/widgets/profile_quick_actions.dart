@@ -1,6 +1,4 @@
 // lib/features/profile/presentation/widgets/profile_quick_actions.dart
-// সংশোধিত: localization যোগ
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -26,6 +24,7 @@ class ProfileQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
     final actions = <_QuickAction>[
       _QuickAction(
@@ -52,37 +51,30 @@ class ProfileQuickActions extends StatelessWidget {
     ];
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       alignment: WrapAlignment.center,
       children: actions.map((a) {
         return InkWell(
           onTap: a.onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            width: 100,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            width: 85,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
-              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
             ),
             child: Column(
               children: [
-                Icon(a.icon, color: AppColors.primary, size: 26),
+                Icon(a.icon, color: AppColors.primary, size: 24),
                 const SizedBox(height: 6),
                 Text(
                   a.label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -99,9 +91,5 @@ class _QuickAction {
   final String label;
   final VoidCallback onTap;
 
-  _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  _QuickAction({required this.icon, required this.label, required this.onTap});
 }
