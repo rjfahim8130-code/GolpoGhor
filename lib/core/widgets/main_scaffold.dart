@@ -1,4 +1,3 @@
-// lib/core/widgets/main_scaffold.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,7 +51,6 @@ class _MainScaffoldState extends State<MainScaffold> {
 
     return Scaffold(
       body: widget.child,
-      // পুরো বটম বার সবুজ (#159447)
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.primary, 
@@ -112,7 +110,6 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // সব আইকন সাদা, তবে সিলেক্টেড হলে একটু বেশি উজ্জ্বল (opacity) বা বোল্ড হবে
     final color = selected ? Colors.white : Colors.white70;
 
     return Expanded(
@@ -156,22 +153,21 @@ class _CreateButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // মাঝখানের বাটন: সাদা সার্কেল, ভেতরে সবুজ প্লাস (অথবা আপনার ছবির মতো)
             Container(
               width: 42, 
               height: 42, 
               decoration: const BoxDecoration(
-                color: Colors.white, // সাদা ব্যাকগ্রাউন্ড
+                color: Colors.white, 
                 shape: BoxShape.circle, 
               ), 
-              child: const Icon(Icons.add, color: AppColors.primary, size: 26) // সবুজ প্লাস
+              child: const Icon(Icons.add, color: AppColors.primary, size: 26) 
             ),
             const SizedBox(height: 2),
             Text(
               label, 
               style: const TextStyle(
                 fontSize: 10, 
-                color: Colors.white, // সাদা টেক্সট
+                color: Colors.white, 
                 fontWeight: FontWeight.w500
               )
             ),
