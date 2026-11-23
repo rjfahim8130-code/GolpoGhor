@@ -1,6 +1,4 @@
 // lib/features/profile/presentation/widgets/profile_posts_tab.dart
-// সংশোধিত: localization যোগ
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -41,8 +39,7 @@ class ProfilePostsTab {
           context: context,
           cover: s.coverUrl,
           title: s.title.isEmpty ? l10n.untitled : s.title,
-          subtitle:
-              '${TimeAgo.compactOf(context, s.viewCount)} · ${TimeAgo.compactOf(context, s.reactionCount)} · ${TimeAgo.of(context, s.createdAt)}',
+          subtitle: '${TimeAgo.compactOf(context, s.viewCount)} · ${TimeAgo.compactOf(context, s.reactionCount)} · ${TimeAgo.of(context, s.createdAt)}',
           onTap: () => onOpenStory(s),
           menuItems: [
             if (onEditStory != null)
@@ -89,8 +86,7 @@ class ProfilePostsTab {
           context: context,
           cover: n.coverUrl,
           title: n.title.isEmpty ? l10n.untitled : n.title,
-          subtitle:
-              '${n.episodeCount} ${l10n.episode} · ${TimeAgo.compactOf(context, n.viewCount)}',
+          subtitle: '${n.episodeCount} ${l10n.episode} · ${TimeAgo.compactOf(context, n.viewCount)}',
           onTap: () => onOpenNovel(n),
           menuItems: [
             if (onEditNovel != null)
@@ -138,8 +134,7 @@ class ProfilePostsTab {
           cover: v.thumbnailUrl,
           isVideo: true,
           title: v.displayTitle,
-          subtitle:
-              '${TimeAgo.compactOf(context, v.viewCount)} · ${TimeAgo.compactOf(context, v.reactionCount)}',
+          subtitle: '${TimeAgo.compactOf(context, v.viewCount)} · ${TimeAgo.compactOf(context, v.reactionCount)}',
           onTap: () => onOpenVideo(v),
           menuItems: [
             if (onEditVideo != null)
@@ -172,86 +167,81 @@ class ProfilePostsTab {
     List<AppDotMenuItem> menuItems = const [],
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     final hasCover = cover != null && cover.trim().isNotEmpty;
 
-    return Card(
-      elevation: 0,
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
+      decoration: BoxDecoration(
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: hasCover
-                      ? Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            CachedNetworkImage(
-                              imageUrl: cover,
-                              fit: BoxFit.cover,
-                              memCacheWidth: 200,
-                              placeholder: (_, __) => Container(
-                                color: AppColors.primary
-                                    .withValues(alpha: 0.08),
+        border: Border.all(color: borderColor),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: hasCover
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl: cover,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 200,
+                                placeholder: (_, __) => Container(color: AppColors.primary.withValues(alpha: 0.05)),
+                                errorWidget: (_, __, ___) => _placeholder(isVideo),
                               ),
-                              errorWidget: (_, __, ___) =>
-                                  _placeholder(isVideo),
-                            ),
-                            if (isVideo)
-                              Container(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.play_circle_fill,
-                                    color: Colors.white,
-                                    size: 28,
+                              if (isVideo)
+                                Container(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  child: const Center(
+                                    child: Icon(Icons.play_circle_fill, color: Colors.white, size: 28),
                                   ),
                                 ),
-                              ),
-                          ],
-                        )
-                      : _placeholder(isVideo),
+                            ],
+                          )
+                        : _placeholder(isVideo),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 2),
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 2),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 11, color: secondary),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(fontSize: 11, color: secondary),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (menuItems.isNotEmpty)
-                AppDotMenu(items: menuItems, iconSize: 20),
-            ],
+                if (menuItems.isNotEmpty)
+                  AppDotMenu(items: menuItems, iconSize: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -260,7 +250,7 @@ class ProfilePostsTab {
 
   static Widget _placeholder(bool isVideo) {
     return Container(
-      color: AppColors.primary.withValues(alpha: 0.08),
+      color: AppColors.primary.withValues(alpha: 0.05),
       alignment: Alignment.center,
       child: Icon(
         isVideo ? Icons.videocam_outlined : Icons.article_outlined,
