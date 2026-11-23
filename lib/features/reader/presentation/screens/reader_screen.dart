@@ -1,9 +1,9 @@
 // lib/features/reader/presentation/screens/reader_screen.dart (Part 1)
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -11,6 +11,7 @@ import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
 import '../../../../core/services/episode_service.dart';
+import '../../../../core/services/follow_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/offline_service.dart';
 import '../../../../core/services/reaction_service.dart';
@@ -19,7 +20,6 @@ import '../../../../core/services/story_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/services/follow_service.dart';
 import '../../../../routing/route_names.dart';
 import '../../../social/presentation/widgets/comment_section.dart';
 import '../../../social/presentation/widgets/reaction_picker.dart';
@@ -29,6 +29,7 @@ import '../widgets/reader_content.dart';
 import '../widgets/reader_watermark.dart';
 
 enum ReaderKind { story, episode }
+
 enum ReaderTheme { light, sepia, dark }
 
 double _globalFontScale = AppConstants.defaultFontScale;
@@ -97,8 +98,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
     return (i >= 0 && i < _siblings.length - 1) ? _siblings[i + 1] : null;
   }
 
-  @override
-
   Future<void> _loadFollowAuthor(String? authorId, {int? followerCount}) async {
     if (followerCount != null) _authorFollowerCount = followerCount;
     final me = Supabase.instance.client.auth.currentUser?.id;
@@ -127,7 +126,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _followBusy = false);
@@ -244,14 +244,22 @@ class _ReaderScreenState extends State<ReaderScreen> {
     try {
       if (_isStory && _story != null) {
         await _historyService.record(
-          id: _story!.id, title: _story!.title, author: _story!.authorName,
-          coverUrl: _story!.coverUrl, kind: 'story', progress: _progress,
+          id: _story!.id,
+          title: _story!.title,
+          author: _story!.authorName,
+          coverUrl: _story!.coverUrl,
+          kind: 'story',
+          progress: _progress,
         );
       } else if (!_isStory && _episode != null) {
         await _historyService.record(
           id: 'ep_${_episode!.id}',
-          title: _episode!.title.isNotEmpty ? _episode!.title : 'Episode ${_episode!.chapterNumber}',
-          author: _authorName, kind: 'episode', progress: _progress,
+          title: _episode!.title.isNotEmpty
+              ? _episode!.title
+              : 'Episode ${_episode!.chapterNumber}',
+          author: _authorName,
+          kind: 'episode',
+          progress: _progress,
         );
       }
     } catch (_) {}
@@ -265,7 +273,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Future<void> _toggleBookmark() async {
     try {
-      // ✅ সঠিক মেথড (Story হলে toggleStoryBookmark এবং Episode হলে toggleEpisodeBookmark)
       final on = _isStory
           ? await _bookmarkService.toggleStoryBookmark(widget.id)
           : await _bookmarkService.toggleEpisodeBookmark(widget.id);
@@ -273,7 +280,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       setState(() => _bookmarked = on);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(on ? context.l10n.bookmarkAdded : context.l10n.bookmarkRemoved),
+          content: Text(
+              on ? context.l10n.bookmarkAdded : context.l10n.bookmarkRemoved),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -305,7 +313,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
           await _offlineService.saveEpisode(
             episodeId: ep.id,
             novelTitle: _novelTitle ?? '',
-            episodeTitle: ep.title.isNotEmpty ? ep.title : '${l10n.episodeLabel} ${ep.chapterNumber}',
+            episodeTitle: ep.title.isNotEmpty
+                ? ep.title
+                : '${l10n.episodeLabel} ${ep.chapterNumber}',
             chapterNumber: ep.chapterNumber,
             contentBlocks: ep.contentBlocks,
             authorName: _authorName ?? _story?.authorName,
@@ -337,11 +347,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
       String? result;
       int total;
       if (_isStory) {
-        result = await _reactionService.toggleStoryReaction(storyId: widget.id, reactionType: type, ownerId: _ownerId);
+        result = await _reactionService.toggleStoryReaction(
+          storyId: widget.id,
+          reactionType: type,
+          ownerId: _ownerId,
+        );
         final counts = await _reactionService.countStoryReactions(widget.id);
         total = counts.values.fold(0, (a, b) => a + b);
       } else {
-        result = await _reactionService.toggleEpisodeReaction(episodeId: widget.id, reactionType: type, ownerId: _ownerId);
+        result = await _reactionService.toggleEpisodeReaction(
+          episodeId: widget.id,
+          reactionType: type,
+          ownerId: _ownerId,
+        );
         final counts = await _reactionService.countEpisodeReactions(widget.id);
         total = counts.values.fold(0, (a, b) => a + b);
       }
@@ -363,7 +381,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => SizedBox(
         height: MediaQuery.of(ctx).size.height * 0.75,
         child: _isStory
@@ -386,7 +406,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Future<void> _share() async {
     final l10n = context.l10n;
     final code = _isStory ? _story?.publicCode : _episode?.publicCode;
-    final title = _isStory ? (_story?.title ?? '') : '${_novelTitle ?? ''} — ${_episode?.title ?? ''}';
+    final title = _isStory
+        ? (_story?.title ?? '')
+        : '${_novelTitle ?? ''} — ${_episode?.title ?? ''}';
     await Share.share(
       '$title\n${l10n.shareReadOnApp}'
       '${code != null && code.isNotEmpty ? '\n${l10n.shareCodeLabel}: $code' : ''}\n#গল্পঘর',
@@ -424,16 +446,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _globalFontScale =
-                                  (_globalFontScale - AppConstants.fontScaleStep)
-                                      .clamp(
-                                        AppConstants.minFontScale,
-                                        AppConstants.maxFontScale,
-                                      );
+                              _globalFontScale = (_globalFontScale -
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                AppConstants.minFontScale,
+                                AppConstants.maxFontScale,
+                              );
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_decrease, color: Colors.black87),
+                          icon: const Icon(
+                            Icons.text_decrease,
+                            color: Colors.black87,
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -456,16 +481,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _globalFontScale =
-                                  (_globalFontScale + AppConstants.fontScaleStep)
-                                      .clamp(
-                                        AppConstants.minFontScale,
-                                        AppConstants.maxFontScale,
-                                      );
+                              _globalFontScale = (_globalFontScale +
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                AppConstants.minFontScale,
+                                AppConstants.maxFontScale,
+                              );
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_increase, color: Colors.black87),
+                          icon: const Icon(
+                            Icons.text_increase,
+                            color: Colors.black87,
+                          ),
                         ),
                       ],
                     ),
@@ -513,7 +541,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             const Color(0xFFF1F8F4),
                             const Color(0xFF1B3D2F),
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.light);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.light);
                               setModal(() {});
                             },
                           ),
@@ -526,7 +555,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             AppColors.sepiaBg,
                             AppColors.sepiaText,
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.sepia);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.sepia);
                               setModal(() {});
                             },
                           ),
@@ -539,7 +569,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             const Color(0xFF1A1A1A),
                             const Color(0xFFE8E8E8),
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.dark);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.dark);
                               setModal(() {});
                             },
                           ),
@@ -556,31 +587,48 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  Widget _themeChip(String label, ReaderTheme theme, Color bg, Color fg, VoidCallback onTap) {
+  Widget _themeChip(
+    String label,
+    ReaderTheme theme,
+    Color bg,
+    Color fg,
+    VoidCallback onTap,
+  ) {
     final selected = _globalReaderTheme == theme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 80, height: 60,
+        width: 80,
+        height: 60,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.primary : Colors.grey, width: selected ? 2.5 : 1),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.grey,
+            width: selected ? 2.5 : 1,
+          ),
         ),
         alignment: Alignment.center,
-        child: Text(label, style: TextStyle(color: fg, fontSize: 12, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: fg,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
 
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.copied)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(context.l10n.copied)));
   }
   // lib/features/reader/presentation/screens/reader_screen.dart (Part 3)
   Color get _bgColor {
-    // Fully independent from app light/dark mode
     switch (_globalReaderTheme) {
       case ReaderTheme.light:
         return const Color(0xFFF1F8F4);
@@ -605,7 +653,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // Reader colors only — never follow app Theme Mode
     final bg = _bgColor;
     final textPrimary = _textColor;
     final textSecondary = switch (_globalReaderTheme) {
@@ -615,13 +662,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
     };
 
     if (_loading) {
-      return Scaffold(backgroundColor: bg, body: const Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (_error != null && _story == null && _episode == null) {
       return Scaffold(
         backgroundColor: bg,
-        appBar: AppBar(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+        appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -637,13 +690,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     final title = _isStory
         ? (_story?.title ?? '')
-        : (_episode?.title.isNotEmpty == true ? _episode!.title : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
+        : (_episode?.title.isNotEmpty == true
+            ? _episode!.title
+            : '${l10n.episodeLabel} ${_episode?.chapterNumber ?? 1}');
 
     final authorName = _authorName ?? _story?.authorName;
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
     final publicCode = _isStory ? _story?.publicCode : _episode?.publicCode;
-    final contentBlocks = _isStory ? (_story?.contentBlocks ?? []) : (_episode?.contentBlocks ?? []);
+    final contentBlocks = _isStory
+        ? (_story?.contentBlocks ?? [])
+        : (_episode?.contentBlocks ?? []);
 
     return Scaffold(
       backgroundColor: bg,
@@ -662,31 +719,52 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         child: Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                               onPressed: () => context.pop(),
                             ),
                             Expanded(
                               child: Text(
-                                _isStory ? l10n.story : '${_novelTitle ?? l10n.novel} · ${l10n.episode} ${_episode?.chapterNumber ?? 1}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                                _isStory
+                                    ? l10n.story
+                                    : '${_novelTitle ?? l10n.novel} · ${l10n.episode} ${_episode?.chapterNumber ?? 1}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.flag_outlined, color: Colors.white),
+                              icon: const Icon(
+                                Icons.flag_outlined,
+                                color: Colors.white,
+                              ),
                               onPressed: () {
                                 ReportSheet.show(
                                   context,
                                   targetType: _isStory ? 'story' : 'episode',
                                   targetId: widget.id,
-                                  title: _isStory ? l10n.reportStory : l10n.reportEpisode,
+                                  title: _isStory
+                                      ? l10n.reportStory
+                                      : l10n.reportEpisode,
                                 );
                               },
                             ),
                           ],
                         ),
                       ),
-                      LinearProgressIndicator(value: _progress, minHeight: 2, backgroundColor: Colors.white24, color: Colors.white),
+                      LinearProgressIndicator(
+                        value: _progress,
+                        minHeight: 2,
+                        backgroundColor: Colors.white24,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
@@ -753,7 +831,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '$_authorFollowerCount ${l10n.followers}',
-                                  style: TextStyle(fontSize: 12, color: textSecondary),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -766,8 +847,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             Expanded(
                               child: Text(
                                 title,
-                                // ✅ ডাবল টাইপ ফিক্স করা হয়েছে (.toDouble())
-                                style: TextStyle(fontSize: (22 * _globalFontScale).toDouble(), fontWeight: FontWeight.bold, height: 1.3, color: textPrimary),
+                                style: TextStyle(
+                                  fontSize: (22 * _globalFontScale).toDouble(),
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.3,
+                                  color: textPrimary,
+                                ),
                               ),
                             ),
                             if (publicCode != null && publicCode.isNotEmpty) ...[
@@ -776,30 +861,75 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 onTap: () => _copyCode(publicCode),
                                 child: Container(
                                   margin: const EdgeInsets.only(top: 4),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-                                  child: Text(publicCode, style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    publicCode,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Center(child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle))),
+                        Center(
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 16),
-                        SelectionContainer.disabled(child: ReaderContent(blocks: contentBlocks, fontScale: _globalFontScale, textColor: textPrimary, secondaryColor: textSecondary)),
+                        SelectionContainer.disabled(
+                          child: ReaderContent(
+                            blocks: contentBlocks,
+                            fontScale: _globalFontScale,
+                            textColor: textPrimary,
+                            secondaryColor: textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 28),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _stat(Icons.remove_red_eye_outlined, TimeAgo.compactOf(context, _viewCount), textSecondary),
+                            _stat(
+                              Icons.remove_red_eye_outlined,
+                              TimeAgo.compactOf(context, _viewCount),
+                              textSecondary,
+                            ),
                             GestureDetector(
                               onTap: _pickReaction,
-                              child: _stat(_myReaction != null ? Icons.favorite : Icons.favorite_border, TimeAgo.compactOf(context, _reactionTotal), _myReaction != null ? Colors.redAccent : textSecondary),
+                              child: _stat(
+                                _myReaction != null
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                TimeAgo.compactOf(context, _reactionTotal),
+                                _myReaction != null
+                                    ? Colors.redAccent
+                                    : textSecondary,
+                              ),
                             ),
                             GestureDetector(
                               onTap: _openComments,
-                              child: _stat(Icons.chat_bubble_outline, TimeAgo.compactOf(context, _commentCount), textSecondary),
+                              child: _stat(
+                                Icons.chat_bubble_outline,
+                                TimeAgo.compactOf(context, _commentCount),
+                                textSecondary,
+                              ),
                             ),
                           ],
                         ),
@@ -812,25 +942,34 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ReaderBottomBar(
                 items: [
                   ReaderBottomBarItem(
-                    icon: _downloaded ? Icons.download_done : Icons.download_outlined,
-                    tooltip: l10n.download, loading: _downloading,
+                    icon: _downloaded
+                        ? Icons.download_done
+                        : Icons.download_outlined,
+                    tooltip: l10n.download,
+                    loading: _downloading,
                     onTap: _downloading ? null : _download,
                   ),
                   ReaderBottomBarItem(
-                    icon: _bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    tooltip: l10n.bookmark, active: _bookmarked,
+                    icon: _bookmarked
+                        ? Icons.bookmark
+                        : Icons.bookmark_border,
+                    tooltip: l10n.bookmark,
+                    active: _bookmarked,
                     onTap: _toggleBookmark,
                   ),
                   ReaderBottomBarItem(
-                    icon: Icons.text_fields, tooltip: l10n.fontSize,
+                    icon: Icons.text_fields,
+                    tooltip: l10n.fontSize,
                     onTap: _showFontSheet,
                   ),
                   ReaderBottomBarItem(
-                    icon: Icons.palette_outlined, tooltip: l10n.theme,
+                    icon: Icons.palette_outlined,
+                    tooltip: l10n.theme,
                     onTap: _showThemeSheet,
                   ),
                   ReaderBottomBarItem(
-                    icon: Icons.share_outlined, tooltip: l10n.share,
+                    icon: Icons.share_outlined,
+                    tooltip: l10n.share,
                     onTap: _share,
                   ),
                 ],
@@ -839,24 +978,34 @@ class _ReaderScreenState extends State<ReaderScreen> {
           ),
           if (!_isStory && (_prev != null || _next != null))
             Positioned(
-              left: 16, right: 16, bottom: 70,
+              left: 16,
+              right: 16,
+              bottom: 70,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (_prev != null)
                     FloatingActionButton.small(
-                      heroTag: 'prev_ep', backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                      onPressed: () => context.pushReplacement('${RouteNames.episode}/${_prev!.id}'),
+                      heroTag: 'prev_ep',
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      onPressed: () => context
+                          .pushReplacement('${RouteNames.episode}/${_prev!.id}'),
                       child: const Icon(Icons.chevron_left),
                     )
-                  else const SizedBox.shrink(),
+                  else
+                    const SizedBox.shrink(),
                   if (_next != null)
                     FloatingActionButton.small(
-                      heroTag: 'next_ep', backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                      onPressed: () => context.pushReplacement('${RouteNames.episode}/${_next!.id}'),
+                      heroTag: 'next_ep',
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      onPressed: () => context
+                          .pushReplacement('${RouteNames.episode}/${_next!.id}'),
                       child: const Icon(Icons.chevron_right),
                     )
-                  else const SizedBox.shrink(),
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -871,7 +1020,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
