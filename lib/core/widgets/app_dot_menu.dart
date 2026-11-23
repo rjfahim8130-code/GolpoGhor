@@ -33,15 +33,22 @@ class AppDotMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // ডার্ক মোডে সাদা, লাইট মোডে কালো (যাতে ফেসবুকের মতো ঝকঝকে দেখায়)
+    final defaultIconColor = isDark ? AppColors.darkText : AppColors.lightText;
+
     return PopupMenuButton<int>(
       icon: Icon(
-        Icons.more_vert,
-        color: iconColor,
+        Icons.more_vert, // লম্বালম্বি ৩ ডট যেমন ছিল তেমনই আছে
+        color: iconColor ?? defaultIconColor,
         size: iconSize,
       ),
-      color: Theme.of(context).cardColor,
+      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        ),
       ),
       onSelected: (i) => items[i].onTap(),
       itemBuilder: (_) => List.generate(items.length, (i) {
@@ -53,13 +60,13 @@ class AppDotMenu extends StatelessWidget {
               Icon(
                 item.icon,
                 size: 20,
-                color: item.danger ? AppColors.danger : null,
+                color: item.danger ? AppColors.danger : defaultIconColor,
               ),
               const SizedBox(width: 12),
               Text(
                 item.label,
                 style: TextStyle(
-                  color: item.danger ? AppColors.danger : null,
+                  color: item.danger ? AppColors.danger : defaultIconColor,
                 ),
               ),
             ],
