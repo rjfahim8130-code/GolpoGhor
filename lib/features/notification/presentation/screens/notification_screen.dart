@@ -1,6 +1,4 @@
 // lib/features/notification/presentation/screens/notification_screen.dart
-// ইনবক্স হিসেবে ব্যবহৃত হচ্ছে (l10n.inbox)
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,7 +9,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/widgets/empty_state.dart'; // ✅ EmptyState ইম্পোর্ট
+import '../../../../core/widgets/empty_view.dart'; 
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -42,9 +40,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     });
     try {
       await _service.clearOld();
-      final list = await _service.getMine(
-        limit: AppConstants.notificationPageSize,
-      );
+      final list = await _service.getMine(limit: AppConstants.notificationPageSize);
       if (!mounted) return;
       setState(() {
         _items = list;
@@ -72,10 +68,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
-            ),
+            child: Text(l10n.delete, style: const TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -92,28 +85,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     if (id == null || type == null) return;
 
     switch (type) {
-      case 'story':
-        context.push('${RouteNames.story}/$id');
-        break;
-      case 'novel':
-        context.push('${RouteNames.novel}/$id');
-        break;
-      case 'episode':
-        context.push('${RouteNames.episode}/$id');
-        break;
-      case 'video':
-        context.push(
-          Uri(
-            path: RouteNames.videos,
-            queryParameters: {'focus': id},
-          ).toString(),
-        );
-        break;
-      case 'profile':
-        context.push('${RouteNames.user}/$id');
-        break;
-      case 'comment':
-        break;
+      case 'story': context.push('${RouteNames.story}/$id'); break;
+      case 'novel': context.push('${RouteNames.novel}/$id'); break;
+      case 'episode': context.push('${RouteNames.episode}/$id'); break;
+      case 'video': context.push(Uri(path: RouteNames.videos, queryParameters: {'focus': id}).toString()); break;
+      case 'profile': context.push('${RouteNames.user}/$id'); break;
     }
   }
 
@@ -121,52 +97,34 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final l10n = context.l10n;
     final name = n.actorDisplayName;
     switch (n.type) {
-      case 'like':
-        return '$name ${l10n.notifReacted}';
-      case 'comment':
-        return '$name ${l10n.notifCommented}';
-      case 'reply':
-        return '$name ${l10n.notifReplied}';
-      case 'mention':
-        return '$name ${l10n.notifMentioned}';
-      case 'follow':
-        return '$name ${l10n.notifFollowed}';
-      default:
-        return n.message ?? l10n.notification;
+      case 'like': return '$name ${l10n.notifReacted}';
+      case 'comment': return '$name ${l10n.notifCommented}';
+      case 'reply': return '$name ${l10n.notifReplied}';
+      case 'mention': return '$name ${l10n.notifMentioned}';
+      case 'follow': return '$name ${l10n.notifFollowed}';
+      default: return n.message ?? l10n.notification;
     }
   }
 
   IconData _iconFor(String type) {
     switch (type) {
-      case 'like':
-        return Icons.favorite;
-      case 'comment':
-        return Icons.chat_bubble;
-      case 'reply':
-        return Icons.reply;
-      case 'mention':
-        return Icons.alternate_email;
-      case 'follow':
-        return Icons.person_add;
-      default:
-        return Icons.notifications;
+      case 'like': return Icons.favorite;
+      case 'comment': return Icons.chat_bubble;
+      case 'reply': return Icons.reply;
+      case 'mention': return Icons.alternate_email;
+      case 'follow': return Icons.person_add;
+      default: return Icons.notifications;
     }
   }
 
   Color _colorFor(String type) {
     switch (type) {
-      case 'like':
-        return AppColors.love;
-      case 'comment':
-        return AppColors.info;
-      case 'reply':
-        return AppColors.primary;
-      case 'mention':
-        return AppColors.warning;
-      case 'follow':
-        return AppColors.success;
-      default:
-        return AppColors.primary;
+      case 'like': return AppColors.love;
+      case 'comment': return AppColors.info;
+      case 'reply': return AppColors.primary;
+      case 'mention': return AppColors.warning;
+      case 'follow': return AppColors.success;
+      default: return AppColors.primary;
     }
   }
 
@@ -174,13 +132,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        // ✅ এখানে "নোটিফিকেশন"-এর বদলে "ইনবক্স" দেখাবে
-        title: Text(l10n.inbox), 
+        backgroundColor: bg,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(l10n.inbox),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -199,7 +161,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : _items.isEmpty
-                  ? EmptyState( // ✅ EmptyView থেকে EmptyState
+                  ? EmptyView(
                       icon: Icons.notifications_none,
                       title: l10n.noNotifications,
                       subtitle: l10n.noNotificationsHint,
@@ -208,14 +170,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       onRefresh: _load,
                       child: ListView.separated(
                         itemCount: _items.length,
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1),
+                        separatorBuilder: (_, __) => Divider(height: 1, color: borderColor),
                         itemBuilder: (_, i) {
                           final n = _items[i];
                           return ListTile(
-                            tileColor: n.isRead
-                                ? null
-                                : AppColors.primary.withValues(alpha: 0.06),
+                            tileColor: n.isRead ? null : AppColors.primary.withValues(alpha: 0.05),
                             leading: Stack(
                               children: [
                                 CachedAvatar(
@@ -232,18 +191,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     decoration: BoxDecoration(
                                       color: _colorFor(n.type),
                                       shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: isDark
-                                            ? AppColors.darkBg
-                                            : Colors.white,
-                                        width: 1.5,
-                                      ),
+                                      border: Border.all(color: bg, width: 1.5),
                                     ),
-                                    child: Icon(
-                                      _iconFor(n.type),
-                                      size: 10,
-                                      color: Colors.white,
-                                    ),
+                                    child: Icon(_iconFor(n.type), size: 10, color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -251,9 +201,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             title: Text(
                               _textFor(context, n),
                               style: TextStyle(
-                                fontWeight: n.isRead
-                                    ? FontWeight.normal
-                                    : FontWeight.w600,
+                                fontWeight: n.isRead ? FontWeight.normal : FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),
