@@ -1,64 +1,139 @@
 // lib/core/widgets/create_sheet.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/localization/app_localizations.dart';
+import '../../core/providers/video_feature_provider.dart';
+import '../../core/theme/app_colors.dart';
 import '../../routing/route_names.dart';
-import '../localization/app_localizations.dart';
-import '../theme/app_colors.dart';
 
 class CreateSheet {
   CreateSheet._();
 
   static Future<void> show(BuildContext context) {
-    final l10n = context.l10n;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? AppColors.darkDivider : AppColors.lightDivider, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 16),
-                Text(l10n.create, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                _actionTile(icon: Icons.article_outlined, label: l10n.newStory, onTap: () { Navigator.pop(ctx); context.push(RouteNames.writeStory); }),
-                _actionTile(icon: Icons.menu_book_outlined, label: l10n.newNovel, onTap: () { Navigator.pop(ctx); context.push(RouteNames.writeNovel); }),
-                _actionTile(icon: Icons.videocam_outlined, label: l10n.newVideo, onTap: () { Navigator.pop(ctx); context.push(RouteNames.createVideo); }),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => const _CreateSheetBody(),
+    );
+  }
+}
+
+class _CreateSheetBody extends ConsumerWidget {
+  const _CreateSheetBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final videoOn = ref.watch(videoFeatureProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+
+    return Container(
+      color: bg,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.create,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              
+              // Story
+              _actionTile(
+                context: context,
+                icon: Icons.article_outlined,
+                title: l10n.newStory,
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(RouteNames.writeStory);
+                },
+              ),
+              const SizedBox(height: 12),
+              
+              // Novel
+              _actionTile(
+                context: context,
+                icon: Icons.menu_book_outlined,
+                title: l10n.newNovel,
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(RouteNames.writeNovel);
+                },
+              ),
+              
+              // Video (Only if enabled)
+              if (videoOn) ...[
+                const SizedBox(height: 12),
+                _actionTile(
+                  context: context,
+                  icon: Icons.videocam_outlined,
+                  title: l10n.newVideo,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push(RouteNames.createVideo);
+                  },
+                ),
               ],
-            ),
+              const SizedBox(height: 20),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  static Widget _actionTile({required IconData icon, required String label, required VoidCallback onTap}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
+  Widget _actionTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
           borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.15), shape: BoxShape.circle), child: Icon(icon, color: AppColors.primary, size: 22)),
-                const SizedBox(width: 14),
-                Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
-                const Icon(Icons.chevron_right),
-              ],
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 28),
+            const SizedBox(width: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-          ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
         ),
       ),
     );
