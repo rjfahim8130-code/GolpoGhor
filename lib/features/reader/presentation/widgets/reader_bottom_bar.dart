@@ -1,6 +1,4 @@
 // lib/features/reader/presentation/widgets/reader_bottom_bar.dart
-// শুধু আইকন সম্বলিত বটম বার (লেবেল ছাড়া)
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -16,7 +14,7 @@ class ReaderBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.primary,
+      color: AppColors.primary, // সবুজ #159447
       elevation: 8,
       child: SafeArea(
         top: false,
