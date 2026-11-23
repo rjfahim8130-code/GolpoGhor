@@ -1,4 +1,3 @@
-// lib/core/widgets/cached_avatar.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +26,9 @@ class CachedAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
     final initial = name.trim().isNotEmpty ? name.trim().substring(0, 1) : '?';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // ডার্ক মোডে হালকা সবুজ, লাইট মোডে হালকা সবুজ
     final bg = backgroundColor ?? AppColors.primary.withValues(alpha: 0.15);
     final fg = textColor ?? AppColors.primary;
 
@@ -34,11 +36,18 @@ class CachedAvatar extends StatelessWidget {
       radius: radius,
       backgroundColor: bg,
       backgroundImage: hasImage ? CachedNetworkImageProvider(imageUrl!) : null,
-      child: hasImage ? null : Text(initial, style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: radius * 0.85)),
+      child: hasImage ? null : Text(
+        initial, 
+        style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: radius * 0.85)
+      ),
     );
 
     if (!tappable || userId == null || userId!.isEmpty) return avatar;
 
-    return GestureDetector(onTap: () => _openProfile(context), behavior: HitTestBehavior.opaque, child: avatar);
+    return GestureDetector(
+      onTap: () => _openProfile(context), 
+      behavior: HitTestBehavior.opaque, 
+      child: avatar
+    );
   }
 }
