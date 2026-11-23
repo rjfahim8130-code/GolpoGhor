@@ -1,6 +1,7 @@
 // lib/features/author/presentation/screens/author_profile_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -108,7 +109,12 @@ class _AuthorProfileScreenState extends State<AuthorProfileScreen>
     if (mounted) setState(() => _busy = false);
   }
 
-  bool get _isMe => _auth.currentUser?.id == widget.userId;
+  bool get _isMe {
+    final a = _auth.currentUser?.id;
+    final b = Supabase.instance.client.auth.currentUser?.id;
+    final me = a ?? b;
+    return me != null && me.isNotEmpty && me == widget.userId;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -208,23 +214,30 @@ class _AuthorProfileScreenState extends State<AuthorProfileScreen>
                       ),
                     ],
                   ),
+                  // Follow — অন্যের প্রোফাইলে সবসময় দেখাবে
                   if (!_isMe) ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
+                      height: 44,
                       child: _following
                           ? OutlinedButton.icon(
                               onPressed: _busy ? null : _toggleFollow,
-                              icon: const Icon(Icons.person_remove),
+                              icon: const Icon(Icons.check, size: 18),
                               label: Text(l10n.unfollow),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                side: const BorderSide(color: AppColors.primary),
+                              ),
                             )
                           : ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
+                                elevation: 0,
                               ),
                               onPressed: _busy ? null : _toggleFollow,
-                              icon: const Icon(Icons.person_add),
+                              icon: const Icon(Icons.person_add_alt_1, size: 18),
                               label: Text(l10n.follow),
                             ),
                     ),
