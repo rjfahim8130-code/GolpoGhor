@@ -6,12 +6,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/comment_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
 
 class CommentTile extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+  static const Color _warningColor = Color(0xFFF57C00);
+
   final CommentModel comment;
   final String? myId;
   final bool isReply;
@@ -33,8 +36,10 @@ class CommentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final isMine = myId != null && myId == comment.userId;
     final displayName = comment.displayAuthorOr(l10n.user);
 
@@ -66,9 +71,10 @@ class CommentTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           displayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
+                            color: primaryText,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -98,7 +104,7 @@ class CommentTile extends StatelessWidget {
                 const SizedBox(height: 3),
 
                 // বডি — reply হলে replyToName bold, mention হলে হাইলাইট
-                _buildBody(isDark),
+                _buildBody(primaryText),
 
                 // Mention indicator
                 if (comment.hasMentions && !isReply) ...[
@@ -108,14 +114,14 @@ class CommentTile extends StatelessWidget {
                       const Icon(
                         Icons.alternate_email,
                         size: 11,
-                        color: AppColors.warning,
+                        color: _warningColor,
                       ),
                       const SizedBox(width: 3),
                       Text(
                         '${comment.mentionedUserIds.length} mention',
                         style: const TextStyle(
                           fontSize: 10,
-                          color: AppColors.warning,
+                          color: _warningColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -129,6 +135,7 @@ class CommentTile extends StatelessWidget {
                   children: [
                     TextButton(
                       style: TextButton.styleFrom(
+                        foregroundColor: _brandGreen,
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(0, 26),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -144,6 +151,7 @@ class CommentTile extends StatelessWidget {
                     if (!isReply && onReply != null)
                       TextButton(
                         style: TextButton.styleFrom(
+                          foregroundColor: _brandGreen,
                           padding: const EdgeInsets.only(left: 12),
                           minimumSize: const Size(0, 26),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -160,7 +168,7 @@ class CommentTile extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 12),
                           minimumSize: const Size(0, 26),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          foregroundColor: AppColors.danger,
+                          foregroundColor: _dangerColor,
                         ),
                         onPressed: onDelete,
                         child: Text(
@@ -178,14 +186,13 @@ class CommentTile extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(bool isDark) {
+  Widget _buildBody(Color primaryText) {
     final textStyle = TextStyle(
       fontSize: 14,
       height: 1.4,
-      color: isDark ? AppColors.darkText : AppColors.lightText,
+      color: primaryText,
     );
 
-    // reply হলে "নাম — text" স্টাইল
     if (comment.isReply &&
         comment.replyToName != null &&
         comment.replyToName!.trim().isNotEmpty) {
@@ -196,7 +203,7 @@ class CommentTile extends StatelessWidget {
             TextSpan(
               text: '${comment.replyToName} ',
               style: const TextStyle(
-                color: AppColors.primary,
+                color: _brandGreen,
                 fontWeight: FontWeight.w600,
               ),
             ),
