@@ -1,4 +1,6 @@
-// lib/features/home/presentation/screens/home_feed_screen.dart
+// lib/features/home/presentation/screens/home_feed_screen.dart (Part 1)
+// নতুন ডিজাইন হেডার (For you, popular, trending, following + Search)
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,13 +9,10 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/episode_model.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
-import '../../../../core/providers/session_cache_provider.dart';
-import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/episode_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/reading_history_service.dart';
 import '../../../../core/services/story_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../routing/route_names.dart';
 import '../widgets/continue_reading_card.dart';
@@ -29,6 +28,10 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _storyService = StoryService();
   final _novelService = NovelService();
   final _episodeService = EpisodeService();
@@ -43,7 +46,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   String? _error;
   int _offset = 0;
   static const int _limit = 15;
-  int _selectedTab = 0;
+  int _selectedTab = 0; // 0: For You, 1: Popular, 2: Trending, 3: Following
 
   @override
   void initState() {
@@ -96,7 +99,9 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
       setState(() {
         _history.clear();
         _history.addAll(history.take(3));
-        _items..clear()..addAll(combined);
+        _items
+          ..clear()
+          ..addAll(combined);
         _offset = stories.length;
         _hasMore = stories.length >= _limit;
         _loading = false;
@@ -121,7 +126,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     if (_loadingMore || !_hasMore) return;
     setState(() => _loadingMore = true);
     try {
-      final more = await _storyService.getFeed(limit: _limit, offset: _offset);
+      final more = await _storyService.getFeed(
+        limit: _limit,
+        offset: _offset,
+      );
       if (!mounted) return;
       setState(() {
         _items.addAll(more);
@@ -137,156 +145,4 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   List<dynamic> get _filteredItems {
     return _items;
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tabs = ['For You', 'Popular', 'Trending', 'Following'];
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
-      appBar: AppBar(
-        backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        toolbarHeight: 44,
-        titleSpacing: 8,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: borderColor),
-        ),
-        title: Row(
-          children: [
-            for (var index = 0; index < tabs.length; index++)
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _selectedTab = index),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      tabs[index],
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: _selectedTab == index
-                            ? (isDark ? Colors.white : Colors.black)
-                            : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                        fontWeight: _selectedTab == index ? FontWeight.w700 : FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, size: 24, color: isDark ? Colors.white : Colors.black),
-            tooltip: 'Search stories',
-            onPressed: () => context.push(RouteNames.search),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          ),
-        ],
-      ),
-      body: _buildBody(context.l10n, tabs),
-    );
-  }
-
-  Widget _buildBody(AppLocalizations l10n, List<String> tabs) {
-    if (_loading) {
-      return const SkeletonList(count: 3);
-    }
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(l10n.t(_error!)),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _load, child: Text(l10n.retry)),
-          ],
-        ),
-      );
-    }
-
-    final filtered = _filteredItems;
-
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView.builder(
-        controller: _scroll,
-        padding: const EdgeInsets.only(top: 8, bottom: 24),
-        itemCount: (filtered.isEmpty && _selectedTab == 0)
-            ? 2
-            : (_selectedTab == 0 && _history.isNotEmpty ? 1 : 0) +
-                filtered.length +
-                (_loadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          int adjustedIndex = index;
-
-          if (_selectedTab == 0 && _history.isNotEmpty) {
-            if (index == 0) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.recent, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                        GestureDetector(
-                          onTap: () => context.push(RouteNames.history),
-                          child: Text(
-                            l10n.seeMore,
-                            style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ..._history.map((h) => ContinueReadingCard(item: h)),
-                  const SizedBox(height: 12),
-                ],
-              );
-            }
-            adjustedIndex = index - 1;
-          }
-
-          if (adjustedIndex >= filtered.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            );
-          }
-
-          final item = filtered[adjustedIndex];
-          if (item is StoryModel) {
-            return StoryCard(
-              story: item,
-              onTap: () => context.push('${RouteNames.story}/${item.id}'),
-            );
-          }
-          if (item is NovelModel) {
-            return NovelCard(
-              novel: item,
-              onTap: () => context.push('${RouteNames.novel}/${item.id}'),
-            );
-          }
-          if (item is EpisodeModel) {
-            return EpisodeCard(
-              episode: item,
-              onTap: () => context.push('${RouteNames.episode}/${item.id}'),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
-    );
-  }
-}
+  
