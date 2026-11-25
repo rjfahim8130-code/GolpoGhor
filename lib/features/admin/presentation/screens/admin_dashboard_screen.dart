@@ -1,4 +1,4 @@
-// lib/features/admin/presentation/screens/admin_dashboard_screen.dart
+// lib/features/admin/presentation/screens/admin_dashboard_screen.dart (Part 1)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +7,8 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/admin_service.dart';
 import '../../../../core/services/report_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
-import '../../../../core/widgets/empty_view.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -25,6 +24,15 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _admin = AdminService();
   final _reportService = ReportService();
 
@@ -32,9 +40,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   bool _allowed = false;
   String? _error;
   Map<String, int> _stats = {};
-  
-  // ✅ টাইপ এরর ফিক্স করা হয়েছে
-  List<Map<String, dynamic>> _reports = [];
+  List> _reports = [];
 
   @override
   void initState() {
@@ -61,14 +67,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
       final results = await Future.wait([
         _admin.stats(),
-        _reportService.listOpen().catchError((_) => <Map<String, dynamic>>[]),
+        _reportService.listOpen().catchError((_) => >[]),
       ]);
 
       if (!mounted) return;
       setState(() {
         _allowed = true;
         _stats = results[0] as Map<String, int>;
-        _reports = results[1] as List<Map<String, dynamic>>;
+        _reports = results[1] as List>;
         _loading = false;
       });
     } catch (_) {
@@ -79,23 +85,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       });
     }
   }
-
+  // lib/features/admin/presentation/screens/admin_dashboard_screen.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardColor = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     if (_loading) {
       return Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: bg,
+          foregroundColor: primaryText,
           elevation: 0,
+          scrolledUnderElevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -111,14 +122,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: bg,
+          foregroundColor: primaryText,
           elevation: 0,
+          scrolledUnderElevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
         ),
-        body: EmptyView(
+        body: EmptyState(
           icon: Icons.lock_outline,
           title: l10n.accessDenied,
           subtitle: l10n.adminOnlyScreen,
@@ -131,7 +144,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: bg,
+          foregroundColor: primaryText,
           elevation: 0,
+          scrolledUnderElevation: 0,
           title: Text(l10n.admin),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -146,6 +161,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
+        foregroundColor: primaryText,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(l10n.adminDashboard),
@@ -161,11 +177,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ],
       ),
       body: RefreshIndicator(
+        color: _brandGreen,
         onRefresh: _init,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _sectionHeader(l10n.statistics),
+            _sectionHeader(l10n.statistics, primaryText),
             Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -184,84 +201,178 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   label: l10n.video,
                   value: '${_stats['videos'] ?? 0}',
                   icon: Icons.videocam_outlined,
-                  color: AppColors.info,
+                  color: _brandGreen,
                 ),
                 AdminStatsCard(
                   label: l10n.users,
                   value: '${_stats['users'] ?? 0}',
                   icon: Icons.people_outline,
-                  color: AppColors.success,
+                  color: _brandGreen,
                 ),
                 AdminStatsCard(
                   label: l10n.comments,
                   value: '${_stats['comments'] ?? 0}',
                   icon: Icons.chat_bubble_outline,
-                  color: AppColors.warning,
+                  color: secondary,
                 ),
                 AdminStatsCard(
                   label: l10n.openReports,
                   value: '${_reports.length}',
                   icon: Icons.flag_outlined,
-                  color: AppColors.danger,
+                  color: _dangerColor,
                 ),
               ],
             ),
             const SizedBox(height: 24),
-
-            _sectionHeader(l10n.users),
+            _sectionHeader(l10n.users, primaryText),
             Card(
               elevation: 0,
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: borderColor),
+                side: BorderSide(color: borderColor, width: 1),
               ),
               child: ListTile(
                 leading: const CircleAvatar(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: _brandGreen,
                   child: Icon(Icons.people, color: Colors.white, size: 20),
                 ),
                 title: Text(
                   l10n.users,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: primaryText,
+                  ),
                 ),
                 subtitle: Text(
                   '${_stats['users'] ?? 0} ${l10n.totalUsers}',
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 12, color: secondary),
                 ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AdminUsersScreen(),
-                  ),
-                ),
+                trailing: Icon(Icons.chevron_right, color: secondary),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AdminUsersScreen(),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 24),
-
-            _sectionHeader(l10n.featureControl),
+            _sectionHeader(l10n.monthlyUsers, primaryText),
             Card(
               elevation: 0,
               color: cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: borderColor),
+                side: BorderSide(color: borderColor, width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people_alt_outlined,
+                          color: _brandGreen,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.totalUsers,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: primaryText,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${_stats['users'] ?? 0}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: _brandGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Divider(height: 24, color: borderColor),
+                    _monthRow(
+                      l10n.thisMonthNew,
+                      '${_stats['this_month_new'] ?? 0}',
+                      _brandGreen,
+                      primaryText,
+                    ),
+                    const SizedBox(height: 8),
+                    _monthRow(
+                      l10n.lastMonthNew,
+                      '${_stats['last_month_new'] ?? 0}',
+                      secondary,
+                      primaryText,
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _brandGreen.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderColor, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: _brandGreen,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.mauLimitNote,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: secondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _sectionHeader(l10n.featureControl, primaryText),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: borderColor, width: 1),
               ),
               child: SwitchListTile(
-                activeColor: AppColors.primary,
-                title: Text(l10n.videoFeature),
+                activeColor: _brandGreen,
+                title: Text(
+                  l10n.videoFeature,
+                  style: TextStyle(color: primaryText),
+                ),
                 subtitle: Text(
                   videoOn ? l10n.videoFeatureDescOn : l10n.videoFeatureDescOff,
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 12, color: secondary),
                 ),
                 secondary: Icon(
                   videoOn ? Icons.videocam : Icons.videocam_off,
-                  color: videoOn ? AppColors.primary : Colors.grey,
+                  color: videoOn ? _brandGreen : secondary,
                 ),
                 value: videoOn,
                 onChanged: (v) async {
                   try {
-                    await ref.read(videoFeatureProvider.notifier).setEnabled(v);
+                    await ref
+                        .read(videoFeatureProvider.notifier)
+                        .setEnabled(v);
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -280,15 +391,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            _sectionHeader(l10n.openReports),
+            _sectionHeader(l10n.openReports, primaryText),
             if (_reports.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Center(
                   child: Text(
                     l10n.noOpenReports,
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(color: secondary),
                   ),
                 ),
               )
@@ -298,7 +408,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 final id = '${r['target_id'] ?? ''}';
                 final reason = '${r['reason'] ?? ''}';
                 final createdAtRaw = r['created_at']?.toString();
-                final createdAt = createdAtRaw != null ? DateTime.tryParse(createdAtRaw) : null;
+                final createdAt = createdAtRaw != null
+                    ? DateTime.tryParse(createdAtRaw)
+                    : null;
 
                 return Card(
                   elevation: 0,
@@ -306,18 +418,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   margin: const EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: borderColor),
+                    side: BorderSide(color: borderColor, width: 1),
                   ),
                   child: ListTile(
                     leading: const CircleAvatar(
-                      backgroundColor: AppColors.danger,
+                      backgroundColor: _dangerColor,
                       child: Icon(Icons.flag, color: Colors.white, size: 18),
                     ),
                     title: Text(
                       '${l10n.typeLabel}: $type',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        color: primaryText,
                       ),
                     ),
                     subtitle: Column(
@@ -328,19 +441,25 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           '${l10n.reasonLabel}: $reason',
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 12, color: secondary),
                         ),
                         Text(
-                          'ID: $id${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
-                          style: const TextStyle(
+                          'ID: $id'
+                          '${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
+                          style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey,
+                            color: secondary,
                           ),
                         ),
                       ],
                     ),
                     trailing: PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: secondary),
+                      color: cardColor,
+                      icon: Icon(Icons.more_vert, color: primaryText),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: borderColor, width: 1),
+                      ),
                       onSelected: (v) async {
                         final rid = r['id']?.toString();
                         if (rid == null) return;
@@ -356,14 +475,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                         await _init();
                       },
                       itemBuilder: (_) => [
-                        PopupMenuItem(value: 'open', child: Text(l10n.open)),
+                        PopupMenuItem(
+                          value: 'open',
+                          child: Text(l10n.open,
+                              style: TextStyle(color: primaryText)),
+                        ),
                         PopupMenuItem(
                           value: 'reviewed',
-                          child: Text(l10n.reviewed),
+                          child: Text(l10n.reviewed,
+                              style: TextStyle(color: primaryText)),
                         ),
                         PopupMenuItem(
                           value: 'dismiss',
-                          child: Text(l10n.cancel),
+                          child: Text(l10n.cancel,
+                              style: TextStyle(color: primaryText)),
                         ),
                       ],
                     ),
@@ -371,19 +496,85 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                 );
               }),
+            const SizedBox(height: 24),
+            _sectionHeader(l10n.moderation, primaryText),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: borderColor, width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: _brandGreen,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.moderationHint,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: secondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionHeader(String title) {
+  Widget _sectionHeader(String title, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
       ),
+    );
+  }
+
+  Widget _monthRow(String label, String value, Color color, Color textColor) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 13, color: textColor),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -400,7 +591,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         break;
       case 'video':
         context.push(
-          Uri(path: RouteNames.videos, queryParameters: {'focus': id}).toString(),
+          Uri(
+            path: RouteNames.videos,
+            queryParameters: {'focus': id},
+          ).toString(),
         );
         break;
       case 'profile':
