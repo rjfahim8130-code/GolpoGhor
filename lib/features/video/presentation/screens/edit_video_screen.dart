@@ -1,4 +1,4 @@
-// lib/features/video/presentation/screens/edit_video_screen.dart
+// lib/features/video/presentation/screens/edit_video_screen.dart (Part 1)
 // সংশোধিত: localization এবং ক্যাটাগরি সিলেকশন (মেইন গ্রুপ → সাব) যুক্ত এবং Dropdown-এ initialValue ব্যবহার
 
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/services/video_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -23,6 +22,15 @@ class EditVideoScreen extends StatefulWidget {
 }
 
 class _EditVideoScreenState extends State<EditVideoScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _service = VideoService();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -33,8 +41,8 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
   bool _saving = false;
   String? _error;
 
-  String? _category;      // সাব key — DB তে যাবে
-  String? _categoryGroup; // শুধু UI এর জন্য মেইন গ্রুপ
+  String? _category;
+  String? _categoryGroup;
 
   @override
   void initState() {
@@ -76,8 +84,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       _titleCtrl.text = v.title;
       _descCtrl.text = v.description;
       _tagsCtrl.text = v.tags.join(' ');
-      
-      // ক্যাটাগরি ও গ্রুপ সেটআপ
+
       _category = CategoryCatalog.normalize(v.category);
       _categoryGroup = _category == null
           ? null
@@ -89,7 +96,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
           _loading = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = 'loadFailed';
@@ -113,7 +120,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
         videoId: widget.videoId,
         title: _titleCtrl.text.trim(),
         description: _descCtrl.text.trim(),
-        category: _category, // ক্যাটাগরি সাব কি আপডেট
+        category: _category,
         tags: _parseTags(_tagsCtrl.text),
       );
       if (!mounted) return;
@@ -148,7 +155,7 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
+              style: const TextStyle(color: _dangerColor),
             ),
           ),
         ],
@@ -166,16 +173,35 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
       );
     }
   }
-
+  // lib/features/video/presentation/screens/edit_video_screen.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardBg = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: borderColor, width: 1),
+    );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _brandGreen, width: 1.5),
+    );
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text('${l10n.edit} (${l10n.video})'),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -188,12 +214,15 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _brandGreen,
+                    ),
                   )
                 : Text(
                     l10n.save,
                     style: const TextStyle(
-                      color: AppColors.primary,
+                      color: _brandGreen,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -215,14 +244,15 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.08),
+                          color: _brandGreen.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: borderColor, width: 1),
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               Icons.info_outline,
-                              color: AppColors.primary,
+                              color: _brandGreen,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -241,39 +271,50 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         ),
                       ),
                     const SizedBox(height: 12),
-
                     TextField(
                       controller: _titleCtrl,
+                      style: TextStyle(color: primaryText),
                       decoration: InputDecoration(
                         labelText: l10n.title,
-                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(color: secondary),
+                        border: inputBorder,
+                        enabledBorder: inputBorder,
+                        focusedBorder: focusedBorder,
                       ),
                     ),
                     const SizedBox(height: 12),
-
                     TextField(
                       controller: _descCtrl,
                       maxLines: 4,
+                      style: TextStyle(color: primaryText),
                       decoration: InputDecoration(
                         labelText: l10n.description,
-                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(color: secondary),
+                        border: inputBorder,
+                        enabledBorder: inputBorder,
+                        focusedBorder: focusedBorder,
                       ),
                     ),
                     const SizedBox(height: 12),
-
-                    // ---------- ক্যাটাগরি (মেইন গ্রুপ → সাব) ----------
                     Text(
                       l10n.optionalCategory,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: primaryText,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    
-                    // মেইন গ্রুপ ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                     DropdownButtonFormField<String?>(
                       initialValue: _categoryGroup,
+                      dropdownColor: cardBg,
+                      style: TextStyle(color: primaryText),
                       decoration: InputDecoration(
                         labelText: l10n.selectGroup,
-                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(color: secondary),
+                        border: inputBorder,
+                        enabledBorder: inputBorder,
+                        focusedBorder: focusedBorder,
                         isDense: true,
                       ),
                       items: [
@@ -290,19 +331,21 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                       ],
                       onChanged: (v) => setState(() {
                         _categoryGroup = v;
-                        _category = null; // গ্রুপ বদলালে সাব রিসেট
+                        _category = null;
                       }),
                     ),
-                    
                     if (_categoryGroup != null) ...[
                       const SizedBox(height: 10),
-                      
-                      // সাব ক্যাটাগরি ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                       DropdownButtonFormField<String?>(
                         initialValue: _category,
+                        dropdownColor: cardBg,
+                        style: TextStyle(color: primaryText),
                         decoration: InputDecoration(
                           labelText: l10n.selectSubcategory,
-                          border: const OutlineInputBorder(),
+                          labelStyle: TextStyle(color: secondary),
+                          border: inputBorder,
+                          enabledBorder: inputBorder,
+                          focusedBorder: focusedBorder,
                           isDense: true,
                         ),
                         items: [
@@ -320,7 +363,6 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         onChanged: (v) => setState(() => _category = v),
                       ),
                     ],
-                    
                     if (_category != null || _categoryGroup != null)
                       TextButton(
                         onPressed: () => setState(() {
@@ -330,22 +372,24 @@ class _EditVideoScreenState extends State<EditVideoScreen> {
                         child: Text(l10n.clearCategory),
                       ),
                     const SizedBox(height: 12),
-
                     TextField(
                       controller: _tagsCtrl,
+                      style: TextStyle(color: primaryText),
                       decoration: InputDecoration(
                         labelText: l10n.tags,
-                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(color: secondary),
+                        border: inputBorder,
+                        enabledBorder: inputBorder,
+                        focusedBorder: focusedBorder,
                       ),
                     ),
                     const SizedBox(height: 28),
-
                     OutlinedButton.icon(
                       onPressed: _saving ? null : _delete,
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
-                        foregroundColor: AppColors.danger,
-                        side: const BorderSide(color: AppColors.danger),
+                        foregroundColor: _dangerColor,
+                        side: const BorderSide(color: _dangerColor),
                       ),
                       icon: const Icon(Icons.delete_outline),
                       label: Text('${l10n.video} ${l10n.delete}'),
