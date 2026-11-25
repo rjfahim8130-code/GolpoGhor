@@ -1,5 +1,5 @@
 // lib/features/auth/presentation/screens/welcome_screen.dart
-// লোগো PNG + localization + offline link
+// সাদা/কালো ব্যাকগ্রাউন্ড + সবুজ (#159447) বাটন + লোগো PNG + localization + offline link
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,12 +11,17 @@ import '../../../../routing/route_names.dart';
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? _bgDark : _bgLight,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
@@ -36,20 +41,21 @@ class WelcomeScreen extends StatelessWidget {
                     return const Icon(
                       Icons.auto_stories_rounded,
                       size: 110,
-                      color: AppColors.primary,
+                      color: _brandGreen,
                     );
                   },
                 ),
               ),
               const SizedBox(height: 24),
 
-              // ============ অ্যাপের নাম (সবসময় বাংলা) ============
+              // ============ অ্যাপের নাম ============
               Text(
                 l10n.appName,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 8),
@@ -70,6 +76,9 @@ class WelcomeScreen extends StatelessWidget {
               // ============ Offline Link ============
               Center(
                 child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: _brandGreen,
+                  ),
                   onPressed: () => context.push(RouteNames.offline),
                   icon: const Icon(
                     Icons.download_done_outlined,
@@ -86,8 +95,9 @@ class WelcomeScreen extends StatelessWidget {
                 height: 54,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: _brandGreen,
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -109,9 +119,9 @@ class WelcomeScreen extends StatelessWidget {
                 height: 54,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                    foregroundColor: _brandGreen,
                     side: const BorderSide(
-                      color: AppColors.primary,
+                      color: _brandGreen,
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
