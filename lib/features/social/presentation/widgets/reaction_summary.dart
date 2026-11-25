@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import 'reaction_picker.dart';
 
 /// একাধিক রিঅ্যাকশনের সারসংক্ষেপ
@@ -30,8 +29,12 @@ class ReactionSummary extends StatelessWidget {
     final total = counts.values.fold<int>(0, (a, b) => a + b);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final ringColor =
+        isDark ? const Color(0xFF18191A) : const Color(0xFFFFFFFF);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -48,14 +51,10 @@ class ReactionSummary extends StatelessWidget {
                   height: emojiSize + 10,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurface
-                        : AppColors.lightSurface,
+                    color: surface,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBg
-                          : AppColors.lightBg,
+                      color: ringColor,
                       width: 1.5,
                     ),
                   ),
