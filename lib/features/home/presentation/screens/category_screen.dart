@@ -1,6 +1,4 @@
 // lib/features/home/presentation/screens/category_screen.dart
-// সংশোধিত: সম্পূর্ণ কোড এক সাথে
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +13,7 @@ import '../../../../routing/route_names.dart';
 import '../widgets/story_card.dart';
 
 class CategoryScreen extends StatefulWidget {
-  final String categoryKey; // মেইন groupKey অথবা subKey
+  final String categoryKey;
 
   const CategoryScreen({super.key, required this.categoryKey});
 
@@ -24,6 +22,10 @@ class CategoryScreen extends StatefulWidget {
 }
 
 class _CategoryScreenState extends State<CategoryScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = StoryService();
   List<StoryModel> _stories = [];
   bool _loading = true;
@@ -82,9 +84,21 @@ class _CategoryScreenState extends State<CategoryScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final titleText = l10n.t(widget.categoryKey);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final chipBg = isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(titleText),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -105,6 +119,23 @@ class _CategoryScreenState extends State<CategoryScreen> {
                     child: ChoiceChip(
                       label: Text(l10n.viewAll),
                       selected: _selectedSubKey == null,
+                      selectedColor: _brandGreen.withValues(alpha: 0.16),
+                      backgroundColor: chipBg,
+                      labelStyle: TextStyle(
+                        color:
+                            _selectedSubKey == null ? _brandGreen : primaryText,
+                        fontWeight: _selectedSubKey == null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: _selectedSubKey == null
+                              ? _brandGreen
+                              : borderColor,
+                        ),
+                      ),
                       onSelected: (_) {
                         setState(() => _selectedSubKey = null);
                         _load();
@@ -118,6 +149,19 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       child: ChoiceChip(
                         label: Text(l10n.t(sub.key)),
                         selected: selected,
+                        selectedColor: _brandGreen.withValues(alpha: 0.16),
+                        backgroundColor: chipBg,
+                        labelStyle: TextStyle(
+                          color: selected ? _brandGreen : primaryText,
+                          fontWeight:
+                              selected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: selected ? _brandGreen : borderColor,
+                          ),
+                        ),
                         onSelected: (_) {
                           setState(() => _selectedSubKey = sub.key);
                           _load();
@@ -144,6 +188,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                             subtitle: titleText,
                           )
                         : RefreshIndicator(
+                            color: _brandGreen,
                             onRefresh: _load,
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(vertical: 8),
