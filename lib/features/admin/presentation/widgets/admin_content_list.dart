@@ -1,12 +1,9 @@
 // lib/features/admin/presentation/widgets/admin_content_list.dart
-// সংশোধিত: localization
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/story_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class AdminContentList extends StatelessWidget {
@@ -21,9 +18,20 @@ class AdminContentList extends StatelessWidget {
     required this.onDelete,
   });
 
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+    final cardBg = isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
 
     if (stories.isEmpty) {
       return Padding(
@@ -31,39 +39,43 @@ class AdminContentList extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.noData,
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: secondaryText),
           ),
         ),
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-
     return Column(
       children: stories.map((s) {
-        return Card(
-          elevation: 0,
-          color: cardColor,
+        return Container(
           margin: const EdgeInsets.only(bottom: 8),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: cardBg,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 1),
           ),
           child: ListTile(
             title: Text(
               s.title.isEmpty ? l10n.untitled : s.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: primaryText,
               ),
             ),
             subtitle: Text(
               '${s.authorName ?? ''} · ${s.isPublished ? l10n.published : l10n.draft} · ${s.viewCount}',
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12, color: secondaryText),
             ),
             trailing: PopupMenuButton<String>(
+              color: cardBg,
+              icon: Icon(Icons.more_vert, color: primaryText),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: borderColor, width: 1),
+              ),
               onSelected: (v) {
                 if (v == 'open') {
                   context.push('${RouteNames.story}/${s.id}');
@@ -74,18 +86,21 @@ class AdminContentList extends StatelessWidget {
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'open',
-                  child: Text(l10n.read),
+                  child: Text(l10n.read, style: TextStyle(color: primaryText)),
                 ),
                 if (s.isPublished)
                   PopupMenuItem(
                     value: 'unpublish',
-                    child: Text(l10n.unpublish),
+                    child: Text(
+                      l10n.unpublish,
+                      style: TextStyle(color: primaryText),
+                    ),
                   ),
                 PopupMenuItem(
                   value: 'delete',
                   child: Text(
                     l10n.delete,
-                    style: const TextStyle(color: AppColors.danger),
+                    style: const TextStyle(color: _dangerColor),
                   ),
                 ),
               ],
