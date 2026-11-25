@@ -19,6 +19,10 @@ class ReadingHistoryScreen extends StatefulWidget {
 }
 
 class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = ReadingHistoryService();
   List<ReadingHistoryItem> _items = [];
   bool _loading = true;
@@ -52,8 +56,10 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete,
-                style: const TextStyle(color: AppColors.danger)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -67,11 +73,19 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.recent),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -99,6 +113,7 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                   itemBuilder: (_, i) {
                     final item = _items[i];
                     return InkWell(
+                      borderRadius: BorderRadius.circular(12),
                       onTap: () {
                         if (item.kind == 'episode') {
                           final epId = item.id.startsWith('ep_')
@@ -117,13 +132,13 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
+                              ? const Color(0xFF242526)
+                              : const Color(0xFFFFFFFF),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.darkDivider
-                                : AppColors.lightDivider,
+                                ? const Color(0xFF3E4042)
+                                : const Color(0xFFE4E6EB),
                           ),
                         ),
                         child: Row(
@@ -132,14 +147,14 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(8),
+                                color: _brandGreen.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
                                 item.kind == 'episode'
                                     ? Icons.menu_book
                                     : Icons.article,
-                                color: Colors.white,
+                                color: _brandGreen,
                                 size: 22,
                               ),
                             ),
@@ -152,20 +167,21 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                                     item.title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
+                                      color: primaryText,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 6),
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(4),
                                     child: LinearProgressIndicator(
                                       value: item.progress.clamp(0.0, 1.0),
                                       minHeight: 4,
-                                      backgroundColor: AppColors.primary
-                                          .withValues(alpha: 0.15),
-                                      color: AppColors.primary,
+                                      backgroundColor:
+                                          _brandGreen.withValues(alpha: 0.15),
+                                      color: _brandGreen,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -180,7 +196,11 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, size: 18),
+                              icon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: secondary,
+                              ),
                               onPressed: () async {
                                 await _service.remove(item.id);
                                 await _load();
