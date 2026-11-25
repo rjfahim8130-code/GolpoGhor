@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
@@ -18,6 +17,10 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _email = TextEditingController();
@@ -57,10 +60,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final l10n = context.l10n;
 
       if (_auth.isLoggedIn) {
-        // সরাসরি লগইন হয়েছে → profile setup
         context.go(RouteNames.profileSetup);
       } else {
-        // Email confirm দরকার — Login screen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.accountCreatedLogin)),
         );
@@ -84,9 +85,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.register),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -103,7 +114,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ============ লোগো PNG ============
                   Center(
                     child: Image.asset(
                       'assets/images/logo.png',
@@ -114,41 +124,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return const Icon(
                           Icons.auto_stories_rounded,
                           size: 80,
-                          color: AppColors.primary,
+                          color: _brandGreen,
                         );
                       },
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // ============ অ্যাপের নাম (সবসময় বাংলা) ============
                   Text(
                     l10n.appName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(height: 6),
-
                   Text(
                     l10n.createNewAccount,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: secondary,
                     ),
                   ),
                   const SizedBox(height: 28),
-
-                  // ============ Name ============
                   TextFormField(
                     controller: _name,
                     textInputAction: TextInputAction.next,
                     textCapitalization: TextCapitalization.words,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.fullName,
                       prefixIcon: const Icon(Icons.person_outline),
@@ -157,12 +162,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (v) => Validators.name(context, v),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Email ============
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.email,
                       prefixIcon: const Icon(Icons.email_outlined),
@@ -171,12 +175,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (v) => Validators.email(context, v),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Password ============
                   TextFormField(
                     controller: _password,
                     obscureText: _obscure,
                     textInputAction: TextInputAction.next,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outline),
@@ -195,13 +198,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (v) => Validators.password(context, v),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Confirm Password ============
                   TextFormField(
                     controller: _confirm,
                     obscureText: true,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.passwordAgain,
                       prefixIcon: const Icon(Icons.lock_outline),
@@ -218,13 +220,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-
-                  // ============ Register Button ============
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: _brandGreen,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -250,28 +250,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Login Link ============
                   TextButton(
                     onPressed: () => context.pop(),
                     child: Text(l10n.alreadyHaveAccount),
                   ),
-
-                  // ============ Terms Notice ============
                   const SizedBox(height: 20),
                   Text(
                     l10n.registerConsent,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: secondary,
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // ============ Terms / Privacy Links ============
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -283,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),
-                      const Text('·'),
+                      Text('·', style: TextStyle(color: secondary)),
                       TextButton(
                         onPressed: () =>
                             context.push('${RouteNames.legal}/privacy'),
