@@ -1,4 +1,6 @@
 // lib/features/profile/presentation/widgets/profile_stats_card.dart
+// সংশোধিত: ৪টি stat + ফেসবুক স্টাইল বর্ডার
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,16 +29,17 @@ class ProfileStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final secondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final borderColor =
+        isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
         children: [
@@ -46,7 +49,9 @@ class ProfileStatsCard extends StatelessWidget {
               value: followerCount,
               label: l10n.followers,
               secondary: secondary,
-              onTap: () => context.push('${RouteNames.follows}/$userId/followers'),
+              onTap: () => context.push(
+                '${RouteNames.follows}/$userId/followers',
+              ),
             ),
           ),
           _divider(isDark),
@@ -56,7 +61,9 @@ class ProfileStatsCard extends StatelessWidget {
               value: followingCount,
               label: l10n.following,
               secondary: secondary,
-              onTap: () => context.push('${RouteNames.follows}/$userId/following'),
+              onTap: () => context.push(
+                '${RouteNames.follows}/$userId/following',
+              ),
             ),
           ),
           _divider(isDark),
@@ -93,14 +100,17 @@ class ProfileStatsCard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(
           children: [
             Text(
               TimeAgo.compactOf(context, value),
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
