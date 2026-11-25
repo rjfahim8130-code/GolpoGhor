@@ -1,9 +1,10 @@
-// lib/features/novel/presentation/screens/novel_details_screen.dart
+// lib/features/novel/presentation/screens/novel_details_screen.dart (Part 1)
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
@@ -12,13 +13,11 @@ import '../../../../core/models/novel_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/bookmark_service.dart';
 import '../../../../core/services/episode_service.dart';
+import '../../../../core/services/follow_service.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/offline_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
-import '../../../../core/services/follow_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -38,6 +37,14 @@ class NovelDetailsScreen extends StatefulWidget {
 }
 
 class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _barGreen = Color(0xFF159447);
+
   final _follow = FollowService();
   bool _isFollowingAuthor = false;
   bool _followBusy = false;
@@ -81,7 +88,8 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
       if (mounted) setState(() => _isFollowingAuthor = next);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _followBusy = false);
@@ -189,7 +197,9 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
         await _offlineService.saveEpisode(
           episodeId: e.id,
           novelTitle: n.title,
-          episodeTitle: e.title.isNotEmpty ? e.title : '${l10n.episodeLabel} ${e.chapterNumber}',
+          episodeTitle: e.title.isNotEmpty
+              ? e.title
+              : '${l10n.episodeLabel} ${e.chapterNumber}',
           chapterNumber: e.chapterNumber,
           contentBlocks: e.contentBlocks,
           authorName: n.authorName,
@@ -215,6 +225,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: const Color(0xFFFFFFFF),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -225,7 +236,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.fontSize, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(
+                      l10n.fontSize,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF050505),
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -233,54 +251,103 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _globalFontScale = (_globalFontScale - AppConstants.fontScaleStep)
-                                  .clamp(AppConstants.minFontScale, AppConstants.maxFontScale);
+                              _globalFontScale = (_globalFontScale -
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                    AppConstants.minFontScale,
+                                    AppConstants.maxFontScale,
+                                  );
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_decrease),
+                          icon: const Icon(
+                            Icons.text_decrease,
+                            color: Color(0xFF050505),
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.12),
+                            color: _barGreen.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             '${(_globalFontScale * 100).round()}%',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _barGreen,
+                            ),
                           ),
                         ),
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _globalFontScale = (_globalFontScale + AppConstants.fontScaleStep)
-                                  .clamp(AppConstants.minFontScale, AppConstants.maxFontScale);
+                              _globalFontScale = (_globalFontScale +
+                                      AppConstants.fontScaleStep)
+                                  .clamp(
+                                    AppConstants.minFontScale,
+                                    AppConstants.maxFontScale,
+                                  );
                             });
                             setModal(() {});
                           },
-                          icon: const Icon(Icons.text_increase),
+                          icon: const Icon(
+                            Icons.text_increase,
+                            color: Color(0xFF050505),
+                          ),
                         ),
                       ],
                     ),
-                    const Divider(height: 24),
-                    Text(l10n.theme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Divider(height: 24, color: Color(0xFFE4E6EB)),
+                    Text(
+                      l10n.theme,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF050505),
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _themeChip(l10n.light, ReaderTheme.light, Colors.white, Colors.black87, () {
-                          setState(() => _globalReaderTheme = ReaderTheme.light);
-                          setModal(() {});
-                        }),
-                        _themeChip('Sepia', ReaderTheme.sepia, AppColors.sepiaBg, AppColors.sepiaText, () {
-                          setState(() => _globalReaderTheme = ReaderTheme.sepia);
-                          setModal(() {});
-                        }),
-                        _themeChip(l10n.dark, ReaderTheme.dark, Colors.black87, Colors.white, () {
-                          setState(() => _globalReaderTheme = ReaderTheme.dark);
-                          setModal(() {});
-                        }),
+                        _themeChip(
+                          l10n.light,
+                          ReaderTheme.light,
+                          const Color(0xFFFFFFFF),
+                          const Color(0xFF1C1E21),
+                          () {
+                            setState(
+                                () => _globalReaderTheme = ReaderTheme.light);
+                            setModal(() {});
+                          },
+                        ),
+                        _themeChip(
+                          'Sepia',
+                          ReaderTheme.sepia,
+                          const Color(0xFFF5EEDB),
+                          const Color(0xFF433422),
+                          () {
+                            setState(
+                                () => _globalReaderTheme = ReaderTheme.sepia);
+                            setModal(() {});
+                          },
+                        ),
+                        _themeChip(
+                          l10n.dark,
+                          ReaderTheme.dark,
+                          const Color(0xFF18191A),
+                          const Color(0xFFE4E6EB),
+                          () {
+                            setState(
+                                () => _globalReaderTheme = ReaderTheme.dark);
+                            setModal(() {});
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -293,50 +360,83 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     );
   }
 
-  Widget _themeChip(String label, ReaderTheme theme, Color bg, Color fg, VoidCallback onTap) {
+  Widget _themeChip(
+    String label,
+    ReaderTheme theme,
+    Color bg,
+    Color fg,
+    VoidCallback onTap,
+  ) {
     final selected = _globalReaderTheme == theme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 80, height: 60,
+        width: 80,
+        height: 60,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.primary : Colors.grey, width: selected ? 2.5 : 1),
+          border: Border.all(
+            color: selected ? _barGreen : const Color(0xFFCED0D4),
+            width: selected ? 2.5 : 1,
+          ),
         ),
         alignment: Alignment.center,
-        child: Text(label, style: TextStyle(color: fg, fontSize: 12, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: fg,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
 
   String? _episodeCover(EpisodeModel e) {
     for (final b in e.contentBlocks) {
-      if (b.isImage && b.imageUrl != null && b.imageUrl!.isNotEmpty) return b.imageUrl;
+      if (b.isImage && b.imageUrl != null && b.imageUrl!.isNotEmpty) {
+        return b.imageUrl;
+      }
     }
     return null;
   }
-    @override
+  // lib/features/novel/presentation/screens/novel_details_screen.dart (Part 2)
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final secondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardColor = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
-    if (_loading) return Scaffold(backgroundColor: bg, body: const LoadingView());
+    if (_loading) {
+      return Scaffold(backgroundColor: bg, body: const LoadingView());
+    }
 
     if (_error != null || _novel == null) {
       return Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: AppColors.primary,
+          backgroundColor: _barGreen,
           foregroundColor: Colors.white,
-          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
         ),
-        body: ErrorView(message: l10n.t(_error ?? 'problem'), onRetry: _load, retryLabel: l10n.retry),
+        body: ErrorView(
+          message: l10n.t(_error ?? 'problem'),
+          onRetry: _load,
+          retryLabel: l10n.retry,
+        ),
       );
     }
 
@@ -349,18 +449,37 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
           Column(
             children: [
               Material(
-                color: AppColors.primary, // সবুজ #159447
+                color: _barGreen,
                 child: SafeArea(
                   bottom: false,
                   child: SizedBox(
                     height: 48,
                     child: Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => context.pop()),
-                        Expanded(child: Text(l10n.novel, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600))),
                         IconButton(
-                          icon: const Icon(Icons.flag_outlined, color: Colors.white),
-                          onPressed: () => ReportSheet.show(context, targetType: 'novel', targetId: widget.novelId, title: l10n.reportNovel),
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => context.pop(),
+                        ),
+                        Expanded(
+                          child: Text(
+                            l10n.novel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.flag_outlined,
+                              color: Colors.white),
+                          onPressed: () => ReportSheet.show(
+                            context,
+                            targetType: 'novel',
+                            targetId: widget.novelId,
+                            title: l10n.reportNovel,
+                          ),
                         ),
                       ],
                     ),
@@ -369,6 +488,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               ),
               Expanded(
                 child: RefreshIndicator(
+                  color: _barGreen,
                   onRefresh: _load,
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
@@ -397,27 +517,40 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                                   child: GestureDetector(
                                     onTap: () {
                                       if (n.authorId.isNotEmpty) {
-                                        context.push('${RouteNames.user}/${n.authorId}');
+                                        context.push(
+                                            '${RouteNames.user}/${n.authorId}');
                                       }
                                     },
                                     child: Text(
                                       n.authorName ?? l10n.author,
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: primaryText,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
-                                if (Supabase.instance.client.auth.currentUser?.id != null &&
-                                    Supabase.instance.client.auth.currentUser?.id != n.authorId &&
+                                if (Supabase.instance.client.auth.currentUser
+                                            ?.id !=
+                                        null &&
+                                    Supabase.instance.client.auth.currentUser
+                                            ?.id !=
+                                        n.authorId &&
                                     n.authorId.isNotEmpty) ...[
                                   const SizedBox(width: 6),
                                   GestureDetector(
-                                    onTap: _followBusy ? null : () => _toggleFollowAuthor(n.authorId),
+                                    onTap: _followBusy
+                                        ? null
+                                        : () => _toggleFollowAuthor(n.authorId),
                                     child: Icon(
-                                      _isFollowingAuthor ? Icons.check_circle : Icons.add_circle_outline,
+                                      _isFollowingAuthor
+                                          ? Icons.check_circle
+                                          : Icons.add_circle_outline,
                                       size: 20,
-                                      color: AppColors.primary,
+                                      color: _barGreen,
                                     ),
                                   ),
                                 ],
@@ -440,8 +573,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           borderRadius: BorderRadius.circular(14),
                           child: CachedNetworkImage(
                             imageUrl: n.coverUrl!,
-                            height: 200, width: double.infinity, fit: BoxFit.cover, memCacheWidth: 800,
-                            placeholder: (_, __) => Container(height: 200, color: AppColors.primary.withValues(alpha: 0.08)),
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 800,
+                            placeholder: (_, __) => Container(
+                              height: 200,
+                              color: _barGreen.withValues(alpha: 0.08),
+                            ),
                             errorWidget: (_, __, ___) => _coverPlaceholder(),
                           ),
                         )
@@ -451,16 +590,40 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: Text(n.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, height: 1.3))),
-                          if (n.publicCode != null && n.publicCode!.isNotEmpty) ...[
+                          Expanded(
+                            child: Text(
+                              n.title,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                height: 1.3,
+                                color: primaryText,
+                              ),
+                            ),
+                          ),
+                          if (n.publicCode != null &&
+                              n.publicCode!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             GestureDetector(
                               onTap: () => _copyCode(n.publicCode!),
                               child: Container(
                                 margin: const EdgeInsets.only(top: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                                child: Text(n.publicCode!, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _barGreen.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  n.publicCode!,
+                                  style: const TextStyle(
+                                    color: _barGreen,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -468,34 +631,61 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       ),
                       if (n.description.isNotEmpty) ...[
                         const SizedBox(height: 8),
-                        Text(n.description, style: const TextStyle(height: 1.5, fontSize: 14)),
+                        Text(
+                          n.description,
+                          style: TextStyle(
+                            height: 1.5,
+                            fontSize: 14,
+                            color: primaryText,
+                          ),
+                        ),
                       ],
                       const SizedBox(height: 16),
                       Wrap(
-                        spacing: 16, runSpacing: 8,
+                        spacing: 16,
+                        runSpacing: 8,
                         children: [
-                          _meta('${n.episodeCount} ${l10n.episode}', Icons.list_alt),
-                          _meta(TimeAgo.compactOf(context, n.viewCount), Icons.remove_red_eye_outlined),
-                          _meta(TimeAgo.compactOf(context, n.reactionCount), Icons.favorite_border),
+                          _meta('${n.episodeCount} ${l10n.episode}',
+                              Icons.list_alt, primaryText),
+                          _meta(TimeAgo.compactOf(context, n.viewCount),
+                              Icons.remove_red_eye_outlined, primaryText),
+                          _meta(TimeAgo.compactOf(context, n.reactionCount),
+                              Icons.favorite_border, primaryText),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      const Divider(),
+                      Divider(color: borderColor),
                       const SizedBox(height: 8),
-                      Text('${l10n.viewAll} ${l10n.episode}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        '${l10n.viewAll} ${l10n.episode}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: primaryText,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       if (_episodes.isEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: Center(child: Text(l10n.noEpisodesYet, style: TextStyle(color: secondary))),
+                          child: Center(
+                            child: Text(
+                              l10n.noEpisodesYet,
+                              style: TextStyle(color: secondary),
+                            ),
+                          ),
                         )
                       else
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _episodes.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.80,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.80,
                           ),
                           itemBuilder: (context, i) {
                             final e = _episodes[i];
@@ -504,47 +694,87 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                               decoration: BoxDecoration(
                                 color: cardColor,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: borderColor),
+                                border:
+                                    Border.all(color: borderColor, width: 1),
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => context.push('${RouteNames.episode}/${e.id}'),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(
-                                        child: cover != null
-                                            ? CachedNetworkImage(imageUrl: cover, fit: BoxFit.cover, memCacheWidth: 400, errorWidget: (_, __, ___) => _epPlaceholder(e.chapterNumber))
-                                            : _epPlaceholder(e.chapterNumber),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                                        child: Text(
-                                          e.title.isNotEmpty ? e.title : '${l10n.episodeLabel} ${e.chapterNumber}',
-                                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                              child: InkWell(
+                                onTap: () => context
+                                    .push('${RouteNames.episode}/${e.id}'),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: cover != null
+                                          ? CachedNetworkImage(
+                                              imageUrl: cover,
+                                              fit: BoxFit.cover,
+                                              memCacheWidth: 400,
+                                              errorWidget: (_, __, ___) =>
+                                                  _epPlaceholder(e.chapterNumber),
+                                            )
+                                          : _epPlaceholder(e.chapterNumber),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          8, 8, 8, 4),
+                                      child: Text(
+                                        e.title.isNotEmpty
+                                            ? e.title
+                                            : '${l10n.episodeLabel} ${e.chapterNumber}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: primaryText,
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.remove_red_eye_outlined, size: 12, color: secondary),
-                                            const SizedBox(width: 2),
-                                            Text(TimeAgo.compactOf(context, e.viewCount), style: TextStyle(fontSize: 11, color: secondary)),
-                                            const SizedBox(width: 6),
-                                            Icon(Icons.favorite_border, size: 12, color: secondary),
-                                            const SizedBox(width: 2),
-                                            Text(TimeAgo.compactOf(context, e.reactionCount), style: TextStyle(fontSize: 11, color: secondary)),
-                                            const Spacer(),
-                                            Text(l10n.read, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                                          ],
-                                        ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          8, 0, 8, 8),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.remove_red_eye_outlined,
+                                            size: 12,
+                                            color: secondary,
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            TimeAgo.compactOf(
+                                                context, e.viewCount),
+                                            style: TextStyle(
+                                                fontSize: 11, color: secondary),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            Icons.favorite_border,
+                                            size: 12,
+                                            color: secondary,
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            TimeAgo.compactOf(
+                                                context, e.reactionCount),
+                                            style: TextStyle(
+                                                fontSize: 11, color: secondary),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            l10n.read,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: _barGreen,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
@@ -554,14 +784,14 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   ),
                 ),
               ),
-              // ✅ সবুজ বটম বার
               Material(
-                color: AppColors.primary,
-                elevation: 8,
+                color: _barGreen,
+                elevation: 0,
                 child: SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -569,14 +799,25 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           tooltip: l10n.downloadAllEpisodes,
                           color: Colors.white,
                           icon: _downloadingAll
-                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : const Icon(Icons.download_outlined),
                           onPressed: _downloadingAll ? null : _downloadAll,
                         ),
                         IconButton(
                           tooltip: l10n.bookmark,
                           color: Colors.white,
-                          icon: Icon(_bookmarked ? Icons.bookmark : Icons.bookmark_border),
+                          icon: Icon(
+                            _bookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                          ),
                           onPressed: _toggleBookmark,
                         ),
                         IconButton(
@@ -609,12 +850,20 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               right: 16,
               bottom: 70,
               child: FloatingActionButton.extended(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 4,
-                onPressed: () => context.push('${RouteNames.addEpisode}/${n.id}'),
+                backgroundColor: cardBg,
+                foregroundColor: _barGreen,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  side: BorderSide(color: borderColor, width: 1),
+                ),
+                onPressed: () =>
+                    context.push('${RouteNames.addEpisode}/${n.id}'),
                 icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.addEpisode, style: const TextStyle(fontWeight: FontWeight.bold)),
+                label: Text(
+                  l10n.addEpisode,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
         ],
@@ -622,13 +871,20 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     );
   }
 
-  Widget _meta(String label, IconData icon) {
+  Widget _meta(String label, IconData icon, Color textColor) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
+        Icon(icon, size: 16, color: _barGreen),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: textColor,
+          ),
+        ),
       ],
     );
   }
@@ -636,19 +892,28 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
   Widget _coverPlaceholder() {
     return Container(
       height: 160,
-      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-      child: const Center(child: Icon(Icons.menu_book, size: 52, color: AppColors.primary)),
+      decoration: BoxDecoration(
+        color: _barGreen.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: const Center(
+        child: Icon(Icons.menu_book, size: 52, color: _barGreen),
+      ),
     );
   }
 
   Widget _epPlaceholder(int num) {
     final isBn = Localizations.localeOf(context).languageCode == 'bn';
     return Container(
-      color: AppColors.primary.withValues(alpha: 0.08),
+      color: _barGreen.withValues(alpha: 0.08),
       alignment: Alignment.center,
       child: Text(
         isBn ? 'পর্ব $num' : 'Episode $num',
-        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16),
+        style: const TextStyle(
+          color: _barGreen,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
       ),
     );
   }
