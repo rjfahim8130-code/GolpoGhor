@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 
 class SetPasswordScreen extends StatefulWidget {
@@ -17,6 +16,10 @@ class SetPasswordScreen extends StatefulWidget {
 }
 
 class _SetPasswordScreenState extends State<SetPasswordScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _formKey = GlobalKey<FormState>();
   final _pass = TextEditingController();
   final _confirm = TextEditingController();
@@ -56,11 +59,19 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     final l10n = context.l10n;
     final email = _auth.currentUser?.email ?? '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.password),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -85,6 +96,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 TextFormField(
                   controller: _pass,
                   obscureText: _obscure,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.password,
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -101,6 +113,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 TextFormField(
                   controller: _confirm,
                   obscureText: true,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.passwordAgainLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -115,7 +128,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: _brandGreen,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
