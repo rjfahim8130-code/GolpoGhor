@@ -1,6 +1,4 @@
 // lib/features/write/presentation/screens/write_screen.dart (Part 1)
-// সংশোধিত: ডুপ্লিকেট রিমুভড, _isDraft বাদ দেওয়া এবং ড্রপডাউন সংক্রান্ত লজিক
-
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,7 +12,6 @@ import '../../../../core/models/content_block_model.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
 import '../../../../core/services/story_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 enum WriteKind { story, novel }
@@ -36,6 +33,14 @@ class WriteScreen extends StatefulWidget {
 }
 
 class _WriteScreenState extends State<WriteScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
@@ -47,10 +52,10 @@ class _WriteScreenState extends State<WriteScreen> {
 
   final List<ContentBlockModel> _blocks = [];
   _Preset _preset = _Preset.body;
-  
-  String? _category;      // সাব key — DB তে যাবে (null = অপশনাল)
-  String? _categoryGroup; // শুধু UI
-  
+
+  String? _category;
+  String? _categoryGroup;
+
   String? _coverUrl;
   bool _loading = false;
   bool _init = true;
@@ -305,20 +310,43 @@ class _WriteScreenState extends State<WriteScreen> {
     }
   }
   // lib/features/write/presentation/screens/write_screen.dart (Part 2)
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardBg = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     if (_init) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(
+          child: CircularProgressIndicator(color: _brandGreen),
+        ),
       );
     }
 
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: borderColor, width: 1),
+    );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _brandGreen, width: 1.5),
+    );
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           _isEdit
               ? (_isStory ? l10n.editStory : l10n.editNovel)
@@ -330,15 +358,17 @@ class _WriteScreenState extends State<WriteScreen> {
         ),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: secondaryText),
             onPressed: _loading ? null : () => _save(asDraft: true),
             child: Text(l10n.draft),
           ),
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: _brandGreen),
             onPressed: _loading ? null : () => _save(asDraft: false),
             child: Text(
               _isStory ? l10n.publish : l10n.create,
               style: const TextStyle(
-                color: AppColors.primary,
+                color: _brandGreen,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -351,14 +381,14 @@ class _WriteScreenState extends State<WriteScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               children: [
-                // কভার
                 GestureDetector(
                   onTap: _loading ? null : _pickCover,
                   child: Container(
                     height: 150,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: _brandGreen.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: borderColor, width: 1),
                       image: (_coverUrl != null && _coverUrl!.isNotEmpty)
                           ? DecorationImage(
                               image: CachedNetworkImageProvider(_coverUrl!),
@@ -374,10 +404,13 @@ class _WriteScreenState extends State<WriteScreen> {
                                 const Icon(
                                   Icons.add_photo_alternate_outlined,
                                   size: 40,
-                                  color: AppColors.primary,
+                                  color: _brandGreen,
                                 ),
                                 const SizedBox(height: 8),
-                                Text(l10n.coverImageOptional),
+                                Text(
+                                  l10n.coverImageOptional,
+                                  style: TextStyle(color: secondaryText),
+                                ),
                               ],
                             ),
                           )
@@ -385,49 +418,53 @@ class _WriteScreenState extends State<WriteScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // শিরোনাম
                 TextField(
                   controller: _titleCtrl,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.title,
+                    hintStyle: TextStyle(color: secondaryText),
                     border: InputBorder.none,
                   ),
                 ),
-
-                // বিবরণ
                 TextField(
                   controller: _descCtrl,
                   maxLines: 3,
                   minLines: 2,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     hintText: l10n.description,
-                    border: const OutlineInputBorder(),
+                    hintStyle: TextStyle(color: secondaryText),
+                    border: inputBorder,
+                    enabledBorder: inputBorder,
+                    focusedBorder: focusedBorder,
                     isDense: true,
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // ক্যাটাগরি (ঐচ্ছিক) — মেইন → সাব
                 Text(
                   l10n.optionalCategory,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
+                    color: primaryText,
                   ),
                 ),
                 const SizedBox(height: 8),
-                
-                // মেইন গ্রুপ ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                 DropdownButtonFormField<String?>(
                   initialValue: _categoryGroup,
+                  dropdownColor: cardBg,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.selectGroup,
-                    border: const OutlineInputBorder(),
+                    labelStyle: TextStyle(color: secondaryText),
+                    border: inputBorder,
+                    enabledBorder: inputBorder,
+                    focusedBorder: focusedBorder,
                     isDense: true,
                   ),
                   items: [
@@ -444,19 +481,21 @@ class _WriteScreenState extends State<WriteScreen> {
                   ],
                   onChanged: (v) => setState(() {
                     _categoryGroup = v;
-                    _category = null; // গ্রুপ বদলালে সাব রিসেট
+                    _category = null;
                   }),
                 ),
-                
                 if (_categoryGroup != null) ...[
                   const SizedBox(height: 10),
-                  
-                  // সাব ক্যাটাগরি ড্রপডাউন (initialValue ব্যবহার করা হয়েছে)
                   DropdownButtonFormField<String?>(
                     initialValue: _category,
+                    dropdownColor: cardBg,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.selectSubcategory,
-                      border: const OutlineInputBorder(),
+                      labelStyle: TextStyle(color: secondaryText),
+                      border: inputBorder,
+                      enabledBorder: inputBorder,
+                      focusedBorder: focusedBorder,
                       isDense: true,
                     ),
                     items: [
@@ -474,9 +513,9 @@ class _WriteScreenState extends State<WriteScreen> {
                     onChanged: (v) => setState(() => _category = v),
                   ),
                 ],
-                
                 if (_category != null || _categoryGroup != null)
                   TextButton(
+                    style: TextButton.styleFrom(foregroundColor: _brandGreen),
                     onPressed: () => setState(() {
                       _category = null;
                       _categoryGroup = null;
@@ -484,30 +523,39 @@ class _WriteScreenState extends State<WriteScreen> {
                     child: Text(l10n.clearCategory),
                   ),
                 const SizedBox(height: 12),
-
-                // ট্যাগ
                 TextField(
                   controller: _tagsCtrl,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.tagsHint,
-                    border: const OutlineInputBorder(),
+                    labelStyle: TextStyle(color: secondaryText),
+                    border: inputBorder,
+                    enabledBorder: inputBorder,
+                    focusedBorder: focusedBorder,
                     isDense: true,
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // গল্প হলে: content blocks
                 if (_isStory) ...[
                   if (_blocks.isNotEmpty) ...[
                     Text(
                       l10n.addedParts,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: primaryText,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     ...List.generate(_blocks.length, (i) {
                       final b = _blocks[i];
                       if (b.isImage) {
                         return Card(
+                          elevation: 0,
+                          color: cardBg,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: borderColor, width: 1),
+                          ),
                           child: ListTile(
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(6),
@@ -519,24 +567,34 @@ class _WriteScreenState extends State<WriteScreen> {
                                         imageUrl: b.imageUrl!,
                                         fit: BoxFit.cover,
                                       )
-                                    : const Icon(Icons.image),
+                                    : Icon(Icons.image, color: primaryText),
                               ),
                             ),
-                            title: Text(l10n.image),
+                            title: Text(
+                              l10n.image,
+                              style: TextStyle(color: primaryText),
+                            ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.close),
+                              icon: Icon(Icons.close, color: secondaryText),
                               onPressed: () => _removeBlock(i),
                             ),
                           ),
                         );
                       }
                       return Card(
+                        elevation: 0,
+                        color: cardBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: borderColor, width: 1),
+                        ),
                         child: ListTile(
                           title: Text(
                             b.text ?? '',
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
+                              color: primaryText,
                               fontWeight: b.style == 'heading1'
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -545,36 +603,38 @@ class _WriteScreenState extends State<WriteScreen> {
                                   : FontStyle.normal,
                             ),
                           ),
-                          subtitle: Text(b.style),
+                          subtitle: Text(
+                            b.style,
+                            style: TextStyle(color: secondaryText),
+                          ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.close),
+                            icon: Icon(Icons.close, color: secondaryText),
                             onPressed: () => _removeBlock(i),
                           ),
                         ),
                       );
                     }),
-                    const Divider(),
+                    Divider(color: borderColor),
                   ],
-
-                  // লেখার বক্স
                   TextField(
                     controller: _bodyCtrl,
                     maxLines: 8,
                     minLines: 4,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       hintText: _hintForPreset(l10n),
+                      hintStyle: TextStyle(color: secondaryText),
                       filled: true,
-                      fillColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      fillColor: cardBg,
+                      border: inputBorder,
+                      enabledBorder: inputBorder,
+                      focusedBorder: focusedBorder,
                     ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: _brandGreen),
                       onPressed: _commitBody,
                       icon: const Icon(Icons.add, size: 18),
                       label: Text(l10n.addPart),
@@ -584,26 +644,25 @@ class _WriteScreenState extends State<WriteScreen> {
                     l10n.writeTips,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: secondaryText,
                     ),
                   ),
                 ],
-
-                // উপন্যাস হলে: hint
                 if (!_isStory)
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: _brandGreen.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _brandGreen.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Row(
                       children: [
                         const Icon(
                           Icons.info_outline,
-                          color: AppColors.primary,
+                          color: _brandGreen,
                           size: 20,
                         ),
                         const SizedBox(width: 10),
@@ -612,9 +671,7 @@ class _WriteScreenState extends State<WriteScreen> {
                             l10n.novelNextEpisodeHint,
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                              color: secondaryText,
                             ),
                           ),
                         ),
@@ -624,38 +681,74 @@ class _WriteScreenState extends State<WriteScreen> {
               ],
             ),
           ),
-
-          // গল্প হলে নিচে টুলবার
           if (_isStory)
             Material(
-              elevation: 8,
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              child: SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    children: [
-                      _chip(l10n.blockHeading, _Preset.heading),
-                      _chip(l10n.blockBody, _Preset.body),
-                      _chip(l10n.blockEmphasis, _Preset.emphasis),
-                      _chip(l10n.blockQuote, _Preset.quote),
-                      const SizedBox(width: 4),
-                      ActionChip(
-                        avatar: _loading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.image_outlined, size: 18),
-                        label: Text(l10n.image),
-                        onPressed: _loading ? null : _pickImage,
-                      ),
-                    ],
+              elevation: 0,
+              color: cardBg,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: borderColor, width: 1),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      children: [
+                        _chip(
+                          l10n.blockHeading,
+                          _Preset.heading,
+                          primaryText,
+                          borderColor,
+                        ),
+                        _chip(
+                          l10n.blockBody,
+                          _Preset.body,
+                          primaryText,
+                          borderColor,
+                        ),
+                        _chip(
+                          l10n.blockEmphasis,
+                          _Preset.emphasis,
+                          primaryText,
+                          borderColor,
+                        ),
+                        _chip(
+                          l10n.blockQuote,
+                          _Preset.quote,
+                          primaryText,
+                          borderColor,
+                        ),
+                        const SizedBox(width: 4),
+                        ActionChip(
+                          backgroundColor: cardBg,
+                          side: BorderSide(color: borderColor),
+                          avatar: _loading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: _brandGreen,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.image_outlined,
+                                  size: 18,
+                                  color: _brandGreen,
+                                ),
+                          label: Text(
+                            l10n.image,
+                            style: TextStyle(color: primaryText),
+                          ),
+                          onPressed: _loading ? null : _pickImage,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -665,7 +758,12 @@ class _WriteScreenState extends State<WriteScreen> {
     );
   }
 
-  Widget _chip(String label, _Preset p) {
+  Widget _chip(
+    String label,
+    _Preset p,
+    Color primaryText,
+    Color borderColor,
+  ) {
     final selected = _preset == p;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
@@ -673,9 +771,14 @@ class _WriteScreenState extends State<WriteScreen> {
         label: Text(label),
         selected: selected,
         onSelected: (_) => setState(() => _preset = p),
-        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+        selectedColor: _brandGreen.withValues(alpha: 0.16),
+        backgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: selected ? _brandGreen : borderColor),
+        ),
         labelStyle: TextStyle(
-          color: selected ? AppColors.primary : null,
+          color: selected ? _brandGreen : primaryText,
           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
