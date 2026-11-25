@@ -1,6 +1,4 @@
 // lib/features/profile/presentation/screens/saved_screen.dart
-// সংশোধিত: localization
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,7 +6,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/bookmark_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -25,6 +22,12 @@ class SavedScreen extends StatefulWidget {
 
 class _SavedScreenState extends State<SavedScreen>
     with SingleTickerProviderStateMixin {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   late TabController _tab;
   final _bookmarkService = BookmarkService();
 
@@ -72,22 +75,43 @@ class _SavedScreenState extends State<SavedScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.saved),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        bottom: TabBar(
-          controller: _tab,
-          labelColor: AppColors.primary,
-          indicatorColor: AppColors.primary,
-          tabs: [
-            Tab(text: l10n.story),
-            Tab(text: l10n.novel),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(49),
+          child: Column(
+            children: [
+              Divider(height: 1, color: borderColor),
+              TabBar(
+                controller: _tab,
+                labelColor: _brandGreen,
+                unselectedLabelColor: secondaryText,
+                indicatorColor: _brandGreen,
+                tabs: [
+                  Tab(text: l10n.story),
+                  Tab(text: l10n.novel),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       body: _loading
@@ -103,6 +127,7 @@ class _SavedScreenState extends State<SavedScreen>
                             title: l10n.noSavedStories,
                           )
                         : RefreshIndicator(
+                            color: _brandGreen,
                             onRefresh: _load,
                             child: ListView.builder(
                               padding:
@@ -125,6 +150,7 @@ class _SavedScreenState extends State<SavedScreen>
                             title: l10n.noSavedNovels,
                           )
                         : RefreshIndicator(
+                            color: _brandGreen,
                             onRefresh: _load,
                             child: ListView.builder(
                               padding:
