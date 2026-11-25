@@ -1,5 +1,5 @@
 // lib/features/home/presentation/screens/discover_screen.dart
-// Deep Forest Green + segmented tabs + writing groups
+// Brand Green + segmented tabs + writing groups
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,10 +8,17 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/category_catalog.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class DiscoverScreen extends ConsumerWidget {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   const DiscoverScreen({super.key});
 
   @override
@@ -19,11 +26,20 @@ class DiscoverScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.discover),
       ),
       body: ListView(
@@ -38,13 +54,9 @@ class DiscoverScreen extends ConsumerWidget {
                 vertical: 14,
               ),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                color: isDark ? _cardDark : _cardLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
-                ),
+                border: Border.all(color: borderColor, width: 1),
               ),
               child: Row(
                 children: [
@@ -68,6 +80,8 @@ class DiscoverScreen extends ConsumerWidget {
             title: l10n.popular,
             subtitle: l10n.mostReactions,
             route: RouteNames.popular,
+            primaryText: primaryText,
+            secondary: secondary,
           ),
           _tile(
             context,
@@ -75,6 +89,8 @@ class DiscoverScreen extends ConsumerWidget {
             title: l10n.trending,
             subtitle: l10n.mostRead,
             route: RouteNames.trending,
+            primaryText: primaryText,
+            secondary: secondary,
           ),
           if (videoOn)
             _tile(
@@ -83,9 +99,11 @@ class DiscoverScreen extends ConsumerWidget {
               title: l10n.videos,
               subtitle: l10n.shortVideoFeed,
               route: RouteNames.videos,
+              primaryText: primaryText,
+              secondary: secondary,
             ),
 
-          const Divider(height: 32),
+          Divider(height: 32, color: borderColor),
 
           // Writing groups
           _sectionTitle(l10n.category, secondary),
@@ -95,7 +113,12 @@ class DiscoverScreen extends ConsumerWidget {
             runSpacing: 8,
             children: CategoryCatalog.writingGroups.map((g) {
               return ActionChip(
-                label: Text(l10n.t(g)),
+                backgroundColor: isDark ? _cardDark : _cardLight,
+                side: BorderSide(color: borderColor, width: 1),
+                label: Text(
+                  l10n.t(g),
+                  style: TextStyle(color: primaryText),
+                ),
                 onPressed: () => context.push(
                   '${RouteNames.category}?key=$g',
                 ),
@@ -114,7 +137,12 @@ class DiscoverScreen extends ConsumerWidget {
               runSpacing: 8,
               children: CategoryCatalog.videoGroups.map((g) {
                 return ActionChip(
-                  label: Text(l10n.t(g)),
+                  backgroundColor: isDark ? _cardDark : _cardLight,
+                  side: BorderSide(color: borderColor, width: 1),
+                  label: Text(
+                    l10n.t(g),
+                    style: TextStyle(color: primaryText),
+                  ),
                   onPressed: () {
                     context.push(
                       Uri(
@@ -152,29 +180,31 @@ class DiscoverScreen extends ConsumerWidget {
     required String title,
     required String subtitle,
     required String route,
+    required Color primaryText,
+    required Color secondary,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? _borderDark : _borderLight;
+
     return Card(
       elevation: 0,
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      color: isDark ? _cardDark : _cardLight,
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        ),
+        side: BorderSide(color: borderColor, width: 1),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-          child: Icon(icon, color: AppColors.primary),
+          backgroundColor: _brandGreen.withValues(alpha: 0.12),
+          child: Icon(icon, color: _brandGreen),
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600, color: primaryText),
         ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: Text(subtitle, style: TextStyle(color: secondary)),
+        trailing: Icon(Icons.chevron_right, color: secondary),
         onTap: () => context.push(route),
       ),
     );
