@@ -403,7 +403,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     }
     return null;
   }
-  // lib/features/novel/presentation/screens/novel_details_screen.dart (Part 2)
+  // lib/features/novel/presentation/screens/novel_details_screen.dart (Part 2A)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -784,6 +784,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                   ),
                 ),
               ),
+              // lib/features/novel/presentation/screens/novel_details_screen.dart (Part 2B)
               Material(
                 color: _barGreen,
                 elevation: 0,
@@ -850,7 +851,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
               right: 16,
               bottom: 70,
               child: FloatingActionButton.extended(
-                backgroundColor: cardBg,
+                backgroundColor: cardColor,
                 foregroundColor: _barGreen,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
