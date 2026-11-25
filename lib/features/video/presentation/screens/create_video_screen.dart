@@ -1,4 +1,6 @@
-// lib/features/video/presentation/screens/create_video_screen.dart
+// lib/features/video/presentation/screens/create_video_screen.dart (Part 1)
+// video_compress ^3.1.3 — subscribe API + ভিডিও ক্যাটাগরি সিস্টেম যুক্ত
+
 import 'dart:async';
 import 'dart:io';
 
@@ -17,7 +19,6 @@ import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/media_compress_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
 import '../../../../core/services/video_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class CreateVideoScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,14 @@ class CreateVideoScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _tagsCtrl = TextEditingController();
@@ -70,7 +79,8 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
-    return context.l10n.t(key);
+    final l10n = context.l10n;
+    return l10n.t(key);
   }
 
   Future<void> _pick() async {
@@ -229,20 +239,35 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
       }
     }
   }
-    @override
+  // lib/features/video/presentation/screens/create_video_screen.dart (Part 2)
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardBg = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: borderColor, width: 1),
+    );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _brandGreen, width: 1.5),
+    );
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
+        foregroundColor: primaryText,
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.newVideo),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -250,12 +275,13 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _uploading || _checking
-                ? null
-                : () => _publish(asDraft: true),
-            child: Text(l10n.draft, style: TextStyle(color: secondary)),
+            style: TextButton.styleFrom(foregroundColor: secondary),
+            onPressed:
+                _uploading || _checking ? null : () => _publish(asDraft: true),
+            child: Text(l10n.draft),
           ),
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: _brandGreen),
             onPressed: _uploading || _checking
                 ? null
                 : () => _publish(asDraft: false),
@@ -263,12 +289,15 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _brandGreen,
+                    ),
                   )
                 : Text(
                     l10n.publish,
                     style: const TextStyle(
-                      color: AppColors.primary,
+                      color: _brandGreen,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -283,9 +312,9 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             child: Container(
               height: 220,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.grey.shade200,
+                color: const Color(0xFF050505),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: borderColor),
+                border: Border.all(color: borderColor, width: 1),
               ),
               clipBehavior: Clip.antiAlias,
               child: _preview != null && _preview!.value.isInitialized
@@ -326,19 +355,19 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                   : Center(
                       child: _checking
                           ? const CircularProgressIndicator(
-                              color: AppColors.primary)
+                              color: Colors.white)
                           : Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.video_library_outlined,
                                   size: 48,
-                                  color: secondary,
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   l10n.pickFromGallery,
-                                  style: TextStyle(color: secondary),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
@@ -346,13 +375,13 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
           if (_compressing) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
+                color: _brandGreen.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: borderColor, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,13 +391,16 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _brandGreen,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           '${l10n.compressingVideo} ${(_compressProgress * 100).toStringAsFixed(0)}%',
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13, color: primaryText),
                         ),
                       ),
                     ],
@@ -377,46 +409,59 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                   LinearProgressIndicator(
                     value: _compressProgress.clamp(0.0, 1.0),
                     minHeight: 6,
-                    backgroundColor:
-                        AppColors.primary.withValues(alpha: 0.15),
-                    color: AppColors.primary,
+                    backgroundColor: _brandGreen.withValues(alpha: 0.15),
+                    color: _brandGreen,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
           ],
-
           TextField(
             controller: _titleCtrl,
+            style: TextStyle(color: primaryText),
             decoration: InputDecoration(
               labelText: '${l10n.title} (${l10n.optional})',
-              border: const OutlineInputBorder(),
+              labelStyle: TextStyle(color: secondary),
+              border: inputBorder,
+              enabledBorder: inputBorder,
+              focusedBorder: focusedBorder,
               isDense: true,
             ),
           ),
           const SizedBox(height: 12),
-
           TextField(
             controller: _descCtrl,
             maxLines: 3,
+            style: TextStyle(color: primaryText),
             decoration: InputDecoration(
               labelText: l10n.description,
-              border: const OutlineInputBorder(),
+              labelStyle: TextStyle(color: secondary),
+              border: inputBorder,
+              enabledBorder: inputBorder,
+              focusedBorder: focusedBorder,
             ),
           ),
           const SizedBox(height: 12),
-
           Text(
             l10n.optionalCategory,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: primaryText,
+            ),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
             value: _categoryGroup,
+            dropdownColor: cardBg,
+            style: TextStyle(color: primaryText),
             decoration: InputDecoration(
               labelText: l10n.selectGroup,
-              border: const OutlineInputBorder(),
+              labelStyle: TextStyle(color: secondary),
+              border: inputBorder,
+              enabledBorder: inputBorder,
+              focusedBorder: focusedBorder,
               isDense: true,
             ),
             items: [
@@ -440,9 +485,14 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             const SizedBox(height: 10),
             DropdownButtonFormField<String?>(
               value: _category,
+              dropdownColor: cardBg,
+              style: TextStyle(color: primaryText),
               decoration: InputDecoration(
                 labelText: l10n.selectSubcategory,
-                border: const OutlineInputBorder(),
+                labelStyle: TextStyle(color: secondary),
+                border: inputBorder,
+                enabledBorder: inputBorder,
+                focusedBorder: focusedBorder,
                 isDense: true,
               ),
               items: [
@@ -462,6 +512,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
           ],
           if (_category != null || _categoryGroup != null)
             TextButton(
+              style: TextButton.styleFrom(foregroundColor: _brandGreen),
               onPressed: () => setState(() {
                 _category = null;
                 _categoryGroup = null;
@@ -469,21 +520,23 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
               child: Text(l10n.clearCategory),
             ),
           const SizedBox(height: 12),
-
           TextField(
             controller: _tagsCtrl,
+            style: TextStyle(color: primaryText),
             decoration: InputDecoration(
               labelText: l10n.tagsHint,
-              border: const OutlineInputBorder(),
+              labelStyle: TextStyle(color: secondary),
+              border: inputBorder,
+              enabledBorder: inputBorder,
+              focusedBorder: focusedBorder,
               isDense: true,
             ),
           ),
           const SizedBox(height: 8),
-
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.primary,
-            title: Text(l10n.seriesMode),
+            activeColor: _brandGreen,
+            title: Text(l10n.seriesMode, style: TextStyle(color: primaryText)),
             subtitle: Text(
               l10n.seriesModeDesc,
               style: TextStyle(fontSize: 12, color: secondary),
@@ -498,14 +551,17 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
                       }
                     }),
           ),
-
           if (_asSeries) ...[
             const SizedBox(height: 8),
             TextField(
               controller: _seriesTitleCtrl,
+              style: TextStyle(color: primaryText),
               decoration: InputDecoration(
                 labelText: l10n.seriesName,
-                border: const OutlineInputBorder(),
+                labelStyle: TextStyle(color: secondary),
+                border: inputBorder,
+                enabledBorder: inputBorder,
+                focusedBorder: focusedBorder,
                 isDense: true,
               ),
             ),
@@ -513,17 +569,20 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             TextField(
               controller: _partCtrl,
               keyboardType: TextInputType.number,
+              style: TextStyle(color: primaryText),
               decoration: InputDecoration(
                 labelText: l10n.partNumber,
-                border: const OutlineInputBorder(),
+                labelStyle: TextStyle(color: secondary),
+                border: inputBorder,
+                enabledBorder: inputBorder,
+                focusedBorder: focusedBorder,
                 isDense: true,
               ),
             ),
           ],
-
           if (_uploading && !_compressing) ...[
             const SizedBox(height: 24),
-            const LinearProgressIndicator(),
+            const LinearProgressIndicator(color: _brandGreen),
             const SizedBox(height: 8),
             Text(
               l10n.uploadingPleaseWait,
