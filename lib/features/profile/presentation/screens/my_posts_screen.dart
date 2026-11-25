@@ -13,7 +13,6 @@ import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
 import '../../../../core/services/video_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -28,6 +27,11 @@ class MyPostsScreen extends ConsumerStatefulWidget {
 
 class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
     with SingleTickerProviderStateMixin {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _storyService = StoryService();
   final _novelService = NovelService();
   final _videoService = VideoService();
@@ -75,7 +79,6 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
         _loading = false;
       });
 
-      // tab length adjust
       final desiredLength = videoOn ? 3 : 2;
       if (_tab.length != desiredLength) {
         final currentIndex = _tab.index.clamp(0, desiredLength - 1);
@@ -139,7 +142,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
+              style: const TextStyle(color: _dangerColor),
             ),
           ),
         ],
@@ -150,10 +153,21 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final tabCount = _videoOn ? 3 : 2;
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.myWorks),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -163,8 +177,9 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen>
             ? null
             : TabBar(
                 controller: _tab,
-                labelColor: AppColors.primary,
-                indicatorColor: AppColors.primary,
+                labelColor: _brandGreen,
+                unselectedLabelColor: secondary,
+                indicatorColor: _brandGreen,
                 tabs: [
                   Tab(text: l10n.story),
                   Tab(text: l10n.novel),
