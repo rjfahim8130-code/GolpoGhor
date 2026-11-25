@@ -1,6 +1,5 @@
+// lib/core/widgets/app_dot_menu.dart
 import 'package:flutter/material.dart';
-
-import '../theme/app_colors.dart';
 
 /// থ্রি-ডট মেনু — যেখানে লাগবে একই রকম
 class AppDotMenuItem {
@@ -29,30 +28,38 @@ class AppDotMenu extends StatelessWidget {
     this.iconSize = 22,
   });
 
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // ডার্ক মোডে সাদা, লাইট মোডে কালো (যাতে ফেসবুকের মতো ঝকঝকে দেখায়)
-    final defaultIconColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final defaultIconColor =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final menuBg =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final textColor =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return PopupMenuButton<int>(
       icon: Icon(
-        Icons.more_vert, // লম্বালম্বি ৩ ডট যেমন ছিল তেমনই আছে
+        Icons.more_vert,
         color: iconColor ?? defaultIconColor,
         size: iconSize,
       ),
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      color: menuBg,
+      elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        ),
+        side: BorderSide(color: borderColor, width: 1),
       ),
       onSelected: (i) => items[i].onTap(),
       itemBuilder: (_) => List.generate(items.length, (i) {
         final item = items[i];
+        final itemColor = item.danger ? _dangerColor : textColor;
         return PopupMenuItem<int>(
           value: i,
           child: Row(
@@ -60,14 +67,12 @@ class AppDotMenu extends StatelessWidget {
               Icon(
                 item.icon,
                 size: 20,
-                color: item.danger ? AppColors.danger : defaultIconColor,
+                color: itemColor,
               ),
               const SizedBox(width: 12),
               Text(
                 item.label,
-                style: TextStyle(
-                  color: item.danger ? AppColors.danger : defaultIconColor,
-                ),
+                style: TextStyle(color: itemColor),
               ),
             ],
           ),
