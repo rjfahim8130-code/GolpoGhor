@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class ReactionPicker {
   ReactionPicker._();
+
+  static const Color _brandGreen = Color(0xFF159447);
 
   static const Map<String, String> _labels = {
     'like': '👍',
@@ -20,8 +21,6 @@ class ReactionPicker {
 
   static String emoji(String? type) => _labels[type] ?? '👍';
 
-  /// locale-aware reaction name (l10n থেকে)
-  /// যেমন: reactionLike, reactionLove, reactionWow, reactionSad, reactionFire
   static String name(BuildContext context, String? type) {
     final l10n = context.l10n;
     switch (type) {
@@ -42,27 +41,30 @@ class ReactionPicker {
 
   static Color color(String? type) {
     switch (type) {
-      case 'like':
-        return AppColors.like;
       case 'love':
-        return AppColors.love;
+        return const Color(0xFFE41E3F);
+      case 'like':
       case 'wow':
-        return AppColors.wow;
       case 'sad':
-        return AppColors.sad;
       case 'fire':
-        return AppColors.fire;
       default:
-        return AppColors.primary;
+        return _brandGreen;
     }
   }
 
   static Future<String?> show(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final handleColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -77,16 +79,17 @@ class ReactionPicker {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: handleColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.reaction,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -108,7 +111,8 @@ class ReactionPicker {
                             const SizedBox(height: 4),
                             Text(
                               name(context, type),
-                              style: const TextStyle(fontSize: 11),
+                              style:
+                                  TextStyle(fontSize: 11, color: primaryText),
                             ),
                           ],
                         ),
