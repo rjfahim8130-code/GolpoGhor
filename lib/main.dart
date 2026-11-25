@@ -39,7 +39,6 @@ Future<void> main() async {
         DeviceOrientation.portraitDown,
       ]);
 
-      // Theme + Locale + Session Cache prefs আগে load করি
       final container = ProviderContainer();
       try {
         await container.read(themeModeProvider.notifier).load();
@@ -62,10 +61,9 @@ Future<void> main() async {
       try {
         await Supabase.initialize(
           url: SupabaseConstants.supabaseUrl,
-          anonKey: SupabaseConstants.supabaseAnonKey, // publishableKey থেকে anonKey-তে নামানো হলো
+          anonKey: SupabaseConstants.supabaseAnonKey,
         );
 
-        // ✅ পুশ নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ
         await PushNotificationService.instance.init();
 
         debugPrint('SUPABASE_INIT: success');
@@ -109,7 +107,7 @@ class _BootErrorApp extends StatelessWidget {
         builder: (context) {
           final l10n = context.l10n;
           return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFFFFFFFF),
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -117,26 +115,44 @@ class _BootErrorApp extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 40),
-                    const Icon(Icons.error_outline, color: Colors.red, size: 56),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Color(0xFFE41E3F),
+                      size: 56,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       l10n.appName,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF050505),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(l10n.bootErrorHelp),
+                    Text(
+                      l10n.bootErrorHelp,
+                      style: const TextStyle(color: Color(0xFF65676B)),
+                    ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
-                        color: Colors.grey.shade100,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F2F5),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFE4E6EB),
+                            width: 1,
+                          ),
+                        ),
                         child: SingleChildScrollView(
                           child: SelectableText(
                             message,
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF050505),
+                            ),
                           ),
                         ),
                       ),
