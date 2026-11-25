@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
 class SegmentedTab extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final List<String> labels;
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -19,6 +19,12 @@ class SegmentedTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedBg =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final unselectedText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return SizedBox(
       height: 38,
@@ -37,18 +43,11 @@ class SegmentedTab extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: selected
-                      ? AppColors.primary
-                      : (isDark
-                          ? AppColors.darkCard
-                          : AppColors.lightCard),
+                  color: selected ? _brandGreen : unselectedBg,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: selected
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
+                    color: selected ? _brandGreen : borderColor,
+                    width: 1,
                   ),
                 ),
                 child: Text(
@@ -57,11 +56,7 @@ class SegmentedTab extends StatelessWidget {
                     fontSize: 13,
                     fontWeight:
                         selected ? FontWeight.w600 : FontWeight.normal,
-                    color: selected
-                        ? Colors.white
-                        : (isDark
-                            ? AppColors.darkText
-                            : AppColors.lightText),
+                    color: selected ? Colors.white : unselectedText,
                   ),
                 ),
               ),
