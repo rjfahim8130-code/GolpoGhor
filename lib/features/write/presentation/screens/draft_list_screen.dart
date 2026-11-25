@@ -9,7 +9,6 @@ import '../../../../core/models/novel_model.dart';
 import '../../../../core/models/story_model.dart';
 import '../../../../core/services/novel_service.dart';
 import '../../../../core/services/story_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -23,6 +22,13 @@ class DraftListScreen extends StatefulWidget {
 }
 
 class _DraftListScreenState extends State<DraftListScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _storyService = StoryService();
   final _novelService = NovelService();
 
@@ -78,7 +84,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
+              style: const TextStyle(color: _dangerColor),
             ),
           ),
         ],
@@ -105,7 +111,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
+              style: const TextStyle(color: _dangerColor),
             ),
           ),
         ],
@@ -120,12 +126,21 @@ class _DraftListScreenState extends State<DraftListScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final empty = _storyDrafts.isEmpty && _novelDrafts.isEmpty;
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.drafts),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -146,6 +161,7 @@ class _DraftListScreenState extends State<DraftListScreen> {
                       title: l10n.noDrafts,
                     )
                   : RefreshIndicator(
+                      color: _brandGreen,
                       onRefresh: _load,
                       child: ListView(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -153,92 +169,106 @@ class _DraftListScreenState extends State<DraftListScreen> {
                           if (_storyDrafts.isNotEmpty) ...[
                             _sectionTitle(l10n.story, secondary),
                             ..._storyDrafts.map((s) {
-                              return ListTile(
-                                title: Text(
-                                  s.title.isEmpty ? l10n.untitled : s.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  s.updatedAt != null
-                                      ? '${l10n.updatedOn}: ${s.updatedAt!.day}/${s.updatedAt!.month}/${s.updatedAt!.year}'
-                                      : '',
-                                  style: TextStyle(color: secondary),
-                                ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (v) {
-                                    if (v == 'edit') {
-                                      context.push(
-                                        '${RouteNames.writeStory}/${s.id}',
-                                      );
-                                    }
-                                    if (v == 'delete') _deleteStory(s);
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(l10n.edit),
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    title: Text(
+                                      s.title.isEmpty ? l10n.untitled : s.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: primaryText),
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        l10n.delete,
-                                        style: const TextStyle(
-                                          color: AppColors.danger,
+                                    subtitle: Text(
+                                      s.updatedAt != null
+                                          ? '${l10n.updatedOn}: ${s.updatedAt!.day}/${s.updatedAt!.month}/${s.updatedAt!.year}'
+                                          : '',
+                                      style: TextStyle(color: secondary),
+                                    ),
+                                    trailing: PopupMenuButton<String>(
+                                      iconColor: secondary,
+                                      onSelected: (v) {
+                                        if (v == 'edit') {
+                                          context.push(
+                                            '${RouteNames.writeStory}/${s.id}',
+                                          );
+                                        }
+                                        if (v == 'delete') _deleteStory(s);
+                                      },
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text(l10n.edit),
                                         ),
-                                      ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text(
+                                            l10n.delete,
+                                            style: const TextStyle(
+                                              color: _dangerColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                onTap: () => context.push(
-                                  '${RouteNames.writeStory}/${s.id}',
-                                ),
+                                    onTap: () => context.push(
+                                      '${RouteNames.writeStory}/${s.id}',
+                                    ),
+                                  ),
+                                  Divider(height: 1, color: borderColor),
+                                ],
                               );
                             }),
                           ],
                           if (_novelDrafts.isNotEmpty) ...[
                             _sectionTitle(l10n.novel, secondary),
                             ..._novelDrafts.map((n) {
-                              return ListTile(
-                                title: Text(
-                                  n.title.isEmpty ? l10n.untitled : n.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  n.updatedAt != null
-                                      ? '${l10n.updatedOn}: ${n.updatedAt!.day}/${n.updatedAt!.month}/${n.updatedAt!.year}'
-                                      : '',
-                                  style: TextStyle(color: secondary),
-                                ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (v) {
-                                    if (v == 'edit') {
-                                      context.push(
-                                        '${RouteNames.writeNovel}/${n.id}',
-                                      );
-                                    }
-                                    if (v == 'delete') _deleteNovel(n);
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(l10n.edit),
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    title: Text(
+                                      n.title.isEmpty ? l10n.untitled : n.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: primaryText),
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        l10n.delete,
-                                        style: const TextStyle(
-                                          color: AppColors.danger,
+                                    subtitle: Text(
+                                      n.updatedAt != null
+                                          ? '${l10n.updatedOn}: ${n.updatedAt!.day}/${n.updatedAt!.month}/${n.updatedAt!.year}'
+                                          : '',
+                                      style: TextStyle(color: secondary),
+                                    ),
+                                    trailing: PopupMenuButton<String>(
+                                      iconColor: secondary,
+                                      onSelected: (v) {
+                                        if (v == 'edit') {
+                                          context.push(
+                                            '${RouteNames.writeNovel}/${n.id}',
+                                          );
+                                        }
+                                        if (v == 'delete') _deleteNovel(n);
+                                      },
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text(l10n.edit),
                                         ),
-                                      ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text(
+                                            l10n.delete,
+                                            style: const TextStyle(
+                                              color: _dangerColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                onTap: () => context.push(
-                                  '${RouteNames.writeNovel}/${n.id}',
-                                ),
+                                    onTap: () => context.push(
+                                      '${RouteNames.writeNovel}/${n.id}',
+                                    ),
+                                  ),
+                                  Divider(height: 1, color: borderColor),
+                                ],
                               );
                             }),
                           ],
