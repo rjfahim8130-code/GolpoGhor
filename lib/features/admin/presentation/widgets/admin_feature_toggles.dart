@@ -6,34 +6,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class AdminFeatureToggles extends ConsumerWidget {
   const AdminFeatureToggles({super.key});
+
+  static const Color _brandGreen = Color(0xFF159447);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardColor =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Card(
       elevation: 0,
       color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor, width: 1),
       ),
       child: SwitchListTile(
-        activeColor: AppColors.primary,
-        title: Text(l10n.videoFeature),
+        activeColor: _brandGreen,
+        title: Text(l10n.videoFeature, style: TextStyle(color: primaryText)),
         subtitle: Text(
           videoOn ? l10n.videoFeatureDescOn : l10n.videoFeatureDescOff,
-          style: const TextStyle(fontSize: 12),
+          style: TextStyle(fontSize: 12, color: secondaryText),
         ),
         secondary: Icon(
           videoOn ? Icons.videocam : Icons.videocam_off,
-          color: videoOn ? AppColors.primary : Colors.grey,
+          color: videoOn ? _brandGreen : secondaryText,
         ),
         value: videoOn,
         onChanged: (v) async {
