@@ -633,7 +633,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
         .showSnackBar(SnackBar(content: Text(context.l10n.copied)));
   }
 
-  // রিডারের ৩টি স্বাধীন মোড: Light, Sepia, Dark
   Color get _bgColor {
     switch (_globalReaderTheme) {
       case ReaderTheme.light:
@@ -871,58 +870,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                   fontWeight: FontWeight.bold,
                                   height: 1.3,
                                   color: textPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (Supabase.instance.client.auth
-                                                .currentUser?.id !=
-                                            null &&
-                                        Supabase.instance.client.auth
-                                                .currentUser?.id !=
-                                            authorId) ...[
-                                      const SizedBox(width: 6),
-                                      GestureDetector(
-                                        onTap: _followBusy
-                                            ? null
-                                            : () =>
-                                                _toggleFollowAuthor(authorId),
-                                        child: Icon(
-                                          _isFollowingAuthor
-                                              ? Icons.check_circle
-                                              : Icons.add_circle_outline,
-                                          size: 20,
-                                          color: _barGreen,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '$_authorFollowerCount ${l10n.followers}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: (22 * _globalFontScale).toDouble(),
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.3,
-                                  color: textPrimary,
                                 ),
                               ),
                             ),
@@ -1101,4 +1048,3 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 }
-         
