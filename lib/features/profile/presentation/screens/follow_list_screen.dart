@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/follow_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/error_view.dart';
@@ -29,6 +28,12 @@ class FollowListScreen extends StatefulWidget {
 }
 
 class _FollowListScreenState extends State<FollowListScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = FollowService();
   List<UserModel> _users = [];
   bool _loading = true;
@@ -69,11 +74,20 @@ class _FollowListScreenState extends State<FollowListScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(_isFollowers ? l10n.followers : l10n.following),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -92,11 +106,12 @@ class _FollowListScreenState extends State<FollowListScreen> {
                           : l10n.notFollowingAnyone,
                     )
                   : RefreshIndicator(
+                      color: _brandGreen,
                       onRefresh: _load,
                       child: ListView.separated(
                         itemCount: _users.length,
                         separatorBuilder: (_, __) =>
-                            const Divider(height: 1),
+                            Divider(height: 1, color: borderColor),
                         itemBuilder: (_, i) {
                           final u = _users[i];
                           return ListTile(
@@ -108,8 +123,9 @@ class _FollowListScreenState extends State<FollowListScreen> {
                             ),
                             title: Text(
                               u.displayName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w600,
+                                color: primaryText,
                               ),
                             ),
                             subtitle: u.bio != null && u.bio!.trim().isNotEmpty
