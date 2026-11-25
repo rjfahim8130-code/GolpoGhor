@@ -1,18 +1,13 @@
 // lib/features/admin/presentation/widgets/admin_reports_list.dart
-// Deep Forest Green + report detail screen push + TimeAgo fix
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/report_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
-import '../../../../routing/route_names.dart';
 import '../screens/admin_report_detail_screen.dart';
 
 class AdminReportsList extends StatelessWidget {
-  final List<Map<String, dynamic>> reports;
+  final List> reports;
   final ReportService service;
   final Future<void> Function() onChanged;
 
@@ -23,9 +18,20 @@ class AdminReportsList extends StatelessWidget {
     required this.onChanged,
   });
 
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     if (reports.isEmpty) {
       return Padding(
@@ -33,14 +39,11 @@ class AdminReportsList extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.noOpenReports,
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: secondaryText),
           ),
         ),
       );
     }
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
 
     return Column(
       children: reports.map((r) {
@@ -48,9 +51,8 @@ class AdminReportsList extends StatelessWidget {
         final id = '${r['target_id'] ?? ''}';
         final reason = '${r['reason'] ?? ''}';
         final createdAtRaw = r['created_at']?.toString();
-        final createdAt = createdAtRaw != null
-            ? DateTime.tryParse(createdAtRaw)
-            : null;
+        final createdAt =
+            createdAtRaw != null ? DateTime.tryParse(createdAtRaw) : null;
 
         return Card(
           elevation: 0,
@@ -58,17 +60,19 @@ class AdminReportsList extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: borderColor, width: 1),
           ),
           child: ListTile(
             leading: const CircleAvatar(
-              backgroundColor: AppColors.danger,
+              backgroundColor: _dangerColor,
               child: Icon(Icons.flag, color: Colors.white, size: 18),
             ),
             title: Text(
               '${l10n.typeLabel}: $type',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: primaryText,
               ),
             ),
             subtitle: Column(
@@ -79,19 +83,25 @@ class AdminReportsList extends StatelessWidget {
                   '${l10n.reasonLabel}: $reason',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 12, color: secondaryText),
                 ),
                 Text(
                   'ID: $id'
                   '${createdAt != null ? " · ${TimeAgo.of(context, createdAt)}" : ""}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: Colors.grey,
+                    color: secondaryText,
                   ),
                 ),
               ],
             ),
             trailing: PopupMenuButton<String>(
+              color: cardColor,
+              icon: Icon(Icons.more_vert, color: primaryText),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: borderColor, width: 1),
+              ),
               onSelected: (v) async {
                 final rid = r['id']?.toString();
                 if (rid == null) return;
@@ -109,15 +119,16 @@ class AdminReportsList extends StatelessWidget {
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'open',
-                  child: Text(l10n.open),
+                  child: Text(l10n.open, style: TextStyle(color: primaryText)),
                 ),
                 PopupMenuItem(
                   value: 'reviewed',
-                  child: Text(l10n.reviewed),
+                  child:
+                      Text(l10n.reviewed, style: TextStyle(color: primaryText)),
                 ),
                 PopupMenuItem(
                   value: 'dismiss',
-                  child: Text(l10n.cancel),
+                  child: Text(l10n.cancel, style: TextStyle(color: primaryText)),
                 ),
               ],
             ),
