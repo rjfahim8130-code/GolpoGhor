@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
@@ -22,6 +21,10 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _nickname = TextEditingController();
@@ -102,15 +105,27 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     if (_init) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(
+          child: CircularProgressIndicator(color: _brandGreen),
+        ),
       );
     }
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.profile),
         automaticallyImplyLeading: false,
         actions: [
@@ -130,13 +145,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               children: [
                 Text(
                   l10n.setupProfileHint,
-                  style: const TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 15, color: primaryText),
                 ),
                 const SizedBox(height: 24),
-
-                // নাম
                 TextFormField(
                   controller: _name,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.fullName,
                     prefixIcon: const Icon(Icons.person_outline),
@@ -144,10 +158,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   validator: (v) => Validators.name(context, v),
                 ),
                 const SizedBox(height: 16),
-
-                // ডাক নাম
                 TextFormField(
                   controller: _nickname,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.nickname,
                     prefixIcon: const Icon(Icons.badge_outlined),
@@ -155,23 +168,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // বায়ো
                 TextFormField(
                   controller: _bio,
                   maxLines: 3,
+                  style: TextStyle(color: primaryText),
                   decoration: InputDecoration(
                     labelText: l10n.bio,
                     alignLabelWithHint: true,
                   ),
                 ),
                 const SizedBox(height: 28),
-
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: _brandGreen,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
