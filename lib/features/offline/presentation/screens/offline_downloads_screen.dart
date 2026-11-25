@@ -1,6 +1,4 @@
 // lib/features/offline/presentation/screens/offline_downloads_screen.dart
-// সংশোধিত: localization
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +7,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/offline_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../routing/route_names.dart';
@@ -24,6 +21,13 @@ class OfflineDownloadsScreen extends ConsumerStatefulWidget {
 
 class _OfflineDownloadsScreenState
     extends ConsumerState<OfflineDownloadsScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _service = OfflineService();
   List<OfflineItem> _items = [];
   bool _loading = true;
@@ -60,7 +64,7 @@ class _OfflineDownloadsScreenState
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: AppColors.danger),
+              style: const TextStyle(color: _dangerColor),
             ),
           ),
         ],
@@ -89,12 +93,21 @@ class _OfflineDownloadsScreenState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final online = ref.watch(networkStatusProvider);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.offline),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -104,7 +117,7 @@ class _OfflineDownloadsScreenState
           IconButton(
             icon: Icon(online ? Icons.wifi : Icons.wifi_off),
             tooltip: online ? l10n.goOnline : l10n.noInternet,
-            color: online ? AppColors.success : null,
+            color: online ? _brandGreen : primaryText,
             onPressed: _tryOnline,
           ),
           if (_items.isNotEmpty)
@@ -125,7 +138,7 @@ class _OfflineDownloadsScreenState
                         onPressed: () => Navigator.pop(ctx, true),
                         child: Text(
                           l10n.delete,
-                          style: const TextStyle(color: AppColors.danger),
+                          style: const TextStyle(color: _dangerColor),
                         ),
                       ),
                     ],
@@ -146,20 +159,21 @@ class _OfflineDownloadsScreenState
                 if (!online)
                   Container(
                     width: double.infinity,
-                    color: AppColors.warning.withValues(alpha: 0.15),
+                    color: isDark
+                        ? const Color(0xFF242526)
+                        : const Color(0xFFF0F2F5),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.wifi_off,
-                            size: 16, color: AppColors.warning),
+                        Icon(Icons.wifi_off, size: 16, color: secondary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             l10n.offlineBanner,
-                            style: const TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: 12, color: primaryText),
                           ),
                         ),
                       ],
@@ -173,34 +187,35 @@ class _OfflineDownloadsScreenState
                           subtitle: l10n.noDownloadsHint,
                         )
                       : RefreshIndicator(
+                          color: _brandGreen,
                           onRefresh: _load,
                           child: ListView.separated(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             itemCount: _items.length,
                             separatorBuilder: (_, __) =>
-                                const Divider(height: 1),
+                                Divider(height: 1, color: borderColor),
                             itemBuilder: (_, i) {
                               final item = _items[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: AppColors.primary
-                                      .withValues(alpha: 0.12),
+                                  backgroundColor:
+                                      _brandGreen.withValues(alpha: 0.12),
                                   child: Icon(
                                     item.kind == 'episode'
                                         ? Icons.menu_book_outlined
                                         : Icons.article_outlined,
-                                    color: AppColors.primary,
+                                    color: _brandGreen,
                                   ),
                                 ),
                                 title: Text(
                                   item.title,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: primaryText),
                                 ),
                                 subtitle: Text(
                                   [
-                                    if (item.subtitle != null)
-                                      item.subtitle!,
+                                    if (item.subtitle != null) item.subtitle!,
                                     if (item.authorName != null)
                                       item.authorName!,
                                     '${_fmt(item.savedAt)}',
@@ -213,7 +228,8 @@ class _OfflineDownloadsScreenState
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline),
+                                  icon: Icon(Icons.delete_outline,
+                                      color: secondary),
                                   onPressed: () => _delete(item),
                                 ),
                                 onTap: () => context.push(
