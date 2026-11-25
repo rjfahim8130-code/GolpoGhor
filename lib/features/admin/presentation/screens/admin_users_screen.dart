@@ -20,6 +20,12 @@ class AdminUsersScreen extends StatefulWidget {
 }
 
 class _AdminUsersScreenState extends State<AdminUsersScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = AdminService();
   final _search = TextEditingController();
   List<UserModel> _users = [];
@@ -80,9 +86,30 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+
+    final outlineBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: borderColor, width: 1),
+    );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _brandGreen, width: 1.5),
+    );
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.users),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -99,10 +126,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       padding: const EdgeInsets.all(12),
                       child: TextField(
                         controller: _search,
+                        style: TextStyle(color: primaryText),
                         decoration: InputDecoration(
                           hintText: l10n.searchHint,
-                          prefixIcon: const Icon(Icons.search),
-                          border: const OutlineInputBorder(),
+                          hintStyle: TextStyle(color: secondary),
+                          prefixIcon: Icon(Icons.search, color: secondary),
+                          border: outlineBorder,
+                          enabledBorder: outlineBorder,
+                          focusedBorder: focusedBorder,
                           isDense: true,
                         ),
                       ),
@@ -116,7 +147,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           : ListView.separated(
                               itemCount: _filtered.length,
                               separatorBuilder: (_, __) =>
-                                  const Divider(height: 1),
+                                  Divider(height: 1, color: borderColor),
                               itemBuilder: (_, i) {
                                 final u = _filtered[i];
                                 return ListTile(
@@ -127,13 +158,22 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                     radius: 20,
                                     tappable: false,
                                   ),
-                                  title: Text(u.displayNameOr(l10n.user)),
+                                  title: Text(
+                                    u.displayNameOr(l10n.user),
+                                    style: TextStyle(color: primaryText),
+                                  ),
                                   subtitle: u.hasNickname
-                                      ? Text('@${u.displayNickname}')
+                                      ? Text(
+                                          '@${u.displayNickname}',
+                                          style: TextStyle(color: secondary),
+                                        )
                                       : null,
                                   trailing: u.isAdmin
-                                      ? const Icon(Icons.shield,
-                                          color: Colors.orange, size: 18)
+                                      ? const Icon(
+                                          Icons.shield,
+                                          color: _brandGreen,
+                                          size: 18,
+                                        )
                                       : null,
                                   onTap: () => context.push(
                                     '${RouteNames.user}/${u.id}',
