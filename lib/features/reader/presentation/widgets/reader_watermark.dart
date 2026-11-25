@@ -3,15 +3,15 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
 class ReaderWatermark extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+
   const ReaderWatermark({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tint = isDark ? Colors.white : AppColors.primary;
+    final tint = isDark ? const Color(0xFFE4E6EB) : _brandGreen;
 
     return IgnorePointer(
       child: Stack(
