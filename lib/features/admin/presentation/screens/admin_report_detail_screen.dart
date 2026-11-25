@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/report_service.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class AdminReportDetailScreen extends StatefulWidget {
   final Map<String, dynamic> report;
@@ -18,6 +17,15 @@ class AdminReportDetailScreen extends StatefulWidget {
 }
 
 class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _service = ReportService();
   bool _busy = false;
 
@@ -34,7 +42,8 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
         );
         context.pop();
       }
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -43,10 +52,22 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final cardBg = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final r = widget.report;
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.report),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -59,36 +80,35 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              color: cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
-              ),
+              border: Border.all(color: borderColor, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.flag, color: AppColors.danger),
+                    const Icon(Icons.flag, color: _dangerColor),
                     const SizedBox(width: 8),
                     Text(
-                      '${l10n.typeLabel}: ${r['target_type']}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      '${l10n.typeLabel}:${r['target_type']}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: primaryText,
+                      ),
                     ),
                   ],
                 ),
-                const Divider(height: 20),
+                Divider(height: 20, color: borderColor),
                 Text(
-                  '${l10n.reasonLabel}: ${r['reason']}',
-                  style: const TextStyle(fontSize: 13),
+                  '${l10n.reasonLabel}:${r['reason']}',
+                  style: TextStyle(fontSize: 13, color: primaryText),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'ID: ${r['target_id']}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: secondary),
                 ),
               ],
             ),
@@ -96,7 +116,7 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
           const SizedBox(height: 20),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warning,
+              backgroundColor: _brandGreen,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
             ),
@@ -107,8 +127,8 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
           const SizedBox(height: 8),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
-              side: const BorderSide(color: AppColors.danger),
+              foregroundColor: _dangerColor,
+              side: const BorderSide(color: _dangerColor),
               minimumSize: const Size.fromHeight(48),
             ),
             onPressed: _busy ? null : () => _action('dismiss'),
