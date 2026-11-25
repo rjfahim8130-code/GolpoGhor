@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/screens/forgot_password_screen.dart
+// lib/features/auth/presentation/screens/forgot_password_screen.dart (Part 1)
 // Localization সহ
 
 import 'package:flutter/material.dart';
@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -17,6 +16,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _email = TextEditingController();
   final _otp = TextEditingController();
   final _pass = TextEditingController();
@@ -120,13 +123,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
-
+  // lib/features/auth/presentation/screens/forgot_password_screen.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.passwordReset),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -141,23 +153,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: _step == 0 ? _emailStep(l10n) : _otpStep(l10n),
+        child: _step == 0
+            ? _emailStep(l10n, primaryText)
+            : _otpStep(l10n, primaryText),
       ),
     );
   }
 
-  Widget _emailStep(AppLocalizations l10n) {
+  Widget _emailStep(AppLocalizations l10n, Color primaryText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           l10n.otpEmailHint,
-          style: const TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: 14, color: primaryText),
         ),
         const SizedBox(height: 24),
         TextField(
           controller: _email,
           keyboardType: TextInputType.emailAddress,
+          style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.email,
             prefixIcon: const Icon(Icons.email_outlined),
@@ -168,7 +183,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           height: 50,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: _brandGreen,
               foregroundColor: Colors.white,
             ),
             onPressed: _loading ? null : _sendOtp,
@@ -191,18 +206,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _otpStep(AppLocalizations l10n) {
+  Widget _otpStep(AppLocalizations l10n, Color primaryText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           '${_email.text.trim()} — ${l10n.otpSentTo}',
-          style: const TextStyle(fontSize: 14, height: 1.4),
+          style: TextStyle(fontSize: 14, height: 1.4, color: primaryText),
         ),
         const SizedBox(height: 20),
         TextField(
           controller: _otp,
           keyboardType: TextInputType.number,
+          style: TextStyle(color: primaryText),
           decoration: const InputDecoration(
             labelText: 'OTP',
             prefixIcon: Icon(Icons.pin_outlined),
@@ -212,6 +228,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         TextField(
           controller: _pass,
           obscureText: _obscure,
+          style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.newPassword,
             prefixIcon: const Icon(Icons.lock_outline),
@@ -227,6 +244,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         TextField(
           controller: _pass2,
           obscureText: _obscure,
+          style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.passwordAgain,
             prefixIcon: const Icon(Icons.lock_outline),
@@ -237,7 +255,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           height: 50,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: _brandGreen,
               foregroundColor: Colors.white,
             ),
             onPressed: _loading ? null : _confirmReset,
