@@ -7,9 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/content_block_model.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class ReaderContent extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final List<ContentBlockModel> blocks;
   final double fontScale;
   final Color? textColor;
@@ -73,7 +74,9 @@ class ReaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final color = textColor ?? const Color(0xFF1B3D2F);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = textColor ??
+        (isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505));
     final secondary = secondaryColor ?? color.withValues(alpha: 0.65);
 
     if (blocks.isEmpty) {
@@ -102,10 +105,10 @@ class ReaderContent extends StatelessWidget {
                   fit: BoxFit.cover,
                   memCacheWidth: 900,
                   placeholder: (_, __) => Container(
-                    color: AppColors.primary.withValues(alpha: 0.08),
+                    color: _brandGreen.withValues(alpha: 0.08),
                   ),
                   errorWidget: (_, __, ___) => Container(
-                    color: AppColors.primary.withValues(alpha: 0.08),
+                    color: _brandGreen.withValues(alpha: 0.08),
                     alignment: Alignment.center,
                     child: Icon(Icons.broken_image_outlined, color: secondary),
                   ),
@@ -122,11 +125,12 @@ class ReaderContent extends StatelessWidget {
           ),
           child: b.style == 'quote'
               ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     border: Border(
                       left: BorderSide(
-                        color: AppColors.primary.withValues(alpha: 0.5),
+                        color: _brandGreen.withValues(alpha: 0.5),
                         width: 3,
                       ),
                     ),
