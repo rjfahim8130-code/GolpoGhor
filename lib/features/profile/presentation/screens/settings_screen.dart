@@ -1,4 +1,4 @@
-// lib/features/profile/presentation/screens/settings_screen.dart
+// lib/features/profile/presentation/screens/settings_screen.dart (Part 1)
 // Theme, Language, Notification Controls, Account, Legal, About
 
 import 'package:flutter/material.dart';
@@ -23,6 +23,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   bool _pushEnabled = true;
   bool _likesEnabled = true;
   bool _commentsEnabled = true;
@@ -39,6 +43,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _pushEnabled = prefs.getBool('notif_push') ?? true;
       _likesEnabled = prefs.getBool('notif_likes') ?? true;
@@ -53,8 +58,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _saveSetting(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
-    
-    // ডেমো: টেস্ট করার জন্য নোটিফিকেশন দেখাবে
+
     if (value && key == 'notif_push') {
       PushNotificationService.instance.showNotification(
         id: 1,
@@ -63,15 +67,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
     }
   }
-
+  // lib/features/profile/presentation/screens/settings_screen.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final currentMode = ref.watch(themeModeProvider);
     final localeCode = ref.read(localeProvider.notifier).currentCode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final dividerColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.settings),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -86,7 +101,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(l10n.system),
             value: ThemeMode.system,
             groupValue: currentMode,
-            activeColor: AppColors.primary,
+            activeColor: _brandGreen,
             onChanged: (v) {
               if (v != null) ref.read(themeModeProvider.notifier).setMode(v);
             },
@@ -95,7 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(l10n.light),
             value: ThemeMode.light,
             groupValue: currentMode,
-            activeColor: AppColors.primary,
+            activeColor: _brandGreen,
             onChanged: (v) {
               if (v != null) ref.read(themeModeProvider.notifier).setMode(v);
             },
@@ -104,46 +119,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(l10n.dark),
             value: ThemeMode.dark,
             groupValue: currentMode,
-            activeColor: AppColors.primary,
+            activeColor: _brandGreen,
             onChanged: (v) {
               if (v != null) ref.read(themeModeProvider.notifier).setMode(v);
             },
           ),
-          const Divider(),
+          Divider(color: dividerColor),
 
           // ---------------- Language ----------------
           _sectionTitle(context, l10n.language),
           RadioListTile<String>(
             title: Text(l10n.system),
-            subtitle: Text(l10n.systemLanguageHint, style: const TextStyle(fontSize: 12)),
+            subtitle: Text(
+              l10n.systemLanguageHint,
+              style: const TextStyle(fontSize: 12),
+            ),
             value: 'system',
             groupValue: localeCode,
-            activeColor: AppColors.primary,
-            onChanged: (v) => ref.read(localeProvider.notifier).setLocale('system'),
+            activeColor: _brandGreen,
+            onChanged: (v) {
+              if (v != null) ref.read(localeProvider.notifier).setLocale(v);
+            },
           ),
           RadioListTile<String>(
             title: Text(l10n.bangla),
             value: 'bn',
             groupValue: localeCode,
-            activeColor: AppColors.primary,
-            onChanged: (v) => ref.read(localeProvider.notifier).setLocale('bn'),
+            activeColor: _brandGreen,
+            onChanged: (v) {
+              if (v != null) ref.read(localeProvider.notifier).setLocale(v);
+            },
           ),
           RadioListTile<String>(
             title: Text(l10n.english),
             value: 'en',
             groupValue: localeCode,
-            activeColor: AppColors.primary,
-            onChanged: (v) => ref.read(localeProvider.notifier).setLocale('en'),
+            activeColor: _brandGreen,
+            onChanged: (v) {
+              if (v != null) ref.read(localeProvider.notifier).setLocale(v);
+            },
           ),
-          const Divider(),
+          Divider(color: dividerColor),
 
           // ---------------- Notifications ----------------
           _sectionTitle(context, 'Notification Controls'),
           SwitchListTile(
-            title: const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: const Text(
+              'Push Notifications',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: const Text('Main switch for all app notifications'),
             value: _pushEnabled,
-            activeColor: AppColors.primary,
+            activeColor: _brandGreen,
             onChanged: (v) {
               setState(() => _pushEnabled = v);
               _saveSetting('notif_push', v);
@@ -153,6 +180,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SwitchListTile(
               title: Text(l10n.like),
               value: _likesEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _likesEnabled = v);
                 _saveSetting('notif_likes', v);
@@ -161,6 +189,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SwitchListTile(
               title: Text(l10n.comment),
               value: _commentsEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _commentsEnabled = v);
                 _saveSetting('notif_comments', v);
@@ -169,6 +198,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SwitchListTile(
               title: Text(l10n.notifMentioned),
               value: _mentionsEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _mentionsEnabled = v);
                 _saveSetting('notif_mentions', v);
@@ -177,6 +207,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SwitchListTile(
               title: Text(l10n.follow),
               value: _followersEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _followersEnabled = v);
                 _saveSetting('notif_followers', v);
@@ -186,6 +217,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: const Text('Author Updates'),
               subtitle: const Text('New stories from followed authors'),
               value: _authorUpdatesEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _authorUpdatesEnabled = v);
                 _saveSetting('notif_author_updates', v);
@@ -195,13 +227,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: const Text('Saved Content Updates'),
               subtitle: const Text('New episodes of bookmarked stories'),
               value: _savedContentUpdatesEnabled,
+              activeColor: _brandGreen,
               onChanged: (v) {
                 setState(() => _savedContentUpdatesEnabled = v);
                 _saveSetting('notif_saved_updates', v);
               },
             ),
           ],
-          const Divider(),
+          Divider(color: dividerColor),
 
           // ---------------- Account ----------------
           _sectionTitle(context, l10n.profile),
@@ -219,16 +252,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.warning),
-            title: Text(l10n.logout, style: const TextStyle(color: AppColors.warning)),
+            title: Text(
+              l10n.logout,
+              style: const TextStyle(color: AppColors.warning),
+            ),
             onTap: () => _confirmLogout(context, ref, l10n),
           ),
           ListTile(
             leading: const Icon(Icons.delete_forever, color: AppColors.danger),
-            title: Text(l10n.deleteAccount, style: const TextStyle(color: AppColors.danger)),
+            title: Text(
+              l10n.deleteAccount,
+              style: const TextStyle(color: AppColors.danger),
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(RouteNames.deleteAccount),
           ),
-          const Divider(),
+          Divider(color: dividerColor),
 
           // ---------------- Legal & About ----------------
           _sectionTitle(context, l10n.legal),
@@ -244,7 +283,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('${RouteNames.legal}/privacy'),
           ),
-          const Divider(),
+          Divider(color: dividerColor),
 
           _sectionTitle(context, l10n.about),
           ListTile(
@@ -261,19 +300,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _sectionTitle(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+  Future<void> _confirmLogout(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.logout),
         content: Text(l10n.logoutConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.logout)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.logout),
+          ),
         ],
       ),
     );
