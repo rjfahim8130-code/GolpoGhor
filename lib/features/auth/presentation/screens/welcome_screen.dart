@@ -1,11 +1,8 @@
 // lib/features/auth/presentation/screens/welcome_screen.dart
-// সাদা/কালো ব্যাকগ্রাউন্ড + সবুজ (#159447) বাটন + লোগো PNG + localization + offline link
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -19,6 +16,10 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
       backgroundColor: isDark ? _bgDark : _bgLight,
@@ -30,7 +31,7 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 40),
 
-              // ============ লোগো PNG ============
+              // লোগো PNG
               Center(
                 child: Image.asset(
                   'assets/images/logo.png',
@@ -48,32 +49,30 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // ============ অ্যাপের নাম ============
+              // অ্যাপের নাম
               Text(
                 l10n.appName,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  color: primaryText,
                 ),
               ),
               const SizedBox(height: 8),
 
-              // ============ Tagline ============
+              // Tagline
               Text(
                 l10n.appTagline,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: secondaryText,
                 ),
               ),
               const SizedBox(height: 20),
 
-              // ============ Offline Link ============
+              // Offline Link
               Center(
                 child: TextButton.icon(
                   style: TextButton.styleFrom(
@@ -90,16 +89,16 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(),
 
-              // ============ Login Button ============
+              // Login Button
               SizedBox(
-                height: 54,
+                height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _brandGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: () => context.push(RouteNames.login),
@@ -114,9 +113,9 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // ============ Register Button ============
+              // Register Button
               SizedBox(
-                height: 54,
+                height: 52,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _brandGreen,
@@ -125,27 +124,28 @@ class WelcomeScreen extends StatelessWidget {
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: () => context.push(RouteNames.register),
                   child: Text(
                     l10n.createAccount,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // ============ Footer ============
+              // Footer
               Text(
                 l10n.welcomeFooter,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: secondaryText,
                 ),
               ),
               const SizedBox(height: 8),
