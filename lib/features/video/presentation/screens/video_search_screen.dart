@@ -11,7 +11,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/models/video_model.dart';
 import '../../../../core/services/search_service.dart';
 import '../../../../core/services/search_suggestion_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_names.dart';
 
 class VideoSearchScreen extends StatefulWidget {
@@ -22,6 +21,10 @@ class VideoSearchScreen extends StatefulWidget {
 }
 
 class _VideoSearchScreenState extends State<VideoSearchScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _controller = TextEditingController();
   final _focus = FocusNode();
   final _search = SearchService();
@@ -105,7 +108,6 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
   }
 
   void _openVideo(VideoModel v) {
-    // ✅ FIX: focus query param সহ navigate
     context.push('${RouteNames.videos}?focus=${v.id}');
   }
 
@@ -113,9 +115,19 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: TextField(
           controller: _controller,
           focusNode: _focus,
@@ -123,8 +135,10 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
           textInputAction: TextInputAction.search,
           onChanged: _onChanged,
           onSubmitted: _run,
+          style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             hintText: l10n.searchHint,
+            hintStyle: TextStyle(color: secondary),
             border: InputBorder.none,
           ),
         ),
@@ -143,25 +157,37 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: _brandGreen),
+            )
           : _last.isEmpty
               ? _buildIdle(l10n, isDark)
               : _results.isEmpty
-                  ? Center(child: Text(l10n.noSearchResults))
+                  ? Center(
+                      child: Text(
+                        l10n.noSearchResults,
+                        style: TextStyle(color: secondary),
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: _results.length,
                       itemBuilder: (_, i) {
                         final v = _results[i];
                         return ListTile(
-                          leading: const Icon(Icons.videocam_outlined),
+                          leading: const Icon(
+                            Icons.videocam_outlined,
+                            color: _brandGreen,
+                          ),
                           title: Text(
                             v.displayTitleOr(l10n.video),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: primaryText),
                           ),
                           subtitle: Text(
                             v.authorName ?? l10n.author,
                             maxLines: 1,
+                            style: TextStyle(color: secondary),
                           ),
                           onTap: () => _openVideo(v),
                         );
@@ -171,22 +197,32 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
   }
 
   Widget _buildIdle(AppLocalizations l10n, bool isDark) {
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+    final chipBg =
+        isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         if (_top.isNotEmpty) ...[
-          Text(l10n.popularSearches,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            l10n.popularSearches,
+            style: TextStyle(fontWeight: FontWeight.bold, color: primaryText),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: _top
                 .map((q) => ActionChip(
-                      label: Text(q),
+                      backgroundColor: chipBg,
+                      side: BorderSide(color: borderColor),
+                      label: Text(q, style: TextStyle(color: primaryText)),
                       onPressed: () => _apply(q),
                     ))
                 .toList(),
@@ -194,30 +230,38 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
           const SizedBox(height: 20),
         ],
         if (_recent.isNotEmpty) ...[
-          Text(l10n.recent,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            l10n.recent,
+            style: TextStyle(fontWeight: FontWeight.bold, color: primaryText),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: _recent
                 .map((q) => ActionChip(
-                      label: Text(q),
+                      backgroundColor: chipBg,
+                      side: BorderSide(color: borderColor),
+                      label: Text(q, style: TextStyle(color: primaryText)),
                       onPressed: () => _apply(q),
                     ))
                 .toList(),
           ),
           const SizedBox(height: 20),
         ],
-        Text(l10n.category,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          l10n.category,
+          style: TextStyle(fontWeight: FontWeight.bold, color: primaryText),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: CategoryCatalog.videoGroups.map((g) {
             return ActionChip(
-              label: Text(l10n.t(g)),
+              backgroundColor: chipBg,
+              side: BorderSide(color: borderColor),
+              label: Text(l10n.t(g), style: TextStyle(color: primaryText)),
               onPressed: () => _apply(l10n.t(g)),
             );
           }).toList(),
