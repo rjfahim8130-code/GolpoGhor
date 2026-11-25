@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
@@ -20,6 +19,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -52,9 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (!mounted) return;
 
-      // সফল লগইনের পর প্রোফাইল ফেচ করে ক্যাশে সেভ করুন (অ্যাভাটার দ্রুত দেখানোর জন্য)
       try {
-        // এখানে fetchMyProfile()-এর পরিবর্তে সঠিক মেথড getMyProfile() ব্যবহার করা হয়েছে
         final profile = await _auth.getMyProfile();
         if (profile != null) {
           await ref.read(sessionCacheProvider.notifier).save(profile);
@@ -84,9 +85,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.login),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -103,7 +114,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ============ লোগো PNG ============
                   Center(
                     child: Image.asset(
                       'assets/images/logo.png',
@@ -114,29 +124,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         return const Icon(
                           Icons.auto_stories_rounded,
                           size: 90,
-                          color: AppColors.primary,
+                          color: _brandGreen,
                         );
                       },
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ অ্যাপের নাম (সবসময় বাংলা) ============
                   Text(
                     l10n.appName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
+                      color: primaryText,
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // ============ Email ============
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.email,
                       prefixIcon: const Icon(Icons.email_outlined),
@@ -145,13 +153,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     validator: (v) => Validators.email(context, v),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Password ============
                   TextFormField(
                     controller: _password,
                     obscureText: _obscure,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outline),
@@ -168,8 +175,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     validator: (v) => Validators.password(context, v),
                   ),
-
-                  // ============ Forgot Password ============
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -179,13 +184,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // ============ Login Button ============
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: _brandGreen,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -211,14 +214,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // ============ Register Link ============
                   TextButton(
                     onPressed: () => context.push(RouteNames.register),
                     child: Text(l10n.dontHaveAccount),
                   ),
-
-                  // ============ Offline Link ============
                   const SizedBox(height: 24),
                   TextButton.icon(
                     onPressed: () => context.push(RouteNames.offline),
@@ -228,17 +227,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     label: Text(l10n.readOfflineStories),
                   ),
-
-                  // ============ Version Text ============
                   const SizedBox(height: 16),
                   Text(
                     l10n.appName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: secondary,
                     ),
                   ),
                 ],
