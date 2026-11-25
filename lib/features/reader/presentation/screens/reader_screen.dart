@@ -1,4 +1,4 @@
-// lib/features/reader/presentation/screens/reader_screen.dart
+// lib/features/reader/presentation/screens/reader_screen.dart (Part 1)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +17,6 @@ import '../../../../core/services/offline_service.dart';
 import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/reading_history_service.dart';
 import '../../../../core/services/story_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../routing/route_names.dart';
@@ -128,7 +127,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _followBusy = false);
@@ -204,7 +204,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _authorName = story.authorName ?? story.authorNickname;
       _authorAvatar = story.authorAvatar;
       _authorFollowerCount = story.authorFollowerCount;
-      _loadFollowAuthor(story.authorId, followerCount: story.authorFollowerCount);
+      _loadFollowAuthor(story.authorId,
+          followerCount: story.authorFollowerCount);
       _bookmarked = bm;
       _myReaction = myR;
       _reactionTotal = counts.values.fold(0, (a, b) => a + b);
@@ -340,7 +341,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       );
     }
   }
-
+  // lib/features/reader/presentation/screens/reader_screen.dart (Part 2)
   Future<void> _pickReaction() async {
     final type = await ReactionPicker.show(context);
     if (type == null) return;
@@ -395,10 +396,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
       try {
         if (_isStory) {
           final s = await _storyService.getById(widget.id);
-          if (s != null && mounted) setState(() => _commentCount = s.commentCount);
+          if (s != null && mounted) {
+            setState(() => _commentCount = s.commentCount);
+          }
         } else {
           final ep = await _episodeService.getById(widget.id);
-          if (ep != null && mounted) setState(() => _commentCount = ep.commentCount);
+          if (ep != null && mounted) {
+            setState(() => _commentCount = ep.commentCount);
+          }
         }
       } catch (_) {}
     });
@@ -421,7 +426,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFFFFF),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -437,7 +442,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Color(0xFF050505),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -458,13 +463,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           },
                           icon: const Icon(
                             Icons.text_decrease,
-                            color: Colors.black87,
+                            color: Color(0xFF050505),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
+                            horizontal: 14,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             color: _barGreen.withValues(alpha: 0.12),
@@ -493,7 +498,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           },
                           icon: const Icon(
                             Icons.text_increase,
-                            color: Colors.black87,
+                            color: Color(0xFF050505),
                           ),
                         ),
                       ],
@@ -513,7 +518,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFFFFF),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModal) {
@@ -529,7 +534,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Color(0xFF050505),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -539,10 +544,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           child: _themeChip(
                             l10n.light,
                             ReaderTheme.light,
-                            const Color(0xFFF1F8F4),
-                            const Color(0xFF1B3D2F),
+                            const Color(0xFFFFFFFF),
+                            const Color(0xFF1C1E21),
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.light);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.light);
                               setModal(() {});
                             },
                           ),
@@ -552,10 +558,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           child: _themeChip(
                             'Sepia',
                             ReaderTheme.sepia,
-                            AppColors.sepiaBg,
-                            AppColors.sepiaText,
+                            const Color(0xFFF5EEDB),
+                            const Color(0xFF433422),
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.sepia);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.sepia);
                               setModal(() {});
                             },
                           ),
@@ -565,10 +572,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           child: _themeChip(
                             l10n.dark,
                             ReaderTheme.dark,
-                            const Color(0xFF1A1A1A),
-                            const Color(0xFFE8E8E8),
+                            const Color(0xFF18191A),
+                            const Color(0xFFE4E6EB),
                             () {
-                              setState(() => _globalReaderTheme = ReaderTheme.dark);
+                              setState(
+                                  () => _globalReaderTheme = ReaderTheme.dark);
                               setModal(() {});
                             },
                           ),
@@ -597,13 +605,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 80,
         height: 60,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? _barGreen : Colors.grey,
+            color: selected ? _barGreen : const Color(0xFFCED0D4),
             width: selected ? 2.5 : 1,
           ),
         ),
@@ -626,25 +633,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
         .showSnackBar(SnackBar(content: Text(context.l10n.copied)));
   }
 
+  // রিডারের ৩টি স্বাধীন মোড: Light, Sepia, Dark
   Color get _bgColor {
     switch (_globalReaderTheme) {
       case ReaderTheme.light:
-        return const Color(0xFFF1F8F4);
+        return const Color(0xFFFFFFFF);
       case ReaderTheme.sepia:
-        return AppColors.sepiaBg;
+        return const Color(0xFFF5EEDB);
       case ReaderTheme.dark:
-        return const Color(0xFF1A1A1A);
+        return const Color(0xFF18191A);
     }
   }
 
   Color get _textColor {
     switch (_globalReaderTheme) {
       case ReaderTheme.light:
-        return const Color(0xFF1B3D2F);
+        return const Color(0xFF1C1E21);
       case ReaderTheme.sepia:
-        return AppColors.sepiaText;
+        return const Color(0xFF433422);
       case ReaderTheme.dark:
-        return const Color(0xFFE8E8E8);
+        return const Color(0xFFE4E6EB);
     }
   }
 
@@ -654,15 +662,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final bg = _bgColor;
     final textPrimary = _textColor;
     final textSecondary = switch (_globalReaderTheme) {
-      ReaderTheme.light => const Color(0xFF5A7A6A),
-      ReaderTheme.sepia => AppColors.sepiaText.withValues(alpha: 0.72),
-      ReaderTheme.dark => const Color(0xFFA0A0A0),
+      ReaderTheme.light => const Color(0xFF65676B),
+      ReaderTheme.sepia => const Color(0xFF7A664E),
+      ReaderTheme.dark => const Color(0xFFB0B3B8),
     };
 
     if (_loading) {
       return Scaffold(
         backgroundColor: bg,
-        body: const Center(child: CircularProgressIndicator(color: _barGreen)),
+        body: const Center(
+          child: CircularProgressIndicator(color: _barGreen),
+        ),
       );
     }
 
@@ -680,7 +690,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
             children: [
               Text(l10n.t(_error!), style: TextStyle(color: textPrimary)),
               const SizedBox(height: 12),
-              TextButton(onPressed: _load, child: Text(l10n.again)),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: _barGreen),
+                onPressed: _load,
+                child: Text(l10n.again),
+              ),
             ],
           ),
         ),
@@ -697,8 +711,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final authorId = _isStory ? _story?.authorId : _episode?.authorId;
     final authorAvatar = _authorAvatar ?? _story?.authorAvatar;
     final publicCode = _isStory ? _story?.publicCode : _episode?.publicCode;
-    final contentBlocks =
-        _isStory ? (_story?.contentBlocks ?? []) : (_episode?.contentBlocks ?? []);
+    final contentBlocks = _isStory
+        ? (_story?.contentBlocks ?? [])
+        : (_episode?.contentBlocks ?? []);
 
     return Scaffold(
       backgroundColor: bg,
@@ -713,7 +728,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   child: Column(
                     children: [
                       SizedBox(
-                        height: 40,
+                        height: 44,
                         child: Row(
                           children: [
                             IconButton(
@@ -734,7 +749,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -782,7 +797,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 GestureDetector(
                                   onTap: () {
                                     if (authorId.isNotEmpty) {
-                                      context.push('${RouteNames.user}/$authorId');
+                                      context
+                                          .push('${RouteNames.user}/$authorId');
                                     }
                                   },
                                   child: CachedAvatar(
@@ -808,17 +824,18 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    if (Supabase.instance.client.auth.currentUser
-                                                ?.id !=
+                                    if (Supabase.instance.client.auth
+                                                .currentUser?.id !=
                                             null &&
-                                        Supabase.instance.client.auth.currentUser
-                                                ?.id !=
+                                        Supabase.instance.client.auth
+                                                .currentUser?.id !=
                                             authorId) ...[
                                       const SizedBox(width: 6),
                                       GestureDetector(
                                         onTap: _followBusy
                                             ? null
-                                            : () => _toggleFollowAuthor(authorId),
+                                            : () =>
+                                                _toggleFollowAuthor(authorId),
                                         child: Icon(
                                           _isFollowingAuthor
                                               ? Icons.check_circle
@@ -833,7 +850,62 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '$_authorFollowerCount ${l10n.followers}',
-                                  style: TextStyle(fontSize: 12, color: textSecondary),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: (22 * _globalFontScale).toDouble(),
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.3,
+                                  color: textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (Supabase.instance.client.auth
+                                                .currentUser?.id !=
+                                            null &&
+                                        Supabase.instance.client.auth
+                                                .currentUser?.id !=
+                                            authorId) ...[
+                                      const SizedBox(width: 6),
+                                      GestureDetector(
+                                        onTap: _followBusy
+                                            ? null
+                                            : () =>
+                                                _toggleFollowAuthor(authorId),
+                                        child: Icon(
+                                          _isFollowingAuthor
+                                              ? Icons.check_circle
+                                              : Icons.add_circle_outline,
+                                          size: 20,
+                                          color: _barGreen,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$_authorFollowerCount ${l10n.followers}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -986,8 +1058,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       heroTag: 'prev_ep',
                       backgroundColor: _barGreen,
                       foregroundColor: Colors.white,
-                      onPressed: () => context
-                          .pushReplacement('${RouteNames.episode}/${_prev!.id}'),
+                      onPressed: () => context.pushReplacement(
+                          '${RouteNames.episode}/${_prev!.id}'),
                       child: const Icon(Icons.chevron_left),
                     )
                   else
@@ -997,8 +1069,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       heroTag: 'next_ep',
                       backgroundColor: _barGreen,
                       foregroundColor: Colors.white,
-                      onPressed: () => context
-                          .pushReplacement('${RouteNames.episode}/${_next!.id}'),
+                      onPressed: () => context.pushReplacement(
+                          '${RouteNames.episode}/${_next!.id}'),
                       child: const Icon(Icons.chevron_right),
                     )
                   else
@@ -1029,4 +1101,4 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 }
-        
+         
