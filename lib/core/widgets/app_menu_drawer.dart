@@ -6,11 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/localization/app_localizations.dart';
-import '../../core/theme/app_colors.dart';
 import '../../routing/route_names.dart';
 import 'cached_avatar.dart';
 
 class AppMenuDrawer extends ConsumerWidget {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final String? userId;
   final String? userName;
   final String? userAvatar;
@@ -27,12 +31,18 @@ class AppMenuDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final drawerBg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
 
     return Drawer(
+      backgroundColor: drawerBg,
       child: SafeArea(
         child: Column(
           children: [
-            // হেডার
             InkWell(
               onTap: () {
                 Navigator.pop(context);
@@ -43,7 +53,12 @@ class AppMenuDrawer extends ConsumerWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
-                color: AppColors.primary.withValues(alpha: 0.1),
+                decoration: BoxDecoration(
+                  color: _brandGreen.withValues(alpha: 0.1),
+                  border: Border(
+                    bottom: BorderSide(color: borderColor, width: 1),
+                  ),
+                ),
                 child: Row(
                   children: [
                     Stack(
@@ -63,7 +78,7 @@ class AppMenuDrawer extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.all(3),
                               decoration: const BoxDecoration(
-                                color: AppColors.danger,
+                                color: _dangerColor,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -82,9 +97,10 @@ class AppMenuDrawer extends ConsumerWidget {
                         children: [
                           Text(
                             userName ?? l10n.user,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: primaryText,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -97,10 +113,10 @@ class AppMenuDrawer extends ConsumerWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.danger.withValues(alpha: 0.15),
+                                color: _dangerColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: AppColors.danger.withValues(alpha: 0.4),
+                                  color: _dangerColor.withValues(alpha: 0.4),
                                 ),
                               ),
                               child: const Text(
@@ -108,7 +124,7 @@ class AppMenuDrawer extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.danger,
+                                  color: _dangerColor,
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -125,37 +141,80 @@ class AppMenuDrawer extends ConsumerWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  // ✅ শুধুমাত্র লেখক-কেন্দ্রিক অপশনগুলো
-                  _tile(context, Icons.article_outlined, l10n.myWorks, RouteNames.myWorks),
-                  _tile(context, Icons.insights_outlined, l10n.insights, RouteNames.insights),
-                  _tile(context, Icons.bookmark_outline, l10n.saved, RouteNames.saved),
-                  _tile(context, Icons.drafts_outlined, l10n.drafts, RouteNames.drafts),
-                  _tile(context, Icons.download_outlined, l10n.download, RouteNames.offline),
-                  _tile(context, Icons.history, l10n.recent, RouteNames.history),
-                  const Divider(),
-
-                  // এডমিন সেকশন
+                  _tile(
+                    context,
+                    Icons.article_outlined,
+                    l10n.myWorks,
+                    RouteNames.myWorks,
+                    primaryText,
+                  ),
+                  _tile(
+                    context,
+                    Icons.insights_outlined,
+                    l10n.insights,
+                    RouteNames.insights,
+                    primaryText,
+                  ),
+                  _tile(
+                    context,
+                    Icons.bookmark_outline,
+                    l10n.saved,
+                    RouteNames.saved,
+                    primaryText,
+                  ),
+                  _tile(
+                    context,
+                    Icons.drafts_outlined,
+                    l10n.drafts,
+                    RouteNames.drafts,
+                    primaryText,
+                  ),
+                  _tile(
+                    context,
+                    Icons.download_outlined,
+                    l10n.download,
+                    RouteNames.offline,
+                    primaryText,
+                  ),
+                  _tile(
+                    context,
+                    Icons.history,
+                    l10n.recent,
+                    RouteNames.history,
+                    primaryText,
+                  ),
+                  Divider(color: borderColor),
                   if (isAdmin) ...[
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: 0.1),
+                        color: _dangerColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: AppColors.danger.withValues(alpha: 0.3),
+                          color: _dangerColor.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.admin_panel_settings, size: 16, color: AppColors.danger),
+                          Icon(
+                            Icons.admin_panel_settings,
+                            size: 16,
+                            color: _dangerColor,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'ADMIN SECTIONS',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.danger,
+                              color: _dangerColor,
                               letterSpacing: 1,
                             ),
                           ),
@@ -167,7 +226,8 @@ class AppMenuDrawer extends ConsumerWidget {
                       Icons.admin_panel_settings_outlined,
                       l10n.adminDashboard,
                       RouteNames.admin,
-                      color: AppColors.danger,
+                      primaryText,
+                      color: _dangerColor,
                     ),
                   ],
                 ],
@@ -179,10 +239,17 @@ class AppMenuDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _tile(BuildContext context, IconData icon, String label, String route, {Color? color}) {
+  Widget _tile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String route,
+    Color textColor, {
+    Color? color,
+  }) {
     return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(label, style: color != null ? TextStyle(color: color) : null),
+      leading: Icon(icon, color: color ?? _brandGreen),
+      title: Text(label, style: TextStyle(color: color ?? textColor)),
       onTap: () {
         Navigator.pop(context);
         context.push(route);
