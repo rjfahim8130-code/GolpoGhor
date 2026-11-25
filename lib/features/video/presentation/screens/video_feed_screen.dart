@@ -1,6 +1,4 @@
-// lib/features/video/presentation/screens/video_feed_screen.dart
-// New Reels Design: Transparent TopBar, Double Tap Like, Redesigned Sidebar
-
+// lib/features/video/presentation/screens/video_feed_screen.dart (Part 1)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +12,6 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/follow_service.dart';
 import '../../../../core/services/reaction_service.dart';
 import '../../../../core/services/video_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_ago.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -35,6 +32,9 @@ class VideoFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
+  static const Color _brandGreen = Color(0xFF159447);
+  static const Color _dangerColor = Color(0xFFE41E3F);
+
   final _service = VideoService();
   final _pageController = PageController();
   List<VideoModel> _items = [];
@@ -42,7 +42,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
   String? _error;
   int _currentIndex = 0;
 
-  // Top Bar Tabs
   int _selectedTab = 0;
   final List<String> _tabs = ['For You', 'Popular', 'Trending', 'Following'];
 
@@ -93,7 +92,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
 
     if (!videoOn) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF18191A),
         body: Center(
           child: Text(
             l10n.videoFeatureDisabled,
@@ -105,14 +104,14 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
 
     if (_loading) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF18191A),
         body: LoadingView(),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF18191A),
         body: ErrorView(
           message: l10n.t(_error!),
           onRetry: _load,
@@ -123,7 +122,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
 
     if (_items.isEmpty) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF18191A),
         body: EmptyState(
           icon: Icons.videocam_outlined,
           title: l10n.noVideosYet,
@@ -179,7 +178,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
               );
             },
           ),
-          // ✅ নতুন ট্রান্সপারেন্ট টপ বার
           Positioned(
             top: 0,
             left: 0,
@@ -187,7 +185,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     Expanded(
@@ -224,10 +223,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.search, color: Colors.white, size: 22),
+                      icon: const Icon(Icons.search,
+                          color: Colors.white, size: 22),
                       onPressed: () => context.push(RouteNames.videoSearch),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 40),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 40),
                     ),
                   ],
                 ),
@@ -239,6 +240,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen> {
     );
   }
 }
+
 class _VideoFeedItem extends ConsumerStatefulWidget {
   final VideoModel video;
   final bool isActive;
@@ -276,7 +278,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
   bool _autoLoop = false;
   bool _isFollowing = false;
 
-  // ডাবল ট্যাপ লাভ অ্যানিমেশনের জন্য
   bool _showHeartAnim = false;
 
   VideoModel? _nextPart;
@@ -385,7 +386,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     }
   }
 
-  // ✅ ওয়ান ক্লিকে প্লে/পজ
   void _togglePlay() {
     final c = _controller;
     if (c == null || !_initialized) return;
@@ -397,7 +397,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     setState(() {});
   }
 
-  // ✅ ডাবল ক্লিকে লাভ রিয়েক্ট
   Future<void> _handleDoubleTap() async {
     setState(() => _showHeartAnim = true);
     Future.delayed(const Duration(milliseconds: 800), () {
@@ -446,106 +445,109 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
       }
     }
   }
+  // lib/features/video/presentation/screens/video_feed_screen.dart (Part 2)
   void _openMore() {
-  final l10n = context.l10n;
-  final v = widget.video;
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.grey.shade900,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ✅ শেয়ার অপশনটি এখান থেকে বাদ দেওয়া হয়েছে
-          ListTile(
-            leading: const Icon(Icons.flag_outlined, color: Colors.white),
-            title: Text(
-              l10n.report,
-              style: const TextStyle(color: Colors.white),
-            ),
-            onTap: () {
-              Navigator.pop(ctx);
-              ReportSheet.show(
-                context,
-                targetType: 'video',
-                targetId: v.id,
-                title: l10n.reportVideo,
-              );
-            },
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.loop, color: Colors.white),
-            title: Text(
-              l10n.autoLoop,
-              style: const TextStyle(color: Colors.white),
-            ),
-            value: _autoLoop,
-            activeColor: AppColors.primaryLight,
-            onChanged: (val) {
-              setState(() => _autoLoop = val);
-              _controller?.setLooping(val);
-              Navigator.pop(ctx);
-            },
-          ),
-          if (_isOwner) ...[
-            const Divider(color: Colors.white24),
+    final l10n = context.l10n;
+    final v = widget.video;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF242526),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Colors.white),
+              leading: const Icon(Icons.flag_outlined, color: Colors.white),
               title: Text(
-                l10n.edit,
+                l10n.report,
                 style: const TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                context.push('${RouteNames.createVideo}/${v.id}');
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: AppColors.danger,
-              ),
-              title: Text(
-                l10n.delete,
-                style: const TextStyle(color: AppColors.danger),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (d) => AlertDialog(
-                    title: Text(l10n.deleteVideoConfirm),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(d, false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(d, true),
-                        child: Text(
-                          l10n.delete,
-                          style: const TextStyle(color: AppColors.danger),
-                        ),
-                      ),
-                    ],
-                  ),
+                ReportSheet.show(
+                  context,
+                  targetType: 'video',
+                  targetId: v.id,
+                  title: l10n.reportVideo,
                 );
-                if (ok == true) {
-                  await _service.deleteVideo(v.id);
-                  widget.onDeleted?.call();
-                }
               },
             ),
+            SwitchListTile(
+              secondary: const Icon(Icons.loop, color: Colors.white),
+              title: Text(
+                l10n.autoLoop,
+                style: const TextStyle(color: Colors.white),
+              ),
+              value: _autoLoop,
+              activeColor: _VideoFeedScreenState._brandGreen,
+              onChanged: (val) {
+                setState(() => _autoLoop = val);
+                _controller?.setLooping(val);
+                Navigator.pop(ctx);
+              },
+            ),
+            if (_isOwner) ...[
+              const Divider(color: Colors.white24),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined, color: Colors.white),
+                title: Text(
+                  l10n.edit,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.push('${RouteNames.createVideo}/${v.id}');
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: _VideoFeedScreenState._dangerColor,
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(
+                      color: _VideoFeedScreenState._dangerColor),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (d) => AlertDialog(
+                      title: Text(l10n.deleteVideoConfirm),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(d, false),
+                          child: Text(l10n.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(d, true),
+                          child: Text(
+                            l10n.delete,
+                            style: const TextStyle(
+                                color: _VideoFeedScreenState._dangerColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (ok == true) {
+                    await _service.deleteVideo(v.id);
+                    widget.onDeleted?.call();
+                  }
+                },
+              ),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
-  );
+    );
   }
-    @override
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final v = widget.video;
@@ -563,7 +565,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ভিডিও প্লেয়ার (ওয়ান ট্যাপ ও ডাবল ট্যাপ লজিক)
         Positioned(
           top: topSpace,
           left: 0,
@@ -582,12 +583,12 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     ),
                   )
                 : const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(
+                      color: _VideoFeedScreenState._brandGreen,
+                    ),
                   ),
           ),
         ),
-        
-        // ডাবল ট্যাপে হার্ট অ্যানিমেশন
         if (_showHeartAnim)
           const Center(
             child: Icon(
@@ -596,7 +597,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               color: Colors.white,
             ),
           ),
-
         if (ok && !c.value.isPlaying && !_showHeartAnim)
           Center(
             child: IgnorePointer(
@@ -607,14 +607,13 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
             ),
           ),
-
         if (_showNextPart && _nextPart != null)
           Positioned(
             left: 16,
             right: 80,
             bottom: bottomPad + 90,
             child: Material(
-              color: Colors.black87,
+              color: const Color(0xFF242526),
               borderRadius: BorderRadius.circular(12),
               child: ListTile(
                 title: Text(
@@ -631,6 +630,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 trailing: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: _VideoFeedScreenState._brandGreen,
+                  ),
                   onPressed: () {
                     final n = _nextPart;
                     if (n == null) return;
@@ -648,25 +650,24 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
               ),
             ),
           ),
-
-        // ✅ ডান পাশের কলাম (খুব বেশি কম্প্যাক্ট/চেপে চেপে রাখা হয়েছে)
         Positioned(
           right: 8,
-          bottom: bottomPad + 65, // প্রোগ্রেস বারের ঠিক ওপরে
+          bottom: bottomPad + 65,
           child: Column(
             children: [
-              // ১. রিঅ্যাক্ট (সবচেয়ে উপরে)
               _sideBtn(
                 _myReaction != null ? Icons.favorite : Icons.favorite_border,
                 () async {
-                  final type = await ReactionPicker.show(context) ?? 'like';
+                  final type =
+                      await ReactionPicker.show(context) ?? 'like';
                   try {
                     final res = await _reaction.toggleVideoReaction(
                       videoId: widget.video.id,
                       reactionType: type,
                       ownerId: v.authorId,
                     );
-                    final count = await _reaction.countVideoReactions(widget.video.id);
+                    final count =
+                        await _reaction.countVideoReactions(widget.video.id);
                     if (mounted) {
                       setState(() {
                         _myReaction = res;
@@ -681,11 +682,11 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     }
                   }
                 },
-                iconColor: _myReaction != null ? AppColors.love : null,
+                iconColor: _myReaction != null
+                    ? _VideoFeedScreenState._dangerColor
+                    : null,
               ),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-              
-              // ২. কমেন্ট
+              const SizedBox(height: 6),
               _sideBtn(
                 Icons.chat_bubble_outline,
                 () {
@@ -700,13 +701,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   );
                 },
               ),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-
-              // ৩. ভিউ
+              const SizedBox(height: 6),
               _sideBtn(Icons.visibility, () {}),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-
-              // ৪. সেভ
+              const SizedBox(height: 6),
               _sideBtn(
                 _saved ? Icons.bookmark : Icons.bookmark_border,
                 () async {
@@ -721,11 +718,10 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     }
                   }
                 },
-                iconColor: _saved ? AppColors.primaryLight : null,
+                iconColor:
+                    _saved ? _VideoFeedScreenState._brandGreen : null,
               ),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-
-              // ৫. শেয়ার
+              const SizedBox(height: 6),
               _sideBtn(
                 Icons.share_outlined,
                 () {
@@ -734,13 +730,9 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                   );
                 },
               ),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-
-              // ৬. থ্রি-ডট
+              const SizedBox(height: 6),
               _sideBtn(Icons.more_vert, _openMore),
-              const SizedBox(height: 6), // ✅ গ্যাপ কমানো হয়েছে
-
-              // ৭. মাইক (একদম নিচে)
+              const SizedBox(height: 6),
               _sideBtn(
                 _muted ? Icons.volume_off : Icons.volume_up,
                 () {
@@ -751,8 +743,6 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
             ],
           ),
         ),
-
-        // ✅ নিচের বাম দিক (অ্যাভাটার, নাম, ফলোয়ার, ডেসক্রিপশন)
         Positioned(
           left: 12,
           right: 72,
@@ -807,7 +797,7 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                                       : Icons.add_circle_outline,
                                   color: _isFollowing
                                       ? Colors.white
-                                      : AppColors.primaryLight,
+                                      : _VideoFeedScreenState._brandGreen,
                                   size: 18,
                                 ),
                               ),
@@ -852,25 +842,26 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                 ),
               ],
               const SizedBox(height: 6),
-              
-              // প্রোগ্রেস বার
               if (ok)
                 Row(
                   children: [
                     Text(
                       _fmt(pos),
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 10),
                     ),
                     Expanded(
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 5),
+                          overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 12),
                         ),
                         child: Slider(
                           value: progress.clamp(0.0, 1.0),
-                          activeColor: AppColors.primaryLight,
+                          activeColor: _VideoFeedScreenState._brandGreen,
                           inactiveColor: Colors.white24,
                           onChangeStart: (_) {
                             _dragging = true;
@@ -881,7 +872,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                             _dragging = false;
                             if (dur.inMilliseconds > 0) {
                               c.seekTo(Duration(
-                                milliseconds: (val * dur.inMilliseconds).round(),
+                                milliseconds:
+                                    (val * dur.inMilliseconds).round(),
                               ));
                             }
                             setState(() {});
@@ -891,7 +883,8 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
                     ),
                     Text(
                       _fmt(dur),
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 10),
                     ),
                   ],
                 ),
@@ -902,13 +895,12 @@ class _VideoFeedItemState extends ConsumerState<_VideoFeedItem> {
     );
   }
 
-  // ✅ শুধু আইকন রাখার জন্য `_sideBtn` (প্যাডিং কমানো হয়েছে যাতে আরও কম্প্যাক্ট হয়)
   Widget _sideBtn(IconData icon, VoidCallback onTap, {Color? iconColor}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(6), // ✅ প্যাডিং কমানো হয়েছে
+        padding: const EdgeInsets.all(6),
         child: Icon(icon, color: iconColor ?? Colors.white, size: 28),
       ),
     );
