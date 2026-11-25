@@ -1,10 +1,13 @@
 // lib/features/profile/presentation/widgets/profile_quick_actions.dart
+// সংশোধিত: localization যোগ
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class ProfileQuickActions extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final bool videoOn;
   final VoidCallback onNewStory;
   final VoidCallback onNewNovel;
@@ -24,7 +27,12 @@ class ProfileQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final boxBg =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     final actions = <_QuickAction>[
       _QuickAction(
@@ -51,30 +59,34 @@ class ProfileQuickActions extends StatelessWidget {
     ];
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       alignment: WrapAlignment.center,
       children: actions.map((a) {
         return InkWell(
           onTap: a.onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            width: 85,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            width: 100,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: borderColor),
+              color: boxBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor, width: 1),
             ),
             child: Column(
               children: [
-                Icon(a.icon, color: AppColors.primary, size: 24),
+                Icon(a.icon, color: _brandGreen, size: 26),
                 const SizedBox(height: 6),
                 Text(
                   a.label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: primaryText,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -91,5 +103,9 @@ class _QuickAction {
   final String label;
   final VoidCallback onTap;
 
-  _QuickAction({required this.icon, required this.label, required this.onTap});
+  _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 }
