@@ -1,9 +1,11 @@
 // lib/features/reader/presentation/widgets/reader_bottom_bar.dart
+// শুধু আইকন সম্বলিত বটম বার (লেবেল ছাড়া)
+
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
 class ReaderBottomBar extends StatelessWidget {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final List<ReaderBottomBarItem> items;
 
   const ReaderBottomBar({
@@ -13,26 +15,35 @@ class ReaderBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topBorder =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+
     return Material(
-      color: AppColors.primary, // সবুজ #159447
-      elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 56,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: items
-                .map(
-                  (item) => _Btn(
-                    icon: item.icon,
-                    onTap: item.onTap,
-                    loading: item.loading,
-                    active: item.active,
-                    tooltip: item.tooltip,
-                  ),
-                )
-                .toList(),
+      color: _brandGreen,
+      elevation: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: topBorder, width: 1)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: items
+                  .map(
+                    (item) => _Btn(
+                      icon: item.icon,
+                      onTap: item.onTap,
+                      loading: item.loading,
+                      active: item.active,
+                      tooltip: item.tooltip,
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
         ),
       ),
@@ -73,7 +84,9 @@ class _Btn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = onTap == null ? Colors.white38 : (active ? Colors.amber : Colors.white);
+    final color = onTap == null
+        ? Colors.white38
+        : (active ? const Color(0xFFFFD54F) : Colors.white);
 
     return IconButton(
       onPressed: onTap,
