@@ -1,4 +1,4 @@
-// lib/features/social/presentation/widgets/comment_section.dart
+// lib/features/social/presentation/widgets/comment_section.dart (Part 1)
 // সংশোধিত: mention UI, সব notification trigger, localization
 
 import 'package:flutter/material.dart';
@@ -10,7 +10,6 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/comment_service.dart';
 import '../../../../core/services/follow_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 import '../../../../core/widgets/empty_view.dart';
 import '../../../../core/widgets/loading_view.dart';
@@ -38,6 +37,8 @@ class CommentSection extends ConsumerStatefulWidget {
 }
 
 class _CommentSectionState extends ConsumerState<CommentSection> {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = CommentService();
   final _auth = AuthService();
   final _follow = FollowService();
@@ -75,7 +76,6 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
     super.dispose();
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
   String _translateError(BuildContext context, Object e) {
     final raw = e.toString();
     final key = raw.replaceAll('Exception: ', '').trim();
@@ -88,14 +88,12 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
     final sel = _controller.selection;
     if (sel.baseOffset < 0) return;
 
-    // শেষ @ থেকে এখন পর্যন্ত query বের করি
     final before = text.substring(0, sel.baseOffset);
     final atIdx = before.lastIndexOf('@');
     if (atIdx < 0) {
       if (_showMentionList) setState(() => _showMentionList = false);
       return;
     }
-    // @ এর আগে space বা line start হলে সেটাই mention শুরু
     if (atIdx > 0 && before[atIdx - 1] != ' ' && before[atIdx - 1] != '\n') {
       if (_showMentionList) setState(() => _showMentionList = false);
       return;
@@ -222,8 +220,6 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
   List<CommentModel> _replies(String parentId) =>
       _comments.where((c) => c.parentId == parentId).toList();
 
-  // ---------- Mention insert ----------
-
   void _insertMention(UserModel u) {
     final text = _controller.text;
     final sel = _controller.selection;
@@ -246,60 +242,68 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
       _showMentionList = false;
     });
   }
-  
+  // lib/features/social/presentation/widgets/comment_section.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    final secondaryText =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+    final inputFill =
+        isDark ? const Color(0xFF242526) : const Color(0xFFF0F2F5);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
     final myId = _auth.currentUser?.id;
 
     return Column(
       children: [
-        // হেডার
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(
             children: [
               Text(
                 l10n.comments,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: primaryText,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 '(${_comments.length})',
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: secondaryText),
               ),
               const Spacer(),
               if (_loading)
                 const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _brandGreen,
+                  ),
                 ),
             ],
           ),
         ),
-
-        // reply ব্যানার
         if (_replyToId != null)
           Container(
             width: double.infinity,
-            color: AppColors.primary.withValues(alpha: 0.08),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            color: _brandGreen.withValues(alpha: 0.08),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     '${l10n.reply}: ${_replyToName ?? ''}',
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: 12, color: primaryText),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 16),
+                  icon: Icon(Icons.close, size: 16, color: secondaryText),
                   onPressed: () => setState(() {
                     _replyToId = null;
                     _replyToName = null;
@@ -308,15 +312,11 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
               ],
             ),
           ),
-
-        // Mention picker
         if (_showMentionList)
           _MentionPicker(
             query: _mentionQuery.value,
             onPick: _insertMention,
           ),
-
-        // লিস্ট
         Expanded(
           child: _loading && _comments.isEmpty
               ? const LoadingView()
@@ -362,8 +362,6 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                       },
                     ),
         ),
-
-        // Mentioned users chips (ইনপুটের উপরে)
         if (_mentioned.isNotEmpty)
           Container(
             width: double.infinity,
@@ -377,24 +375,26 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
               children: _mentioned
                   .map(
                     (u) => Chip(
+                      backgroundColor: inputFill,
+                      side: BorderSide(color: borderColor),
                       label: Text(
                         u.displayNameOr(l10n.user),
-                        style: const TextStyle(fontSize: 11),
+                        style: TextStyle(fontSize: 11, color: primaryText),
                       ),
                       avatar: CircleAvatar(
                         radius: 10,
-                        backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.15),
+                        backgroundColor: _brandGreen.withValues(alpha: 0.15),
                         child: Text(
                           u.initial,
                           style: const TextStyle(
                             fontSize: 10,
-                            color: AppColors.primary,
+                            color: _brandGreen,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                      deleteIcon: const Icon(Icons.close, size: 14),
+                      deleteIcon: Icon(Icons.close,
+                          size: 14, color: secondaryText),
                       onDeleted: () => setState(() {
                         _mentioned.removeWhere((m) => m.id == u.id);
                       }),
@@ -406,8 +406,6 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                   .toList(),
             ),
           ),
-
-        // ইনপুট
         SafeArea(
           top: false,
           child: Padding(
@@ -419,18 +417,28 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                     controller: _controller,
                     minLines: 1,
                     maxLines: 4,
+                    style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       hintText: l10n.writeComment,
+                      hintStyle: TextStyle(color: secondaryText),
                       helperText: l10n.mentionHint,
-                      helperStyle: const TextStyle(fontSize: 10),
+                      helperStyle:
+                          TextStyle(fontSize: 10, color: secondaryText),
                       isDense: true,
                       filled: true,
-                      fillColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.grey.shade100,
+                      fillColor: inputFill,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(color: borderColor, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: borderColor, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide:
+                            const BorderSide(color: _brandGreen, width: 1.5),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -442,7 +450,7 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
                 const SizedBox(width: 6),
                 IconButton.filled(
                   style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: _brandGreen,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: _sending ? null : _send,
@@ -466,8 +474,6 @@ class _CommentSectionState extends ConsumerState<CommentSection> {
   }
 }
 
-// ---------------- Mention Picker ----------------
-
 class _MentionPicker extends StatefulWidget {
   final String query;
   final void Function(UserModel) onPick;
@@ -482,6 +488,8 @@ class _MentionPicker extends StatefulWidget {
 }
 
 class _MentionPickerState extends State<_MentionPicker> {
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _follow = FollowService();
   final _auth = AuthService();
   List<UserModel> _results = [];
@@ -503,27 +511,6 @@ class _MentionPickerState extends State<_MentionPicker> {
     final q = widget.query.trim();
     setState(() => _loading = true);
     try {
-      // query খালি হলে — নিজে যে follow করি তাদের প্রথম ৫
-      if (q.isEmpty) {
-        final myId = _auth.currentUser?.id;
-        if (myId == null) {
-          setState(() {
-            _results = [];
-            _loading = false;
-          });
-          return;
-        }
-        final list = await _follow.getFollowing(myId);
-        if (!mounted) return;
-        setState(() {
-          _results = list.take(5).toList();
-          _loading = false;
-        });
-        return;
-      }
-
-      // query থাকলে full_name/nickname দিয়ে সার্চ (profiles)
-      // আমরা সহজভাবে follow-লিস্ট ফিল্টার করি (কম API call)
       final myId = _auth.currentUser?.id;
       if (myId == null) {
         setState(() {
@@ -533,11 +520,21 @@ class _MentionPickerState extends State<_MentionPicker> {
         return;
       }
       final list = await _follow.getFollowing(myId);
+      if (q.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _results = list.take(5).toList();
+          _loading = false;
+        });
+        return;
+      }
       final lower = q.toLowerCase();
-      final filtered = list.where((u) {
-        return u.displayName.toLowerCase().contains(lower) ||
-            u.displayNickname.toLowerCase().contains(lower);
-      }).take(8).toList();
+      final filtered = list
+          .where((u) =>
+              u.displayName.toLowerCase().contains(lower) ||
+              u.displayNickname.toLowerCase().contains(lower))
+          .take(8)
+          .toList();
 
       if (!mounted) return;
       setState(() {
@@ -557,8 +554,14 @@ class _MentionPickerState extends State<_MentionPicker> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+    final surface =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+    final borderColor =
+        isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
 
     if (_loading) {
       return const Padding(
@@ -569,7 +572,10 @@ class _MentionPickerState extends State<_MentionPicker> {
             child: SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: _brandGreen,
+              ),
             ),
           ),
         ),
@@ -580,7 +586,12 @@ class _MentionPickerState extends State<_MentionPicker> {
 
     return Container(
       height: 160,
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border.symmetric(
+          horizontal: BorderSide(color: borderColor, width: 1),
+        ),
+      ),
       child: ListView.builder(
         itemCount: _results.length,
         itemBuilder: (_, i) {
@@ -594,7 +605,11 @@ class _MentionPickerState extends State<_MentionPicker> {
               radius: 16,
               tappable: false,
             ),
-            title: Text(u.displayNameOr(l10n.user), maxLines: 1),
+            title: Text(
+              u.displayNameOr(l10n.user),
+              maxLines: 1,
+              style: TextStyle(color: primaryText),
+            ),
             subtitle: u.hasNickname
                 ? Text(
                     u.displayNickname,
