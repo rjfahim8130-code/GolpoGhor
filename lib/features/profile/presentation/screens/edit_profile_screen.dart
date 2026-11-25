@@ -1,5 +1,5 @@
-// lib/features/profile/presentation/screens/edit_profile_screen.dart
-// Deep Forest Green + cover image + R2 avatar delete
+// lib/features/profile/presentation/screens/edit_profile_screen.dart (Part 1)
+// Brand Green + cover image + R2 avatar delete
 
 import 'dart:io';
 
@@ -12,7 +12,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/r2_storage_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/cached_avatar.dart';
 
@@ -24,6 +23,10 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _nickname = TextEditingController();
@@ -152,19 +155,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) setState(() => _saving = false);
     }
   }
-
+  // lib/features/profile/presentation/screens/edit_profile_screen.dart (Part 2)
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(
+          child: CircularProgressIndicator(color: _brandGreen),
+        ),
       );
     }
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.editProfile),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -176,7 +191,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             child: Text(
               l10n.save,
               style: const TextStyle(
-                color: AppColors.primary,
+                color: _brandGreen,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -196,7 +211,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   height: 130,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    color: _brandGreen,
                     borderRadius: BorderRadius.circular(14),
                     image: (_coverUrl != null && _coverUrl!.isNotEmpty)
                         ? DecorationImage(
@@ -257,7 +272,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
-                          color: AppColors.primary,
+                          color: _brandGreen,
                           shape: BoxShape.circle,
                         ),
                         child: _saving
@@ -292,6 +307,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               // Name
               TextFormField(
                 controller: _name,
+                style: TextStyle(color: primaryText),
                 decoration: InputDecoration(
                   labelText: l10n.fullName,
                   prefixIcon: const Icon(Icons.person_outline),
@@ -303,6 +319,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               // Nickname
               TextFormField(
                 controller: _nickname,
+                style: TextStyle(color: primaryText),
                 decoration: InputDecoration(
                   labelText: l10n.nickname,
                   prefixIcon: const Icon(Icons.badge_outlined),
@@ -315,6 +332,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               TextFormField(
                 controller: _bio,
                 maxLines: 3,
+                style: TextStyle(color: primaryText),
                 decoration: InputDecoration(
                   labelText: l10n.bio,
                   alignLabelWithHint: true,
@@ -326,6 +344,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _brandGreen,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: _saving ? null : _save,
                   child: _saving
                       ? const SizedBox(
