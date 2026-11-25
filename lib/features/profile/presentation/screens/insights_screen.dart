@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/video_feature_provider.dart';
 import '../../../../core/services/insights_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 
@@ -20,6 +19,14 @@ class InsightsScreen extends ConsumerStatefulWidget {
 }
 
 class _InsightsScreenState extends ConsumerState<InsightsScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _cardDark = Color(0xFF242526);
+  static const Color _borderLight = Color(0xFFE4E6EB);
+  static const Color _borderDark = Color(0xFF3E4042);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = InsightsService();
   InsightsBundle? _data;
   bool _loading = true;
@@ -65,11 +72,19 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     final l10n = context.l10n;
     final videoOn = ref.watch(videoFeatureProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
     final secondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.insights),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -87,11 +102,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           : _error != null
               ? ErrorView(message: _error!, onRetry: _load)
               : RefreshIndicator(
+                  color: _brandGreen,
                   onRefresh: _load,
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _sectionHeader(l10n.insightsWritingHeader),
+                      _sectionHeader(l10n.insightsWritingHeader, primaryText),
                       _periodCard(
                         l10n.thisWeek,
                         _data!.writingWeek,
@@ -110,7 +126,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       ),
                       if (videoOn) ...[
                         const SizedBox(height: 24),
-                        _sectionHeader(l10n.video),
+                        _sectionHeader(l10n.video, primaryText),
                         _periodCard(
                           l10n.thisWeek,
                           _data!.videoWeek,
@@ -139,12 +155,16 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     );
   }
 
-  Widget _sectionHeader(String text) {
+  Widget _sectionHeader(String text, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
       ),
     );
   }
@@ -156,12 +176,19 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   ) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? _cardDark : _cardLight;
+    final borderColor = isDark ? _borderDark : _borderLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 10),
-      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor, width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -171,13 +198,16 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: primaryText,
+                  ),
                 ),
                 const Spacer(),
                 Text(
                   '${l10n.views} $viewDelta',
                   style: const TextStyle(
-                    color: AppColors.primary,
+                    color: _brandGreen,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -189,10 +219,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
               spacing: 20,
               runSpacing: 8,
               children: [
-                _chip(l10n.seen, '${s.views}'),
-                _chip(l10n.reactions, '${s.reactions}'),
-                _chip(l10n.comments, '${s.comments}'),
-                if (s.saves > 0) _chip(l10n.saves, '${s.saves}'),
+                _chip(l10n.seen, '${s.views}', primaryText),
+                _chip(l10n.reactions, '${s.reactions}', primaryText),
+                _chip(l10n.comments, '${s.comments}', primaryText),
+                if (s.saves > 0) _chip(l10n.saves, '${s.saves}', primaryText),
               ],
             ),
           ],
@@ -201,7 +231,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     );
   }
 
-  Widget _chip(String label, String value) {
+  Widget _chip(String label, String value, Color labelColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -210,10 +240,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+            color: _brandGreen,
           ),
         ),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Text(label, style: TextStyle(fontSize: 12, color: labelColor)),
       ],
     );
   }
