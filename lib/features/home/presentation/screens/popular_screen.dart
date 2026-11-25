@@ -1,6 +1,4 @@
 // lib/features/home/presentation/screens/popular_screen.dart
-// সংশোধিত: localization
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,6 +19,10 @@ class PopularScreen extends StatefulWidget {
 }
 
 class _PopularScreenState extends State<PopularScreen> {
+  static const Color _bgLight = Color(0xFFFFFFFF);
+  static const Color _bgDark = Color(0xFF18191A);
+  static const Color _brandGreen = Color(0xFF159447);
+
   final _service = StoryService();
   List<StoryModel> _stories = [];
   bool _loading = true;
@@ -56,9 +58,18 @@ class _PopularScreenState extends State<PopularScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _bgDark : _bgLight;
+    final primaryText =
+        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.popular),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -79,6 +90,7 @@ class _PopularScreenState extends State<PopularScreen> {
                       title: l10n.noPopularYet,
                     )
                   : RefreshIndicator(
+                      color: _brandGreen,
                       onRefresh: _load,
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 8),
