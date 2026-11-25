@@ -4,8 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../theme/app_colors.dart';
-
 /// Base shimmer box
 class SkeletonBox extends StatelessWidget {
   final double? width;
@@ -29,7 +27,7 @@ class SkeletonBox extends StatelessWidget {
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+        color: isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB),
         borderRadius: BorderRadius.circular(radius),
       ),
     );
@@ -43,21 +41,24 @@ class SkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final highlight =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          color: isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB),
+          width: 1,
         ),
       ),
       child: Shimmer.fromColors(
-        baseColor: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        highlightColor: isDark
-            ? AppColors.darkSurface
-            : AppColors.lightBg,
+        baseColor: base,
+        highlightColor: highlight,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -115,12 +116,16 @@ class SkeletonProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
+    final highlight =
+        isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
+
     return Container(
       padding: const EdgeInsets.all(20),
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      color: isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF),
       child: Shimmer.fromColors(
-        baseColor: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        highlightColor: isDark ? AppColors.darkSurface : AppColors.lightBg,
+        baseColor: base,
+        highlightColor: highlight,
         child: Column(
           children: [
             const SkeletonBox(width: 88, height: 88, radius: 44),
