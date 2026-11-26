@@ -5,7 +5,7 @@ import '../constants/app_constants.dart';
 import '../constants/supabase_constants.dart';
 import '../models/comment_model.dart';
 import 'notification_service.dart';
-import 'auth_service.dart'; // AppException
+import 'auth_service.dart';
 
 class CommentService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -39,6 +39,19 @@ class CommentService {
 
     final data = await query.order('created_at', ascending: true);
 
+    return (data as List)
+        .map((e) => CommentModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  // ✅ নতুন মেথড: রিপ্লাইগুলো নিয়ে আসা
+  Future<List<CommentModel>> getReplies(String parentId) async {
+    final data = await _client
+        .from(SupabaseConstants.comments)
+        .select(_selectWithProfile)
+        .eq('parent_id', parentId)
+        .order('created_at', ascending: true);
+        
     return (data as List)
         .map((e) => CommentModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
