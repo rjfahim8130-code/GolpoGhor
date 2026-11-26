@@ -81,3 +81,24 @@ class PushNotificationService {
   Future<void> showNotification({
     required int id,
     required String title,
+    required String body,
+  }) async {
+    try {
+      const AndroidNotificationDetails androidNotificationDetails =
+          AndroidNotificationDetails(
+        'golpoghor_channel',
+        'GolpoGhor Notifications',
+        channelDescription: 'Notifications for likes, comments, follows, etc.',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+      );
+      const NotificationDetails notificationDetails =
+          NotificationDetails(android: androidNotificationDetails);
+
+      await _notificationsPlugin.show(id, title, body, notificationDetails);
+    } catch (e) {
+      debugPrint('SHOW_NOTIFICATION_FAILED: $e');
+    }
+  }
+}
