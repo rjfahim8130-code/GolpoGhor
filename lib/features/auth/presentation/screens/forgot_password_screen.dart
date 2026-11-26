@@ -1,11 +1,10 @@
-// lib/features/auth/presentation/screens/forgot_password_screen.dart (Part 1)
-// Localization সহ
-
+// lib/features/auth/presentation/screens/forgot_password_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/utils/error_mapper.dart'; // ✅ নতুন ইমপোর্ট
 import '../../../../routing/route_names.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -39,14 +38,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
-  String _translateError(BuildContext context, Object e) {
-    final raw = e.toString();
-    final key = raw.replaceAll('Exception: ', '').trim();
-    final l10n = context.l10n;
-    return l10n.t(key);
-  }
-
   Future<void> _sendOtp() async {
     final l10n = context.l10n;
     final e = _email.text.trim();
@@ -70,8 +61,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } catch (err) {
       if (!mounted) return;
       setState(() => _loading = false);
+      // ✅ সুন্দর এরর মেসেজ
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_translateError(context, err))),
+        SnackBar(content: Text(ErrorMapper.get(context, err))),
       );
     }
   }
@@ -116,21 +108,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       context.go(RouteNames.login);
     } catch (err) {
       if (!mounted) return;
+      // ✅ সুন্দর এরর মেসেজ
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_translateError(context, err))),
+        SnackBar(content: Text(ErrorMapper.get(context, err))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
-  // lib/features/auth/presentation/screens/forgot_password_screen.dart (Part 2)
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _bgLight;
-    final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+    
+    // ✅ গাঢ় কালো এবং সাদা
+    final primaryText = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       backgroundColor: bg,
@@ -175,6 +169,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.email,
+            labelStyle: TextStyle(color: primaryText),
             prefixIcon: const Icon(Icons.email_outlined),
           ),
         ),
@@ -219,9 +214,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           controller: _otp,
           keyboardType: TextInputType.number,
           style: TextStyle(color: primaryText),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'OTP',
-            prefixIcon: Icon(Icons.pin_outlined),
+            labelStyle: TextStyle(color: primaryText),
+            prefixIcon: const Icon(Icons.pin_outlined),
           ),
         ),
         const SizedBox(height: 16),
@@ -231,6 +227,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.newPassword,
+            labelStyle: TextStyle(color: primaryText),
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
@@ -247,6 +244,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(color: primaryText),
           decoration: InputDecoration(
             labelText: l10n.passwordAgain,
+            labelStyle: TextStyle(color: primaryText),
             prefixIcon: const Icon(Icons.lock_outline),
           ),
         ),
