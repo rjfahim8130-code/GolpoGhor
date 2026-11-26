@@ -1,6 +1,4 @@
 // lib/features/auth/presentation/screens/login_screen.dart
-// লোগো PNG + localization + full form validation + session cache saving on login (সংশোধিত)
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/session_cache_provider.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/utils/error_mapper.dart'; // ✅ নতুন ইমপোর্ট
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
@@ -37,14 +36,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  /// Exception থেকে key বের করে l10n দিয়ে translate
-  String _translateError(BuildContext context, Object e) {
-    final raw = e.toString();
-    final key = raw.replaceAll('Exception: ', '').trim();
-    final l10n = context.l10n;
-    return l10n.t(key);
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -60,9 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (profile != null) {
           await ref.read(sessionCacheProvider.notifier).save(profile);
         }
-      } catch (e) {
-        debugPrint('LOGIN_PROFILE_CACHE_FAILED: $e');
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       final needs = await _auth.needsProfileSetup();
@@ -70,11 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go(needs ? RouteNames.profileSetup : RouteNames.home);
     } catch (e) {
       if (!mounted) return;
-      final l10n = context.l10n;
+      // ✅ সুন্দর এরর মেসেজ
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${l10n.loginFailed}: ${_translateError(context, e)}'),
-        ),
+        SnackBar(content: Text(ErrorMapper.get(context, e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -86,10 +73,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _bgLight;
-    final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
-    final secondary =
-        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
+    
+    // ✅ গাঢ় কালো এবং সাদা
+    final primaryText = isDark ? Colors.white : Colors.black;
+    final secondary = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       backgroundColor: bg,
@@ -147,6 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.email,
+                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: const OutlineInputBorder(),
                     ),
@@ -161,6 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.password,
+                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
