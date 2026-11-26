@@ -12,20 +12,20 @@ class AppColors {
   static const Color accent = Color(0xFF159447);
   static const Color accentSoft = Color(0xFF23AE5A);
 
-  // LIGHT THEME (#FFFFFF, #050505, #65676B, #E4E6EB)
+  // LIGHT THEME (এখন একদম খাঁটি কালো)
   static const Color lightBg = Color(0xFFFFFFFF);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightText = Color(0xFF050505);
-  static const Color lightTextSecondary = Color(0xFF65676B);
+  static const Color lightText = Color(0xFF000000); // Pure Black
+  static const Color lightTextSecondary = Color(0xFF000000); // Pure Black
   static const Color lightDivider = Color(0xFFE4E6EB);
 
-  // DARK THEME (#18191A, #242526, #E4E6EB, #B0B3B8, #3E4042)
+  // DARK THEME (এখন একদম খাঁটি সাদা)
   static const Color darkBg = Color(0xFF18191A);
   static const Color darkSurface = Color(0xFF242526);
   static const Color darkCard = Color(0xFF242526);
-  static const Color darkText = Color(0xFFE4E6EB);
-  static const Color darkTextSecondary = Color(0xFFB0B3B8);
+  static const Color darkText = Color(0xFFFFFFFF); // Pure White
+  static const Color darkTextSecondary = Color(0xFFFFFFFF); // Pure White
   static const Color darkDivider = Color(0xFF3E4042);
 
   // STATE
