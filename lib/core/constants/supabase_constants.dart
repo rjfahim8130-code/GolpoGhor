@@ -1,15 +1,8 @@
-// lib/core/constants/supabase_constants.dart
 class SupabaseConstants {
   SupabaseConstants._();
 
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: '',
-  );
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
   static const String profiles = 'profiles';
   static const String stories = 'stories';
@@ -24,9 +17,8 @@ class SupabaseConstants {
   static const String appSettings = 'app_settings';
   static const String reports = 'reports';
   static const String notifications = 'notifications';
-
   static const String videoPosts = 'video_posts';
   static const String videoSaves = 'video_saves';
-
+  
   static const String rpcRecordView = 'record_view';
 }
