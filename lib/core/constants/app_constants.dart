@@ -1,3 +1,4 @@
+// lib/core/constants/app_constants.dart
 class AppConstants {
   AppConstants._();
 
@@ -5,7 +6,6 @@ class AppConstants {
   static const String appNameEn = 'GolpoGhor';
   static const String appVersion = '1.0.1';
 
-  // ক্যাটাগরি (UI-তে l10n.categoryList ব্যবহার করুন)
   static const List<String> categoryKeys = [
     'catRomance',
     'catMystery',
@@ -17,7 +17,6 @@ class AppConstants {
     'catOther',
   ];
 
-  // রিঅ্যাকশন টাইপ
   static const List<String> reactionTypes = [
     'like',
     'love',
@@ -26,30 +25,24 @@ class AppConstants {
     'fire',
   ];
 
-  // পেজিনেশন
   static const int feedPageSize = 15;
   static const int listPageSize = 20;
 
-  // Search
   static const int searchDebounceMs = 300;
   static const int searchRecentMax = 10;
 
-  // Reader
   static const double readerLogoOpacity = 0.10;
   static const double minFontScale = 0.55;
   static const double maxFontScale = 1.50;
   static const double defaultFontScale = 0.95;
   static const double fontScaleStep = 0.08;
 
-  // Notification (in-app)
   static const int notificationRetentionDays = 2;
   static const int notificationPageSize = 30;
 
-  // Comment
   static const int commentMaxLength = 1000;
   static const int reportReasonMaxLength = 500;
 
-  // ✅ আপলোড ও নেটওয়ার্ক লিমিট (নতুন যোগ করা হলো)
   static const int maxUploadImageMb = 5;
   static const int maxUploadVideoMb = 50;
   static const int apiTimeoutSeconds = 30;
