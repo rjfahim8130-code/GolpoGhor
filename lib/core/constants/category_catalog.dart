@@ -1,6 +1,3 @@
-// lib/core/constants/category_catalog.dart
-// UI টেক্সট l10n থেকে আসবে, এখানে শুধু DB key।
-
 class CategoryItem {
   final String key;
   final String groupKey;
@@ -8,7 +5,6 @@ class CategoryItem {
 }
 
 abstract final class CategoryCatalog {
-  // ───────── লেখার মেইন গ্রুপ ─────────
   static const List<String> writingGroups = [
     'grp_literature', 'grp_islamic', 'grp_history', 'grp_romance',
     'grp_thriller', 'grp_society', 'grp_kids', 'grp_poetry',
@@ -16,14 +12,12 @@ abstract final class CategoryCatalog {
     'grp_comedy', 'grp_fantasy', 'grp_other',
   ];
 
-  // ───────── ভিডিও মেইন গ্রুপ ─────────
   static const List<String> videoGroups = [
     'vgrp_story', 'vgrp_islamic', 'vgrp_history', 'vgrp_poetry',
     'vgrp_drama', 'vgrp_kids', 'vgrp_comedy', 'vgrp_documentary',
     'vgrp_author', 'vgrp_other',
   ];
 
-  // ───────── লেখার সাব ─────────
   static const List<CategoryItem> writingSubs = [
     CategoryItem('lit_short', 'grp_literature'),
     CategoryItem('lit_flash', 'grp_literature'),
@@ -82,7 +76,6 @@ abstract final class CategoryCatalog {
     CategoryItem('oth_misc', 'grp_other'),
   ];
 
-  // ───────── ভিডিও সাব ─────────
   static const List<CategoryItem> videoSubs = [
     CategoryItem('vid_story_read', 'vgrp_story'),
     CategoryItem('vid_novel_read', 'vgrp_story'),
@@ -119,22 +112,12 @@ abstract final class CategoryCatalog {
   }
 
   static const Map<String, String> legacyMap = {
-    'প্রেম': 'rom_romantic',
-    'রহস্য': 'thr_mystery',
-    'হরর': 'thr_horror',
-    'সামাজিক': 'soc_social',
-    'ইতিহাস': 'his_bd',
-    'কমেডি': 'com_funny',
-    'কিশোর': 'kid_teen',
-    'অন্যান্য': 'oth_misc',
-    'catRomance': 'rom_romantic',
-    'catMystery': 'thr_mystery',
-    'catHorror': 'thr_horror',
-    'catSocial': 'soc_social',
-    'catHistory': 'his_bd',
-    'catComedy': 'com_funny',
-    'catTeen': 'kid_teen',
-    'catOther': 'oth_misc',
+    'প্রেম': 'rom_romantic', 'রহস্য': 'thr_mystery', 'হরর': 'thr_horror',
+    'সামাজিক': 'soc_social', 'ইতিহাস': 'his_bd', 'কমেডি': 'com_funny',
+    'কিশোর': 'kid_teen', 'অন্যান্য': 'oth_misc',
+    'catRomance': 'rom_romantic', 'catMystery': 'thr_mystery', 'catHorror': 'thr_horror',
+    'catSocial': 'soc_social', 'catHistory': 'his_bd', 'catComedy': 'com_funny',
+    'catTeen': 'kid_teen', 'catOther': 'oth_misc',
   };
 
   static String? normalize(String? raw) {
