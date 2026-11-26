@@ -1,7 +1,7 @@
+// lib/core/constants/supabase_constants.dart
 class SupabaseConstants {
   SupabaseConstants._();
 
-  // GitHub Secrets থেকে ডেটা নেবে
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: '',
@@ -11,7 +11,6 @@ class SupabaseConstants {
     defaultValue: '',
   );
 
-  // Tables
   static const String profiles = 'profiles';
   static const String stories = 'stories';
   static const String novels = 'novels';
@@ -26,10 +25,8 @@ class SupabaseConstants {
   static const String reports = 'reports';
   static const String notifications = 'notifications';
 
-  // Video
   static const String videoPosts = 'video_posts';
   static const String videoSaves = 'video_saves';
 
-  // RPC
   static const String rpcRecordView = 'record_view';
 }
