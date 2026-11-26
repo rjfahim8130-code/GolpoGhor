@@ -1,4 +1,3 @@
-// lib/core/constants/app_constants.dart
 class AppConstants {
   AppConstants._();
 
@@ -7,23 +6,11 @@ class AppConstants {
   static const String appVersion = '1.0.1';
 
   static const List<String> categoryKeys = [
-    'catRomance',
-    'catMystery',
-    'catHorror',
-    'catSocial',
-    'catHistory',
-    'catComedy',
-    'catTeen',
-    'catOther',
+    'catRomance', 'catMystery', 'catHorror', 'catSocial',
+    'catHistory', 'catComedy', 'catTeen', 'catOther',
   ];
 
-  static const List<String> reactionTypes = [
-    'like',
-    'love',
-    'wow',
-    'sad',
-    'fire',
-  ];
+  static const List<String> reactionTypes = ['like', 'love', 'wow', 'sad', 'fire'];
 
   static const int feedPageSize = 15;
   static const int listPageSize = 20;
