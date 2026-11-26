@@ -1,4 +1,5 @@
-/// কনটেন্ট ব্লক — টেক্সট বা ছবি
+// lib/core/models/content_block_model.dart
+
 class ContentBlockModel {
   final String type; // text | image
   final String? text;
@@ -11,7 +12,6 @@ class ContentBlockModel {
   final String align;
   final String? color;
   
-  // ভবিষ্যতের জন্য স্কিমা ভার্সন
   final int schemaVersion;
 
   const ContentBlockModel({
