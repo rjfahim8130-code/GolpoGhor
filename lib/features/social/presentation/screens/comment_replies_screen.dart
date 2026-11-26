@@ -53,4 +53,66 @@ class _CommentRepliesScreenState extends ConsumerState<CommentRepliesScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ?
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final primaryText = isDark ? AppColors.darkText : AppColors.lightText;
+
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryText,
+        elevation: 0,
+        title: Text('${l10n.reply} (${_replies.length})'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _loading
+          ? const LoadingView()
+          : Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                      ),
+                    ),
+                  ),
+                  child: CommentTile(
+                    comment: widget.parentComment,
+                    myId: _auth.currentUser?.id,
+                    onLike: () {},
+                    onReply: null,
+                  ),
+                ),
+                Expanded(
+                  child: _replies.isEmpty
+                      ? Center(
+                          child: Text(
+                            l10n.noData,
+                            style: TextStyle(color: primaryText),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _replies.length,
+                          itemBuilder: (context, index) {
+                            final reply = _replies[index];
+                            return CommentTile(
+                              comment: reply,
+                              myId: _auth.currentUser?.id,
+                              isReply: true,
+                              onLike: () async {
+                                await _service.toggleCommentLike(reply.id);
+                                _load();
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+    );
+  }
+}
