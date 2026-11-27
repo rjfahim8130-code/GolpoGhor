@@ -1,8 +1,4 @@
-// lib/main.dart
-// startup safe, error handling, runZonedGuarded, sessionCache load + Supabase publishableKey update
-
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,41 +17,22 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-
+      
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
         debugPrint('FLUTTER_ERROR: ${details.exception}');
-        debugPrint('${details.stack}');
       };
 
-      SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-        ),
-      );
-
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
       final container = ProviderContainer();
-      try {
-        await container.read(themeModeProvider.notifier).load();
-      } catch (e) {
-        debugPrint('THEME_LOAD_FAILED: $e');
-      }
-      try {
-        await container.read(localeProvider.notifier).load();
-      } catch (e) {
-        debugPrint('LOCALE_LOAD_FAILED: $e');
-      }
+      try { await container.read(themeModeProvider.notifier).load(); } catch (_) {}
+      try { await container.read(localeProvider.notifier).load(); } catch (_) {}
       try {
         await container.read(sessionCacheProvider.notifier).load();
         await AuthService.loadAdminFlag();
-      } catch (e) {
-        debugPrint('SESSION_CACHE_LOAD_FAILED: $e');
-      }
+      } catch (_) {}
 
       Object? initError;
       try {
@@ -63,33 +40,22 @@ Future<void> main() async {
           url: SupabaseConstants.supabaseUrl,
           anonKey: SupabaseConstants.supabaseAnonKey,
         );
-
         await PushNotificationService.instance.init();
-
-        debugPrint('SUPABASE_INIT: success');
-      } catch (e, st) {
+      } catch (e) {
         initError = e;
-        debugPrint('SUPABASE_INIT_FAILED: $e');
-        debugPrint('$st');
       }
 
       runApp(
         UncontrolledProviderScope(
           container: container,
-          child: initError == null
-              ? const GolpoGhorApp()
-              : _BootErrorApp(message: initError.toString()),
+          child: initError == null ? const GolpoGhorApp() : _BootErrorApp(message: initError.toString()),
         ),
       );
     },
-    (error, stack) {
-      debugPrint('ZONE_ERROR: $error');
-      debugPrint('$stack');
-    },
+    (error, stack) => debugPrint('ZONE_ERROR: $error'),
   );
 }
 
-/// Supabase init fail করলেও অ্যাপ খুলবে — error দেখাবে
 class _BootErrorApp extends StatelessWidget {
   final String message;
   const _BootErrorApp({required this.message});
@@ -100,61 +66,28 @@ class _BootErrorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('bn'),
       supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-      ],
+      localizationsDelegates: const [AppLocalizations.delegate],
       home: Builder(
         builder: (context) {
           final l10n = context.l10n;
           return Scaffold(
-            backgroundColor: const Color(0xFFFFFFFF),
+            backgroundColor: Colors.white,
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
-                    const Icon(
-                      Icons.error_outline,
-                      color: Color(0xFFE41E3F),
-                      size: 56,
-                    ),
+                    const Icon(Icons.error_outline, color: Colors.red, size: 56),
                     const SizedBox(height: 16),
-                    Text(
-                      l10n.appName,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF050505),
-                      ),
-                    ),
+                    Text(l10n.appName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
-                    Text(
-                      l10n.bootErrorHelp,
-                      style: const TextStyle(color: Color(0xFF65676B)),
-                    ),
-                    const SizedBox(height: 12),
+                    Text(l10n.bootErrorHelp),
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0F2F5),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: const Color(0xFFE4E6EB),
-                            width: 1,
-                          ),
-                        ),
-                        child: SingleChildScrollView(
-                          child: SelectableText(
-                            message,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF050505),
-                            ),
-                          ),
-                        ),
+                        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(10)),
+                        child: SingleChildScrollView(child: SelectableText(message)),
                       ),
                     ),
                   ],
