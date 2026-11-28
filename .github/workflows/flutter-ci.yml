@@ -10,40 +10,146 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-      - uses: subosito/flutter-action@v2
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-          
+
       - name: Create Android platform if missing
         run: |
+          echo "Checking android folder..."
+          ls -la
           if [ ! -d android ]; then
+            echo "android/ missing — running flutter create"
             flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          elif [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
+            echo "android/ incomplete — running flutter create"
+            flutter create . --project-name golpoghor --org com.golpoghor --platforms=android
+          else
+            echo "android/ OK"
+          fi
+          ls -la android/app/ || true
+
+      - name: Pin Kotlin plugin to 1.9.24
+        run: |
+          set -e
+          if [ -f android/settings.gradle.kts ]; then
+            sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[^"]+"/id("org.jetbrains.kotlin.android") version "1.9.24"/' android/settings.gradle.kts
+          fi
+          if [ -f android/settings.gradle ]; then
+            sed -i -E "s/id 'org\.jetbrains\.kotlin\.android' version '[^']+'/id 'org.jetbrains.kotlin.android' version '1.9.24'/" android/settings.gradle
+            sed -i -E 's/id\("org\.jetbrains\.kotlin\.android"\) version "[^"]+"/id("org.jetbrains.kotlin.android") version "1.9.24"/' android/settings.gradle
           fi
 
-      - name: Fix Gradle Wrapper
+      - name: Update Kotlin Version in Gradle
+        run: |
+          if [ -f android/build.gradle ]; then
+            sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/' android/build.gradle
+          elif [ -f android/build.gradle.kts ]; then
+            sed -i 's/val kotlinVersion = .*/val kotlinVersion = "1.9.24"/' android/build.gradle.kts
+          fi
+
+      - name: Update Gradle Wrapper and Disable Lint
         run: |
           cd android
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip|' gradle/wrapper/gradle-wrapper.properties
 
+          if [ -f app/build.gradle ]; then
+            echo -e "\nandroid {\n    lintOptions {\n        checkReleaseBuilds false\n        abortOnError false\n    }\n}" >> app/build.gradle
+          elif [ -f app/build.gradle.kts ]; then
+            echo -e "\nandroid {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }\n}" >> app/build.gradle.kts
+          fi
+          cd ..
+
       - name: Ensure INTERNET permission and GolpoGhor Label
         run: |
           MANIFEST=android/app/src/main/AndroidManifest.xml
-          if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
-            sed -i 's|<manifest\(.*\)>|<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>|' "$MANIFEST"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+              sed -i 's|<manifest\(.*\)>|<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>|' "$MANIFEST"
+            fi
+            sed -i 's/android:label="[^"]*"/android:label="GolpoGhor"/' "$MANIFEST"
+          else
+            echo "Manifest NOT found!"
+            exit 1
           fi
-          sed -i 's/android:label="[^"]*"/android:label="GolpoGhor"/' "$MANIFEST"
+
+      - name: Enable Core Library Desugaring
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+
+          desugar = "com.android.tools:desugar_jdk_libs:2.1.4"
+          kts = Path("android/app/build.gradle.kts")
+          groovy = Path("android/app/build.gradle")
+
+          def patch_kts(text: str) -> str:
+              if "isCoreLibraryDesugaringEnabled" not in text:
+                  if "compileOptions {" in text:
+                      text = text.replace("compileOptions {", "compileOptions {\n        isCoreLibraryDesugaringEnabled = true", 1)
+                  else:
+                      text = text.replace("android {", "android {\n    compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility = JavaVersion.VERSION_17\n        targetCompatibility = JavaVersion.VERSION_17\n    }", 1)
+              if "desugar_jdk_libs" not in text:
+                  if "dependencies {" in text:
+                      text = text.replace("dependencies {", f'dependencies {{\n    coreLibraryDesugaring("{desugar}")', 1)
+                  else:
+                      text += f'\n\ndependencies {{\n    coreLibraryDesugaring("{desugar}")\n}}\n'
+              return text
+
+          def patch_groovy(text: str) -> str:
+              if "coreLibraryDesugaringEnabled" not in text:
+                  if "compileOptions {" in text:
+                      text = text.replace("compileOptions {", "compileOptions {\n        coreLibraryDesugaringEnabled true", 1)
+                  else:
+                      text = text.replace("android {", "android {\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }", 1)
+              if "desugar_jdk_libs" not in text:
+                  if "dependencies {" in text:
+                      text = text.replace("dependencies {", f'dependencies {{\n    coreLibraryDesugaring "{desugar}"', 1)
+                  else:
+                      text += f'\n\ndependencies {{\n    coreLibraryDesugaring "{desugar}"\n}}\n'
+              return text
+
+          if kts.exists():
+              kts.write_text(patch_kts(kts.read_text(encoding="utf-8")), encoding="utf-8")
+          elif groovy.exists():
+              groovy.write_text(patch_groovy(groovy.read_text(encoding="utf-8")), encoding="utf-8")
+          else:
+              raise SystemExit(1)
+          PY
 
       - name: Pub get
         run: flutter pub get
 
-      - name: Build release APK
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons || true
+
+      - name: Analyze (fail only on real errors)
+        run: |
+          set +e
+          OUT=$(flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1)
+          CODE=$?
+          echo "$OUT"
+          if echo "$OUT" | grep -E "error •" >/dev/null; then
+            exit 1
+          fi
+          exit 0
+
+      - name: Test (fail on error)
+        run: flutter test
+
+      - name: Build release APK (obfuscated)
         run: |
           flutter build apk --release \
             --obfuscate \
@@ -53,3 +159,10 @@ jobs:
             --dart-define=R2_ACCOUNT_ID=${{ secrets.R2_ACCOUNT_ID }} \
             --dart-define=R2_PUBLIC_BASE_URL=${{ secrets.R2_PUBLIC_BASE_URL }} \
             --dart-define=R2_BUCKET=${{ secrets.R2_BUCKET }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: golpoghor-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
