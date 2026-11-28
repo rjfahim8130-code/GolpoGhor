@@ -10,7 +10,7 @@ import '../models/story_model.dart';
 
 class OfflineItem {
   final String id;
-  final String kind;
+  final String kind; // story | episode
   final String title;
   final String? subtitle;
   final String? authorName;
@@ -75,6 +75,7 @@ class OfflineItem {
         'saved_at': savedAt.toIso8601String(),
       };
 
+  /// Offline fallback -> StoryModel (reader_screen)
   StoryModel toStoryModel() {
     return StoryModel(
       id: id.startsWith('ep_') ? id.substring(3) : id,
@@ -214,10 +215,9 @@ class OfflineService {
     return out;
   }
 
-  // ✅ ফাইল থাকলে ডিলিট হবে
   Future<void> remove(String id) async {
     final f = await _file(id);
-    if (await f.exists()) await f.delete(); 
+    if (!await f.exists()) await f.delete();
     final ids = await _ids();
     ids.remove(id);
     await _setIds(ids);

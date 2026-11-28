@@ -1,10 +1,11 @@
 // lib/features/auth/presentation/screens/register_screen.dart
+// লোগো PNG + localization + full form validation + confirm password
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/utils/error_mapper.dart'; // ✅ নতুন ইমপোর্ট
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 
@@ -38,6 +39,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Exception থেকে key বের করে l10n দিয়ে translate
+  String _translateError(BuildContext context, Object e) {
+    final raw = e.toString();
+    final key = raw.replaceAll('Exception: ', '').trim();
+    final l10n = context.l10n;
+    return l10n.t(key);
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -60,9 +69,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      // ✅ সুন্দর এরর মেসেজ
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ErrorMapper.get(context, e))),
+        SnackBar(
+          content:
+              Text('${l10n.registerFailed}: ${_translateError(context, e)}'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -74,10 +86,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _bgLight;
-    
-    // ✅ গাঢ় কালো এবং সাদা
-    final primaryText = isDark ? Colors.white : Colors.black;
-    final secondary = isDark ? Colors.white : Colors.black;
+    final primaryText =
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+    final secondary =
+        isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
     return Scaffold(
       backgroundColor: bg,
@@ -144,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.fullName,
-                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.person_outline),
                       border: const OutlineInputBorder(),
                     ),
@@ -158,7 +169,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.email,
-                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: const OutlineInputBorder(),
                     ),
@@ -172,7 +182,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.password,
-                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -197,7 +206,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: primaryText),
                     decoration: InputDecoration(
                       labelText: l10n.passwordAgain,
-                      labelStyle: TextStyle(color: secondary),
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                     ),

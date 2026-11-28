@@ -241,7 +241,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF050505),
+                        color: Color(0xFF000000),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -262,7 +262,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           },
                           icon: const Icon(
                             Icons.text_decrease,
-                            color: Color(0xFF050505),
+                            color: Color(0xFF000000),
                           ),
                         ),
                         Container(
@@ -297,7 +297,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           },
                           icon: const Icon(
                             Icons.text_increase,
-                            color: Color(0xFF050505),
+                            color: Color(0xFF000000),
                           ),
                         ),
                       ],
@@ -308,7 +308,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF050505),
+                        color: Color(0xFF000000),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -341,7 +341,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
                           l10n.dark,
                           ReaderTheme.dark,
                           const Color(0xFF18191A),
-                          const Color(0xFFE4E6EB),
+                          const Color(0xFFFFFFFF),
                           () {
                             setState(
                                 () => _globalReaderTheme = ReaderTheme.dark);
@@ -412,7 +412,7 @@ class _NovelDetailsScreenState extends State<NovelDetailsScreen> {
     final cardColor = isDark ? _cardDark : _cardLight;
     final borderColor = isDark ? _borderDark : _borderLight;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondary =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 

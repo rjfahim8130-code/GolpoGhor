@@ -33,8 +33,8 @@ class OfflineReaderScreen extends StatefulWidget {
 class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
   static const Color _bgLight = Color(0xFFFFFFFF);
   static const Color _bgDark = Color(0xFF18191A);
-  static const Color _textLight = Color(0xFF050505);
-  static const Color _textDark = Color(0xFFE4E6EB);
+  static const Color _textLight = Color(0xFF000000);
+  static const Color _textDark = Color(0xFFFFFFFF);
   static const Color _brandGreen = Color(0xFF159447);
   static const Color _dangerColor = Color(0xFFE41E3F);
 
@@ -201,7 +201,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           l10n.light,
                           ReaderTheme.light,
                           const Color(0xFFFFFFFF),
-                          const Color(0xFF050505),
+                          const Color(0xFF000000),
                           () {
                             setState(() => _globalReaderTheme = ReaderTheme.light);
                             setModal(() {});
@@ -221,7 +221,7 @@ class _OfflineReaderScreenState extends State<OfflineReaderScreen> {
                           l10n.dark,
                           ReaderTheme.dark,
                           const Color(0xFF18191A),
-                          const Color(0xFFE4E6EB),
+                          const Color(0xFFFFFFFF),
                           () {
                             setState(() => _globalReaderTheme = ReaderTheme.dark);
                             setModal(() {});

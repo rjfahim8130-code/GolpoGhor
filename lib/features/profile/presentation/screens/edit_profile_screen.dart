@@ -162,7 +162,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _bgLight;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
 
     if (_loading) {
       return Scaffold(

@@ -37,7 +37,7 @@ class CommentTile extends StatelessWidget {
     final l10n = context.l10n;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondary =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final isMine = myId != null && myId == comment.userId;

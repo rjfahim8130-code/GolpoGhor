@@ -442,7 +442,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF050505),
+                        color: Color(0xFF000000),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -463,7 +463,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           },
                           icon: const Icon(
                             Icons.text_decrease,
-                            color: Color(0xFF050505),
+                            color: Color(0xFF000000),
                           ),
                         ),
                         Container(
@@ -498,7 +498,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           },
                           icon: const Icon(
                             Icons.text_increase,
-                            color: Color(0xFF050505),
+                            color: Color(0xFF000000),
                           ),
                         ),
                       ],
@@ -534,7 +534,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF050505),
+                        color: Color(0xFF000000),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -573,7 +573,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             l10n.dark,
                             ReaderTheme.dark,
                             const Color(0xFF18191A),
-                            const Color(0xFFE4E6EB),
+                            const Color(0xFFFFFFFF),
                             () {
                               setState(
                                   () => _globalReaderTheme = ReaderTheme.dark);
@@ -651,7 +651,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       case ReaderTheme.sepia:
         return const Color(0xFF433422);
       case ReaderTheme.dark:
-        return const Color(0xFFE4E6EB);
+        return const Color(0xFFFFFFFF);
     }
   }
 

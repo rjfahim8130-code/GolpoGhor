@@ -1,4 +1,5 @@
 // lib/core/models/comment_model.dart
+// সংশোধিত: mentionedUserIds যোগ
 
 class CommentModel {
   final String id;
@@ -15,6 +16,7 @@ class CommentModel {
   final bool isDeleted;
   final DateTime createdAt;
 
+  // join
   final String? authorName;
   final String? authorNickname;
   final String? authorAvatar;
@@ -69,6 +71,7 @@ class CommentModel {
       body: json['body'] as String? ?? '',
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
       isDeleted: json['is_deleted'] as bool? ?? false,
+      // ডেট প্যার্স ফেইল করলে ১৯৭০ সাল দেখাবে, ভুল টাইমলাইন এড়াতে
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
       authorName: name ?? json['author_name'] as String?,
       authorNickname: nickname ?? json['author_nickname'] as String?,

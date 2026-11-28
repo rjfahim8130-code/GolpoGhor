@@ -12,14 +12,14 @@ class AppTheme {
   static const Color _lightSurface = Color(0xFFFFFFFF);
   static const Color _lightCard = Color(0xFFFFFFFF);
   static const Color _lightBorder = Color(0xFFE4E6EB);
-  static const Color _lightText = Color(0xFF050505);
+  static const Color _lightText = Color(0xFF000000);
   static const Color _lightTextSecondary = Color(0xFF65676B);
 
   static const Color _darkBg = Color(0xFF18191A);
   static const Color _darkSurface = Color(0xFF242526);
   static const Color _darkCard = Color(0xFF242526);
   static const Color _darkBorder = Color(0xFF3E4042);
-  static const Color _darkText = Color(0xFFE4E6EB);
+  static const Color _darkText = Color(0xFFFFFFFF);
   static const Color _darkTextSecondary = Color(0xFFB0B3B8);
 
   static TextTheme _bn(TextTheme base, Color color) {

@@ -2,6 +2,7 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   errors:
+    # CI তে info/warning কে error বানিও না
     deprecated_member_use: ignore
     deprecated_member_use_from_same_package: ignore
 
@@ -10,6 +11,7 @@ linter:
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true
     avoid_print: true
+    # মোবাইল CI স্থিতিশীল রাখতে — পরে আবার true করা যাবে
     use_build_context_synchronously: false
     unawaited_futures: false
     library_private_types_in_public_api: false

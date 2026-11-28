@@ -307,7 +307,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final cardBg = isDark ? _cardDark : _cardLight;
     final borderColor = isDark ? _borderDark : _borderLight;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondaryText =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 

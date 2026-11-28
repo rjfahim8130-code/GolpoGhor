@@ -117,7 +117,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _bgLight;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondary =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
@@ -198,7 +198,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
 
   Widget _buildIdle(AppLocalizations l10n, bool isDark) {
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondary =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
     final chipBg =

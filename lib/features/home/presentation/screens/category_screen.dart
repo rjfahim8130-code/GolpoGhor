@@ -90,7 +90,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     final borderColor =
         isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
 
     return Scaffold(
       backgroundColor: bg,

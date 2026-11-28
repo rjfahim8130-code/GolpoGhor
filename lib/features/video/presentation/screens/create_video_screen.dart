@@ -248,7 +248,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
     final cardBg = isDark ? _cardDark : _cardLight;
     final borderColor = isDark ? _borderDark : _borderLight;
     final primaryText =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final secondary =
         isDark ? const Color(0xFFB0B3B8) : const Color(0xFF65676B);
 
@@ -312,7 +312,7 @@ class _CreateVideoScreenState extends ConsumerState<CreateVideoScreen> {
             child: Container(
               height: 220,
               decoration: BoxDecoration(
-                color: const Color(0xFF050505),
+                color: const Color(0xFF000000),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: borderColor, width: 1),
               ),

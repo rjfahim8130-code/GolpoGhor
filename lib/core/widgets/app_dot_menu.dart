@@ -36,13 +36,13 @@ class AppDotMenu extends StatelessWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final defaultIconColor =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final menuBg =
         isDark ? const Color(0xFF242526) : const Color(0xFFFFFFFF);
     final borderColor =
         isDark ? const Color(0xFF3E4042) : const Color(0xFFE4E6EB);
     final textColor =
-        isDark ? const Color(0xFFE4E6EB) : const Color(0xFF050505);
+        isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
 
     return PopupMenuButton<int>(
       icon: Icon(
