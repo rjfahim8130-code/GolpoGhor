@@ -17,8 +17,9 @@ class SupabaseConstants {
   static const String appSettings = 'app_settings';
   static const String reports = 'reports';
   static const String notifications = 'notifications';
+
   static const String videoPosts = 'video_posts';
   static const String videoSaves = 'video_saves';
-  
+
   static const String rpcRecordView = 'record_view';
 }
